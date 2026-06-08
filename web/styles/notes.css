@@ -1,0 +1,192 @@
+:root {
+  /* iOS 备忘录数据检测链接色（真机偏金黄，非纯蓝） */
+  --notes-phone-color: #c79100;
+  --notes-title-color: #000000;
+  --notes-body-color: #000000;
+  --notes-date-color: rgba(60, 60, 67, 0.6);
+  --notes-nav-tint: #007aff;
+  --notes-toolbar-icon: #3c3c43;
+  --notes-new-note: #ff9500;
+}
+
+.view-notes {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: #ffffff;
+  overflow: hidden;
+  position: relative;
+}
+
+.notes-nav {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 2px 6px 2px 0;
+  min-height: 44px;
+  background: #ffffff;
+}
+
+.notes-nav-back {
+  width: 44px;
+  height: 44px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  color: var(--notes-nav-tint);
+  padding: 0;
+}
+
+.notes-nav-actions {
+  display: flex;
+  align-items: center;
+}
+
+.notes-nav-btn {
+  width: 44px;
+  height: 44px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  color: var(--notes-nav-tint);
+}
+
+.sf-icon {
+  width: 22px;
+  height: 22px;
+  display: block;
+}
+
+.notes-nav-back .sf-icon {
+  width: 20px;
+  height: 20px;
+  margin-left: -2px;
+}
+
+.notes-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 26px 108px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.notes-date {
+  text-align: center;
+  font-size: 15px;
+  font-weight: 400;
+  color: var(--notes-date-color);
+  letter-spacing: -0.24px;
+  margin: 6px 0 16px;
+  outline: none;
+  min-height: 20px;
+}
+
+.notes-title {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--notes-title-color);
+  letter-spacing: 0.36px;
+  line-height: 1.15;
+  margin: 0 0 14px;
+  outline: none;
+  min-height: 34px;
+}
+
+.notes-body {
+  font-size: 17px;
+  font-weight: 400;
+  color: var(--notes-body-color);
+  line-height: 1.47;
+  letter-spacing: -0.41px;
+  outline: none;
+  min-height: 200px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.notes-body .phone-link {
+  color: var(--notes-phone-color);
+  text-decoration: underline;
+  text-decoration-color: var(--notes-phone-color);
+  text-underline-offset: 2px;
+  text-decoration-thickness: 1px;
+  cursor: pointer;
+}
+
+.notes-bottom-bar {
+  flex-shrink: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  padding: 0 14px calc(10px + var(--safe-bottom));
+  background: transparent;
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.notes-bottom-bar > * {
+  pointer-events: auto;
+}
+
+.notes-tool-pill {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  background: rgba(255, 255, 255, 0.88);
+  border: 0.33px solid rgba(0, 0, 0, 0.04);
+  border-radius: 22px;
+  padding: 4px 6px;
+  box-shadow: 0 0 0 0.33px rgba(0, 0, 0, 0.04), 0 4px 16px rgba(0, 0, 0, 0.08);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.notes-tool-btn {
+  width: 42px;
+  height: 38px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  color: var(--notes-toolbar-icon);
+  border-radius: 10px;
+}
+
+.notes-tool-btn:active {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.notes-tool-btn .sf-icon {
+  width: 21px;
+  height: 21px;
+}
+
+.notes-new-btn {
+  width: 50px;
+  height: 50px;
+  border: none;
+  background: rgba(255, 255, 255, 0.92);
+  border-radius: 15px;
+  box-shadow: 0 0 0 0.33px rgba(0, 0, 0, 0.04), 0 4px 16px rgba(0, 0, 0, 0.1);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  color: var(--notes-new-note);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.notes-new-btn .sf-icon {
+  width: 23px;
+  height: 23px;
+}

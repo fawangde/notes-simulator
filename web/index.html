@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
+    />
+    <title>备忘录模拟</title>
+    <link rel="stylesheet" href="styles/ios-base.css" />
+    <link rel="stylesheet" href="styles/home.css" />
+    <link rel="stylesheet" href="styles/notes.css" />
+    <link rel="stylesheet" href="styles/phone-menu.css" />
+    <link rel="stylesheet" href="styles/imessage.css" />
+  </head>
+  <body>
+    <div id="device" class="device">
+      <div class="status-bar" id="statusBar">
+        <span class="status-time" id="statusTime">01:42</span>
+        <div class="status-icons">
+          <span class="status-signal" aria-hidden="true"></span>
+          <span class="status-5g" id="status5g">5G</span>
+          <span class="status-wifi" aria-hidden="true"></span>
+          <span class="status-battery"><span class="battery-pct" id="batteryPct">53</span></span>
+        </div>
+      </div>
+
+      <main id="app" class="app"></main>
+
+      <!-- 长按号码菜单（图2） -->
+      <div id="phoneMenu" class="phone-menu hidden" aria-hidden="true">
+        <div class="phone-menu-backdrop" data-action="dismiss"></div>
+        <div class="phone-menu-layer" id="phoneMenuLayer">
+          <div class="phone-selection-chip" id="phoneSelectionChip"></div>
+          <div class="phone-menu-card" id="phoneMenuCard">
+            <div class="phone-menu-header" id="phoneMenuPhone"></div>
+            <div class="phone-menu-group">
+              <button type="button" class="phone-menu-row" data-action="noop">
+                <span class="pm-icon pm-icon-call"></span>
+                <span class="pm-text"><strong>呼叫</strong><small>电话 (副号)</small></span>
+              </button>
+              <button type="button" class="phone-menu-row" data-action="noop">
+                <span class="pm-icon pm-icon-video"></span>
+                <span class="pm-text"><strong>视频</strong><small>微信</small></span>
+              </button>
+              <button type="button" class="phone-menu-row" data-action="message">
+                <span class="pm-icon pm-icon-message"></span>
+                <span class="pm-text"><strong>信息</strong><small>信息</small></span>
+              </button>
+            </div>
+            <div class="phone-menu-group">
+              <button type="button" class="phone-menu-row" data-action="noop">
+                <span class="pm-icon pm-icon-call"></span>
+                <span class="pm-text"><strong>呼叫</strong></span>
+                <span class="pm-chevron"></span>
+              </button>
+              <button type="button" class="phone-menu-row" data-action="noop">
+                <span class="pm-icon pm-icon-video"></span>
+                <span class="pm-text"><strong>视频</strong></span>
+                <span class="pm-chevron"></span>
+              </button>
+            </div>
+            <div class="phone-menu-group">
+              <button type="button" class="phone-menu-row" data-action="noop">
+                <span class="pm-icon pm-icon-contact"></span>
+                <span class="pm-text"><strong>添加到通讯录</strong></span>
+              </button>
+              <button type="button" class="phone-menu-row" data-action="copy">
+                <span class="pm-icon pm-icon-copy"></span>
+                <span class="pm-text"><strong>拷贝</strong></span>
+              </button>
+              <button type="button" class="phone-menu-row" data-action="noop">
+                <span class="pm-icon pm-icon-link"></span>
+                <span class="pm-text"><strong>编辑链接</strong></span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- iMessage 全屏 sheet：自底部滑入/滑出 -->
+      <div id="imessageSheet" class="imessage-sheet-host" aria-hidden="true"></div>
+    </div>
+
+    <script type="module" src="js/app.js"></script>
+  </body>
+</html>

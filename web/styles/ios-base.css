@@ -1,0 +1,226 @@
+:root {
+  --ios-bg: #f2f2f7;
+  --ios-bg-elevated: #ffffff;
+  --ios-label: #000000;
+  --ios-secondary: rgba(60, 60, 67, 0.6);
+  --ios-tertiary: rgba(60, 60, 67, 0.3);
+  --ios-separator: rgba(60, 60, 67, 0.29);
+  --ios-link: #007aff;
+  --ios-yellow: #ffcc00;
+  --ios-green: #34c759;
+  --ios-blue: #007aff;
+  --ios-gray-btn: #e5e5ea;
+  --ios-nav-blur: rgba(249, 249, 249, 0.94);
+  --ios-radius-lg: 14px;
+  --ios-radius-xl: 22px;
+  --ios-font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display",
+    "PingFang SC", "Helvetica Neue", sans-serif;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  background: #1c1c1e;
+  font-family: var(--ios-font);
+  color: var(--ios-label);
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 12px;
+}
+
+.device {
+  width: min(390px, 100%);
+  height: min(844px, 92vh);
+  background: #fff;
+  border-radius: 44px;
+  overflow: hidden;
+  position: relative;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.45);
+  border: 3px solid #2c2c2e;
+  display: flex;
+  flex-direction: column;
+}
+
+.status-bar {
+  flex-shrink: 0;
+  height: 48px;
+  padding: 14px 24px 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  position: relative;
+  z-index: 400;
+  background: #fff;
+}
+
+.device:not(.chrome-notes):not(.chrome-imessage) .status-bar {
+  background: var(--ios-bg);
+}
+
+.device.chrome-notes .status-bar,
+.device.chrome-imessage .status-bar {
+  background: #ffffff;
+}
+
+.device.chrome-imessage .status-bar {
+  background: #f2f2f7;
+}
+
+.status-time {
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.3px;
+  min-width: 48px;
+}
+
+.status-icons {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.status-signal {
+  width: 18px;
+  height: 11px;
+  background: linear-gradient(
+    to right,
+    #000 0 25%,
+    #000 25% 50%,
+    #000 50% 75%,
+    rgba(0, 0, 0, 0.35) 75%
+  );
+  clip-path: polygon(
+    0 100%,
+    20% 55%,
+    40% 75%,
+    60% 35%,
+    80% 55%,
+    100% 25%,
+    100% 100%
+  );
+}
+
+.status-5g {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: -0.2px;
+}
+
+.status-wifi {
+  width: 16px;
+  height: 12px;
+  border: 2px solid #000;
+  border-radius: 50% 50% 0 0;
+  border-bottom: none;
+  margin-left: 2px;
+}
+
+.status-battery {
+  width: 27px;
+  height: 13px;
+  border: 1.4px solid rgba(0, 0, 0, 0.35);
+  border-radius: 4px;
+  position: relative;
+  margin-left: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.status-battery::before {
+  content: "";
+  position: absolute;
+  left: 2px;
+  top: 2px;
+  bottom: 2px;
+  right: 8px;
+  background: #000;
+  border-radius: 2px;
+}
+
+.status-battery::after {
+  content: "";
+  position: absolute;
+  right: -3px;
+  top: 4px;
+  width: 2px;
+  height: 5px;
+  background: rgba(0, 0, 0, 0.35);
+  border-radius: 0 1px 1px 0;
+}
+
+.battery-pct {
+  position: relative;
+  z-index: 1;
+  font-size: 11px;
+  font-weight: 700;
+  color: #fff;
+  mix-blend-mode: difference;
+  padding-left: 2px;
+}
+
+.app {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.hidden {
+  display: none !important;
+}
+
+.btn-ios {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  border: none;
+  border-radius: var(--ios-radius-lg);
+  padding: 16px 20px;
+  font-size: 17px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: transform 0.1s ease, opacity 0.1s ease;
+}
+
+.btn-ios:active {
+  transform: scale(0.98);
+  opacity: 0.85;
+}
+
+.btn-notes {
+  background: linear-gradient(180deg, #ffe566 0%, #ffcc00 100%);
+  color: #3c3c00;
+  box-shadow: 0 2px 8px rgba(255, 204, 0, 0.35);
+}
+
+.btn-notes-icon {
+  width: 28px;
+  height: 28px;
+  background: #fff;
+  border-radius: 6px;
+  display: grid;
+  place-items: center;
+  font-size: 18px;
+}

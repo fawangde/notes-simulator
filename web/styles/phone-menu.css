@@ -1,0 +1,165 @@
+.phone-menu {
+  position: absolute;
+  inset: 0;
+  z-index: 200;
+  pointer-events: none;
+}
+
+.phone-menu:not(.hidden) {
+  pointer-events: auto;
+}
+
+.phone-menu-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(242, 242, 247, 0.55);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+}
+
+.phone-menu-layer {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  padding: 0 16px;
+  pointer-events: none;
+}
+
+.phone-selection-chip {
+  display: inline-block;
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 2px 14px rgba(0, 0, 0, 0.12);
+  padding: 2px 6px;
+  font-size: 17px;
+  line-height: 1.45;
+  color: var(--notes-phone-color);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  pointer-events: none;
+  position: absolute;
+  white-space: nowrap;
+}
+
+.phone-menu-card {
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  background: rgba(255, 255, 255, 0.97);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-radius: 14px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.14);
+  overflow: hidden;
+  pointer-events: auto;
+}
+
+.phone-menu-header {
+  padding: 14px 16px 10px;
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -0.41px;
+  color: #000000;
+  border-bottom: 0.5px solid rgba(60, 60, 67, 0.12);
+}
+
+.phone-menu-group {
+  border-bottom: 0.5px solid rgba(60, 60, 67, 0.12);
+}
+
+.phone-menu-group:last-child {
+  border-bottom: none;
+}
+
+.phone-menu-row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 11px 16px;
+  border: none;
+  background: transparent;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.phone-menu-row:active {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.pm-icon {
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.pm-icon-call {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23007AFF'%3E%3Cpath d='M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.7 3.6.7.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C10.9 21 3 13.1 3 3c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.3 2.5.7 3.6.1.3 0 .7-.2 1L6.6 10.8z'/%3E%3C/svg%3E");
+}
+
+.pm-icon-video {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23007AFF'%3E%3Cpath d='M17 10.5V7c0-.6-.4-1-1-1H4c-.6 0-1 .4-1 1v10c0 .6.4 1 1 1h12c.6 0 1-.4 1-1v-3.5l4 4v-11l-4 4z'/%3E%3C/svg%3E");
+}
+
+.pm-icon-message {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23007AFF'%3E%3Cpath d='M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z'/%3E%3C/svg%3E");
+}
+
+.pm-icon-contact {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23007AFF'%3E%3Cpath d='M15 12c2.2 0 4-1.8 4-4s-1.8-4-4-4-4 1.8-4 4 1.8 4 4 4zm-9 8v-1c0-2.2 4.5-3.5 9-3.5s9 1.3 9 3.5v1H6z'/%3E%3Cpath d='M19 8h2v2h-2zm0 4h2v2h-2z' fill='%23007AFF'/%3E%3C/svg%3E");
+}
+
+.pm-icon-copy {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23007AFF' stroke-width='2'%3E%3Crect x='9' y='9' width='13' height='13' rx='2'/%3E%3Cpath d='M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1'/%3E%3C/svg%3E");
+}
+
+.pm-icon-link {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23007AFF' stroke-width='2'%3E%3Cpath d='M12 20h9M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4 12.5-12.5z'/%3E%3C/svg%3E");
+}
+
+.pm-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.pm-text strong {
+  font-size: 17px;
+  font-weight: 400;
+  color: #000000;
+  letter-spacing: -0.41px;
+}
+
+.pm-text small {
+  font-size: 13px;
+  color: rgba(60, 60, 67, 0.6);
+  letter-spacing: -0.08px;
+}
+
+.pm-chevron {
+  width: 14px;
+  height: 14px;
+  border-right: 2px solid rgba(60, 60, 67, 0.35);
+  border-bottom: 2px solid rgba(60, 60, 67, 0.35);
+  transform: rotate(-45deg);
+  margin-right: 4px;
+}
+
+.phone-link.is-pressed {
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 2px 14px rgba(0, 0, 0, 0.12);
+  padding: 1px 5px;
+  margin: -1px -5px;
+}
+
+.view-notes.is-menu-open .notes-scroll {
+  filter: blur(2px);
+  opacity: 0.92;
+}

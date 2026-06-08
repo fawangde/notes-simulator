@@ -1,0 +1,598 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 71;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		5ABC33162FD720E800D2D5BE /* NotesSimulator_AdHoc.mobileprovision in Resources */ = {isa = PBXBuildFile; fileRef = 5ABC33152FD720E800D2D5BE /* NotesSimulator_AdHoc.mobileprovision */; };
+		5ABC33172FD720E800D2D5BE /* NotesSimulator_AdHoc.mobileprovision in Resources */ = {isa = PBXBuildFile; fileRef = 5ABC33152FD720E800D2D5BE /* NotesSimulator_AdHoc.mobileprovision */; };
+		BF0000010000000000000001 /* NotesSimulatorApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR0000010000000000000001 /* NotesSimulatorApp.swift */; };
+		BF0000010000000000000002 /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR0000010000000000000002 /* AppState.swift */; };
+		BF0000010000000000000003 /* PhoneUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR0000010000000000000003 /* PhoneUtilities.swift */; };
+		BF0000010000000000000004 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR0000010000000000000004 /* RootView.swift */; };
+		BF0000010000000000000005 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR0000010000000000000005 /* HomeView.swift */; };
+		BF0000010000000000000006 /* NotesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR0000010000000000000006 /* NotesView.swift */; };
+		BF0000010000000000000007 /* NotesBodyEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR0000010000000000000007 /* NotesBodyEditor.swift */; };
+		BF0000010000000000000008 /* PhoneActionMenuView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR0000010000000000000008 /* PhoneActionMenuView.swift */; };
+		BF0000010000000000000009 /* NewIMessageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR0000010000000000000009 /* NewIMessageView.swift */; };
+		BF000001000000000000000A /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FR000001000000000000000A /* Assets.xcassets */; };
+		BF000001000000000000000B /* IOSTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR000001000000000000000B /* IOSTheme.swift */; };
+		BF000001000000000000000C /* MessageBubbleShape.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR000001000000000000000C /* MessageBubbleShape.swift */; };
+		BF000001000000000000000D /* ChineseKeyboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR000001000000000000000D /* ChineseKeyboardView.swift */; };
+		BF000001000000000000000E /* VisualEffectBlur.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR000001000000000000000F /* VisualEffectBlur.swift */; };
+		BF000001000000000000000F /* TopRoundedRectangle.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR0000010000000000000010 /* TopRoundedRectangle.swift */; };
+		BF0000010000000000000011 /* NotesFrostedBackground.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR0000010000000000000013 /* NotesFrostedBackground.swift */; };
+		BF0000010000000000000012 /* NotesDesignTokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR0000010000000000000014 /* NotesDesignTokens.swift */; };
+		BF0000010000000000000013 /* NotesTopGlassFade.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR0000010000000000000015 /* NotesTopGlassFade.swift */; };
+		BF0000010000000000000014 /* NotesGlassControls.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR0000010000000000000016 /* NotesGlassControls.swift */; };
+		BF0000010000000000000015 /* NoteDateFormatting.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR0000010000000000000017 /* NoteDateFormatting.swift */; };
+		BF0000010000000000000016 /* DisplaySharpness.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR0000010000000000000018 /* DisplaySharpness.swift */; };
+		BF0000010000000000000019 /* PreviewBubbleGlassBackground.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR0000010000000000000021 /* PreviewBubbleGlassBackground.swift */; };
+		BF000001000000000000001A /* IMessageDesignTokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR0000010000000000000022 /* IMessageDesignTokens.swift */; };
+		BF000001000000000000001D /* SystemGlassEffectView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR0000010000000000000025 /* SystemGlassEffectView.swift */; };
+		BF000001000000000000001E /* SystemPopoverGlassView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR0000010000000000000026 /* SystemPopoverGlassView.swift */; };
+		BF000001000000000000001F /* MessagesComposerHost.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR0000010000000000000027 /* MessagesComposerHost.swift */; };
+		BF0000010000000000000020 /* MessagesComposeHairline.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR0000010000000000000028 /* MessagesComposeHairline.swift */; };
+		BF0000010000000000000021 /* SystemMessagesMaterial.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR0000010000000000000029 /* SystemMessagesMaterial.swift */; };
+		BF0000010000000000000022 /* IMessageBubbleBackground.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR000001000000000000002A /* IMessageBubbleBackground.swift */; };
+		BF0000010000000000000029 /* ComposeGlassSurface.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR0000010000000000000031 /* ComposeGlassSurface.swift */; };
+		BF000001000000000000002A /* ComposeBackdropDim.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR0000010000000000000032 /* ComposeBackdropDim.swift */; };
+		BF000001000000000000002B /* ComposeThreadBackdropHost.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR0000010000000000000033 /* ComposeThreadBackdropHost.swift */; };
+		BF000001000000000000002C /* ComposeMaterialRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR0000010000000000000034 /* ComposeMaterialRenderer.swift */; };
+		BF000001000000000000002D /* IOSOutgoingChatBubble.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR0000010000000000000035 /* IOSOutgoingChatBubble.swift */; };
+		BF0000010000000000000040 /* BubbleRenderParams.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR0000010000000000000040 /* BubbleRenderParams.swift */; };
+		BF0000010000000000000041 /* NoteImportService.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR0000010000000000000041 /* NoteImportService.swift */; };
+		BF0000010000000000000042 /* NotesAppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR0000010000000000000042 /* NotesAppDelegate.swift */; };
+		BF0000010000000000000045 /* NoteImportStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR0000010000000000000045 /* NoteImportStore.swift */; };
+		BF0000010000000000000050 /* ShareViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR0000010000000000000050 /* ShareViewController.swift */; };
+		BF0000010000000000000051 /* ImportPayload.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR0000010000000000000051 /* ImportPayload.swift */; };
+		BF0000010000000000000052 /* NotesShareExtension.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = FR0000010000000000000053 /* NotesShareExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		PB0000010000000000000001 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = PR000001000000000000000B /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = TG000001000000000000000B;
+			remoteInfo = NotesShareExtension;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		PH0000010000000000000010 /* Embed App Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				BF0000010000000000000052 /* NotesShareExtension.appex in Embed App Extensions */,
+			);
+			name = "Embed App Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		5ABC33152FD720E800D2D5BE /* NotesSimulator_AdHoc.mobileprovision */ = {isa = PBXFileReference; lastKnownFileType = file; path = NotesSimulator_AdHoc.mobileprovision; sourceTree = "<group>"; };
+		FR0000010000000000000001 /* NotesSimulatorApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotesSimulatorApp.swift; sourceTree = "<group>"; };
+		FR0000010000000000000002 /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
+		FR0000010000000000000003 /* PhoneUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneUtilities.swift; sourceTree = "<group>"; };
+		FR0000010000000000000004 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
+		FR0000010000000000000005 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
+		FR0000010000000000000006 /* NotesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotesView.swift; sourceTree = "<group>"; };
+		FR0000010000000000000007 /* NotesBodyEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotesBodyEditor.swift; sourceTree = "<group>"; };
+		FR0000010000000000000008 /* PhoneActionMenuView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneActionMenuView.swift; sourceTree = "<group>"; };
+		FR0000010000000000000009 /* NewIMessageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewIMessageView.swift; sourceTree = "<group>"; };
+		FR000001000000000000000A /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		FR000001000000000000000B /* IOSTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IOSTheme.swift; sourceTree = "<group>"; };
+		FR000001000000000000000C /* MessageBubbleShape.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageBubbleShape.swift; sourceTree = "<group>"; };
+		FR000001000000000000000D /* ChineseKeyboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChineseKeyboardView.swift; sourceTree = "<group>"; };
+		FR000001000000000000000F /* VisualEffectBlur.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VisualEffectBlur.swift; sourceTree = "<group>"; };
+		FR0000010000000000000010 /* TopRoundedRectangle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TopRoundedRectangle.swift; sourceTree = "<group>"; };
+		FR0000010000000000000011 /* NotesSimulator.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = NotesSimulator.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		FR0000010000000000000013 /* NotesFrostedBackground.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotesFrostedBackground.swift; sourceTree = "<group>"; };
+		FR0000010000000000000014 /* NotesDesignTokens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotesDesignTokens.swift; sourceTree = "<group>"; };
+		FR0000010000000000000015 /* NotesTopGlassFade.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotesTopGlassFade.swift; sourceTree = "<group>"; };
+		FR0000010000000000000016 /* NotesGlassControls.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotesGlassControls.swift; sourceTree = "<group>"; };
+		FR0000010000000000000017 /* NoteDateFormatting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteDateFormatting.swift; sourceTree = "<group>"; };
+		FR0000010000000000000018 /* DisplaySharpness.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DisplaySharpness.swift; sourceTree = "<group>"; };
+		FR0000010000000000000021 /* PreviewBubbleGlassBackground.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreviewBubbleGlassBackground.swift; sourceTree = "<group>"; };
+		FR0000010000000000000022 /* IMessageDesignTokens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IMessageDesignTokens.swift; sourceTree = "<group>"; };
+		FR0000010000000000000025 /* SystemGlassEffectView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemGlassEffectView.swift; sourceTree = "<group>"; };
+		FR0000010000000000000026 /* SystemPopoverGlassView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemPopoverGlassView.swift; sourceTree = "<group>"; };
+		FR0000010000000000000027 /* MessagesComposerHost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessagesComposerHost.swift; sourceTree = "<group>"; };
+		FR0000010000000000000028 /* MessagesComposeHairline.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessagesComposeHairline.swift; sourceTree = "<group>"; };
+		FR0000010000000000000029 /* SystemMessagesMaterial.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemMessagesMaterial.swift; sourceTree = "<group>"; };
+		FR000001000000000000002A /* IMessageBubbleBackground.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IMessageBubbleBackground.swift; sourceTree = "<group>"; };
+		FR0000010000000000000031 /* ComposeGlassSurface.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComposeGlassSurface.swift; sourceTree = "<group>"; };
+		FR0000010000000000000032 /* ComposeBackdropDim.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComposeBackdropDim.swift; sourceTree = "<group>"; };
+		FR0000010000000000000033 /* ComposeThreadBackdropHost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComposeThreadBackdropHost.swift; sourceTree = "<group>"; };
+		FR0000010000000000000034 /* ComposeMaterialRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComposeMaterialRenderer.swift; sourceTree = "<group>"; };
+		FR0000010000000000000035 /* IOSOutgoingChatBubble.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IOSOutgoingChatBubble.swift; sourceTree = "<group>"; };
+		FR0000010000000000000040 /* BubbleRenderParams.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BubbleRenderParams.swift; sourceTree = "<group>"; };
+		FR0000010000000000000041 /* NoteImportService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteImportService.swift; sourceTree = "<group>"; };
+		FR0000010000000000000042 /* NotesAppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotesAppDelegate.swift; sourceTree = "<group>"; };
+		FR0000010000000000000043 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		FR0000010000000000000044 /* NotesSimulator.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = NotesSimulator.entitlements; sourceTree = "<group>"; };
+		FR0000010000000000000045 /* NoteImportStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteImportStore.swift; sourceTree = "<group>"; };
+		FR0000010000000000000050 /* ShareViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareViewController.swift; sourceTree = "<group>"; };
+		FR0000010000000000000051 /* ImportPayload.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImportPayload.swift; sourceTree = "<group>"; };
+		FR0000010000000000000052 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		FR0000010000000000000053 /* NotesShareExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = NotesShareExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		FR0000010000000000000054 /* NotesShareExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = NotesShareExtension.entitlements; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		PH0000010000000000000009 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		PH0000010000000000000012 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		GR000001000000000000000C = {
+			isa = PBXGroup;
+			children = (
+				GR000001000000000000000D /* NotesSimulator */,
+				GR0000010000000000000055 /* NotesShareExtension */,
+				GR000001000000000000000E /* Products */,
+				5ABC33152FD720E800D2D5BE /* NotesSimulator_AdHoc.mobileprovision */,
+			);
+			sourceTree = "<group>";
+		};
+		GR000001000000000000000D /* NotesSimulator */ = {
+			isa = PBXGroup;
+			children = (
+				FR0000010000000000000001 /* NotesSimulatorApp.swift */,
+				FR0000010000000000000042 /* NotesAppDelegate.swift */,
+				FR0000010000000000000043 /* Info.plist */,
+				FR0000010000000000000044 /* NotesSimulator.entitlements */,
+				GR000001000000000000000F /* Models */,
+				GR0000010000000000000010 /* Utilities */,
+				GR0000010000000000000011 /* Views */,
+				FR000001000000000000000A /* Assets.xcassets */,
+			);
+			path = NotesSimulator;
+			sourceTree = "<group>";
+		};
+		GR000001000000000000000E /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				FR0000010000000000000011 /* NotesSimulator.app */,
+				FR0000010000000000000053 /* NotesShareExtension.appex */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		GR000001000000000000000F /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				FR0000010000000000000002 /* AppState.swift */,
+				FR0000010000000000000040 /* BubbleRenderParams.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		GR0000010000000000000010 /* Utilities */ = {
+			isa = PBXGroup;
+			children = (
+				FR0000010000000000000003 /* PhoneUtilities.swift */,
+				FR000001000000000000000B /* IOSTheme.swift */,
+				FR0000010000000000000014 /* NotesDesignTokens.swift */,
+				FR0000010000000000000017 /* NoteDateFormatting.swift */,
+				FR0000010000000000000041 /* NoteImportService.swift */,
+				FR0000010000000000000045 /* NoteImportStore.swift */,
+				FR0000010000000000000018 /* DisplaySharpness.swift */,
+				FR0000010000000000000022 /* IMessageDesignTokens.swift */,
+			);
+			path = Utilities;
+			sourceTree = "<group>";
+		};
+		GR0000010000000000000011 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				FR0000010000000000000004 /* RootView.swift */,
+				FR0000010000000000000005 /* HomeView.swift */,
+				FR0000010000000000000006 /* NotesView.swift */,
+				FR0000010000000000000007 /* NotesBodyEditor.swift */,
+				FR0000010000000000000008 /* PhoneActionMenuView.swift */,
+				FR0000010000000000000009 /* NewIMessageView.swift */,
+				FR0000010000000000000025 /* SystemGlassEffectView.swift */,
+				FR0000010000000000000026 /* SystemPopoverGlassView.swift */,
+				FR0000010000000000000027 /* MessagesComposerHost.swift */,
+				FR0000010000000000000028 /* MessagesComposeHairline.swift */,
+				FR0000010000000000000031 /* ComposeGlassSurface.swift */,
+				FR0000010000000000000032 /* ComposeBackdropDim.swift */,
+				FR0000010000000000000033 /* ComposeThreadBackdropHost.swift */,
+				FR0000010000000000000034 /* ComposeMaterialRenderer.swift */,
+				FR0000010000000000000035 /* IOSOutgoingChatBubble.swift */,
+				FR0000010000000000000029 /* SystemMessagesMaterial.swift */,
+				FR000001000000000000002A /* IMessageBubbleBackground.swift */,
+				FR000001000000000000000C /* MessageBubbleShape.swift */,
+				FR000001000000000000000D /* ChineseKeyboardView.swift */,
+				FR000001000000000000000F /* VisualEffectBlur.swift */,
+				FR0000010000000000000010 /* TopRoundedRectangle.swift */,
+				FR0000010000000000000013 /* NotesFrostedBackground.swift */,
+				FR0000010000000000000015 /* NotesTopGlassFade.swift */,
+				FR0000010000000000000016 /* NotesGlassControls.swift */,
+				FR0000010000000000000021 /* PreviewBubbleGlassBackground.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		GR0000010000000000000055 /* NotesShareExtension */ = {
+			isa = PBXGroup;
+			children = (
+				FR0000010000000000000050 /* ShareViewController.swift */,
+				FR0000010000000000000051 /* ImportPayload.swift */,
+				FR0000010000000000000052 /* Info.plist */,
+				FR0000010000000000000054 /* NotesShareExtension.entitlements */,
+			);
+			path = NotesShareExtension;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		TG000001000000000000000A /* NotesSimulator */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = CL0000010000000000000006 /* Build configuration list for PBXNativeTarget "NotesSimulator" */;
+			buildPhases = (
+				PH0000010000000000000007 /* Sources */,
+				PH0000010000000000000009 /* Frameworks */,
+				PH0000010000000000000008 /* Resources */,
+				PH0000010000000000000010 /* Embed App Extensions */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				DP0000010000000000000001 /* PBXTargetDependency */,
+			);
+			name = NotesSimulator;
+			productName = NotesSimulator;
+			productReference = FR0000010000000000000011 /* NotesSimulator.app */;
+			productType = "com.apple.product-type.application";
+		};
+		TG000001000000000000000B /* NotesShareExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = CL0000010000000000000007 /* Build configuration list for PBXNativeTarget "NotesShareExtension" */;
+			buildPhases = (
+				PH0000010000000000000011 /* Sources */,
+				PH0000010000000000000012 /* Frameworks */,
+				PH0000010000000000000013 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = NotesShareExtension;
+			productName = NotesShareExtension;
+			productReference = FR0000010000000000000053 /* NotesShareExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		PR000001000000000000000B /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 2600;
+				LastUpgradeCheck = 2600;
+				TargetAttributes = {
+					TG000001000000000000000A = {
+						CreatedOnToolsVersion = 26.0;
+						SystemCapabilities = {
+							com.apple.ApplicationGroups.iOS = {
+								enabled = 1;
+							};
+						};
+					};
+				};
+			};
+			buildConfigurationList = CL0000010000000000000005 /* Build configuration list for PBXProject "NotesSimulator" */;
+			compatibilityVersion = "Xcode 16.0";
+			developmentRegion = "zh-Hans";
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+				"zh-Hans",
+			);
+			mainGroup = GR000001000000000000000C;
+			productRefGroup = GR000001000000000000000E /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				TG000001000000000000000A /* NotesSimulator */,
+				TG000001000000000000000B /* NotesShareExtension */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		PH0000010000000000000008 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				5ABC33162FD720E800D2D5BE /* NotesSimulator_AdHoc.mobileprovision in Resources */,
+				BF000001000000000000000A /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		PH0000010000000000000013 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				5ABC33172FD720E800D2D5BE /* NotesSimulator_AdHoc.mobileprovision in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		PH0000010000000000000007 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				BF0000010000000000000001 /* NotesSimulatorApp.swift in Sources */,
+				BF0000010000000000000042 /* NotesAppDelegate.swift in Sources */,
+				BF0000010000000000000002 /* AppState.swift in Sources */,
+				BF0000010000000000000040 /* BubbleRenderParams.swift in Sources */,
+				BF0000010000000000000003 /* PhoneUtilities.swift in Sources */,
+				BF0000010000000000000004 /* RootView.swift in Sources */,
+				BF0000010000000000000005 /* HomeView.swift in Sources */,
+				BF0000010000000000000006 /* NotesView.swift in Sources */,
+				BF0000010000000000000007 /* NotesBodyEditor.swift in Sources */,
+				BF0000010000000000000008 /* PhoneActionMenuView.swift in Sources */,
+				BF0000010000000000000009 /* NewIMessageView.swift in Sources */,
+				BF000001000000000000000B /* IOSTheme.swift in Sources */,
+				BF000001000000000000000C /* MessageBubbleShape.swift in Sources */,
+				BF000001000000000000000D /* ChineseKeyboardView.swift in Sources */,
+				BF000001000000000000000E /* VisualEffectBlur.swift in Sources */,
+				BF000001000000000000000F /* TopRoundedRectangle.swift in Sources */,
+				BF0000010000000000000011 /* NotesFrostedBackground.swift in Sources */,
+				BF0000010000000000000012 /* NotesDesignTokens.swift in Sources */,
+				BF0000010000000000000013 /* NotesTopGlassFade.swift in Sources */,
+				BF0000010000000000000014 /* NotesGlassControls.swift in Sources */,
+				BF0000010000000000000015 /* NoteDateFormatting.swift in Sources */,
+				BF0000010000000000000041 /* NoteImportService.swift in Sources */,
+				BF0000010000000000000045 /* NoteImportStore.swift in Sources */,
+				BF0000010000000000000016 /* DisplaySharpness.swift in Sources */,
+				BF0000010000000000000019 /* PreviewBubbleGlassBackground.swift in Sources */,
+				BF000001000000000000001A /* IMessageDesignTokens.swift in Sources */,
+				BF000001000000000000001D /* SystemGlassEffectView.swift in Sources */,
+				BF000001000000000000001E /* SystemPopoverGlassView.swift in Sources */,
+				BF000001000000000000001F /* MessagesComposerHost.swift in Sources */,
+				BF0000010000000000000020 /* MessagesComposeHairline.swift in Sources */,
+				BF0000010000000000000021 /* SystemMessagesMaterial.swift in Sources */,
+				BF0000010000000000000022 /* IMessageBubbleBackground.swift in Sources */,
+				BF0000010000000000000029 /* ComposeGlassSurface.swift in Sources */,
+				BF000001000000000000002A /* ComposeBackdropDim.swift in Sources */,
+				BF000001000000000000002B /* ComposeThreadBackdropHost.swift in Sources */,
+				BF000001000000000000002C /* ComposeMaterialRenderer.swift in Sources */,
+				BF000001000000000000002D /* IOSOutgoingChatBubble.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		PH0000010000000000000011 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				BF0000010000000000000050 /* ShareViewController.swift in Sources */,
+				BF0000010000000000000051 /* ImportPayload.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		DP0000010000000000000001 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = TG000001000000000000000B /* NotesShareExtension */;
+			targetProxy = PB0000010000000000000001 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		BC0000010000000000000003 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_TESTABILITY = YES;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		BC0000010000000000000004 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		BC0000010000000000000007 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = NotesSimulator/NotesSimulator.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 562KJH9T58;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = NotesSimulator/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "备忘录";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.notesimulator.app;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		BC0000010000000000000008 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = NotesSimulator/NotesSimulator.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 562KJH9T58;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = NotesSimulator/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "备忘录";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.notesimulator.app;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		BC0000010000000000000009 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = NotesShareExtension/NotesShareExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 562KJH9T58;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = NotesShareExtension/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "备忘录";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.notesimulator.app.share;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		BC000001000000000000000A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = NotesShareExtension/NotesShareExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 562KJH9T58;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = NotesShareExtension/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "备忘录";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.notesimulator.app.share;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		CL0000010000000000000005 /* Build configuration list for PBXProject "NotesSimulator" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				BC0000010000000000000003 /* Debug */,
+				BC0000010000000000000004 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		CL0000010000000000000006 /* Build configuration list for PBXNativeTarget "NotesSimulator" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				BC0000010000000000000007 /* Debug */,
+				BC0000010000000000000008 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		CL0000010000000000000007 /* Build configuration list for PBXNativeTarget "NotesShareExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				BC0000010000000000000009 /* Debug */,
+				BC000001000000000000000A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = PR000001000000000000000B /* Project object */;
+}

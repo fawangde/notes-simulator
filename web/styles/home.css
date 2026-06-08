@@ -1,0 +1,149 @@
+.view-home {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 8px 20px 24px;
+  overflow-y: auto;
+}
+
+.home-header {
+  margin: 12px 0 28px;
+}
+
+.home-header h1 {
+  margin: 0;
+  font-size: 34px;
+  font-weight: 700;
+  letter-spacing: 0.37px;
+}
+
+.home-header p {
+  margin: 8px 0 0;
+  font-size: 15px;
+  color: var(--ios-secondary);
+  line-height: 1.4;
+}
+
+.home-section {
+  margin-bottom: 24px;
+}
+
+.home-section-label {
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: -0.08px;
+  color: var(--ios-secondary);
+  margin: 0 0 8px 4px;
+}
+
+.mode-segment {
+  display: flex;
+  background: var(--ios-gray-btn);
+  border-radius: 9px;
+  padding: 2px;
+  gap: 2px;
+}
+
+.mode-segment button {
+  flex: 1;
+  border: none;
+  background: transparent;
+  padding: 8px 4px;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: inherit;
+  color: var(--ios-label);
+  border-radius: 7px;
+  cursor: pointer;
+  transition: background 0.2s, box-shadow 0.2s;
+}
+
+.mode-segment button.active {
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+  font-weight: 600;
+}
+
+.mode-panel {
+  margin-top: 12px;
+  background: var(--ios-bg-elevated);
+  border-radius: var(--ios-radius-lg);
+  overflow: hidden;
+}
+
+.mode-panel textarea {
+  width: 100%;
+  min-height: 120px;
+  border: none;
+  resize: vertical;
+  padding: 14px 16px;
+  font-size: 17px;
+  font-family: inherit;
+  line-height: 1.45;
+  outline: none;
+  background: transparent;
+}
+
+.mode-panel textarea::placeholder {
+  color: var(--ios-tertiary);
+}
+
+.image-picker {
+  padding: 16px;
+  text-align: center;
+}
+
+.image-picker input[type="file"] {
+  display: none;
+}
+
+.image-picker-label {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 20px;
+  background: var(--ios-gray-btn);
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--ios-link);
+  cursor: pointer;
+}
+
+.image-preview {
+  margin-top: 12px;
+  border-radius: 12px;
+  overflow: hidden;
+  max-height: 160px;
+}
+
+.image-preview img {
+  width: 100%;
+  height: auto;
+  display: block;
+  object-fit: cover;
+}
+
+.home-actions {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-top: 16px;
+}
+
+.hint-card {
+  background: rgba(0, 122, 255, 0.08);
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-size: 13px;
+  color: var(--ios-secondary);
+  line-height: 1.5;
+}
+
+.hint-card strong {
+  color: var(--ios-link);
+  font-weight: 600;
+}
