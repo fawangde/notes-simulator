@@ -185,7 +185,7 @@ struct NewIMessageView: View {
     private var navigationBarTitle: some View {
         Text("新 iMessage 信息")
             .font(IMessageDesignTokens.navTitleFont)
-            .foregroundStyle(Color(uiColor: .label))
+            .foregroundStyle(IOSTheme.labelPrimary)
             .frame(maxWidth: .infinity)
             .frame(height: IMessageDesignTokens.layer3NavHeight)
     }
@@ -194,7 +194,7 @@ struct NewIMessageView: View {
         Button(action: close) {
             Image(systemName: "xmark")
                 .font(.system(size: IMessageDesignTokens.navCloseIconSize, weight: .bold))
-                .foregroundStyle(Color(uiColor: .label))
+                .foregroundStyle(IOSTheme.labelPrimary)
                 .frame(
                     width: IMessageDesignTokens.layer3CloseSize,
                     height: IMessageDesignTokens.layer3CloseSize

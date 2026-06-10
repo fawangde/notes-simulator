@@ -143,7 +143,7 @@ enum IMessageDesignTokens {
     static let addressHairlineHorizontalInset: CGFloat = 18
     static let addressLabelFont = Font.system(size: 15, weight: .regular)
     /// 「收件人」「发件人」及冒号（比 secondaryLabel 略深一丁点）
-    static let addressLabelColor = Color(uiColor: UIColor.label.withAlphaComponent(0.58))
+    static let addressLabelColor = Color(uiColor: NotesSemanticColor.labelUI.withAlphaComponent(0.58))
     static let recipientCapsuleHPadding: CGFloat = 9
     static let recipientCapsuleVPadding: CGFloat = 4
     static let recipientCapsuleFill = Color(uiColor: UIColor.systemGray3).opacity(0.34)

@@ -1,0 +1,10 @@
+{
+  "rules": {
+    "activationCodes": {
+      "$code": {
+        ".read": true,
+        ".write": "(data.child('used').val() == false && newData.child('used').val() == true) || (data.child('used').val() == true && data.child('deviceId').val() == newData.child('deviceId').val() && data.child('mode').val() == 'clicks' && newData.child('remainingClicks').isNumber() && newData.child('remainingClicks').val() == data.child('remainingClicks').val() - 1 && newData.child('used').val() == true)"
+      }
+    }
+  }
+}

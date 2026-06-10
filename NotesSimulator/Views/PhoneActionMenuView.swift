@@ -184,7 +184,7 @@ struct PhoneActionMenuView: View {
         VStack(spacing: 0) {
             Text(phone)
                 .font(.system(size: NotesDesignTokens.MenuLayout.headerFontSize, weight: .semibold))
-                .foregroundStyle(Color(uiColor: .label))
+                .foregroundStyle(IOSTheme.labelPrimary)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.leading, NotesDesignTokens.MenuLayout.contentInsetH + menuIconLeadingExtra)
                 .padding(.trailing, NotesDesignTokens.MenuLayout.contentInsetH)
@@ -405,7 +405,7 @@ private struct MenuActionRow: View {
                 if showsChevron {
                     Image(systemName: "chevron.right")
                         .font(.system(size: chevronSize, weight: .semibold))
-                        .foregroundStyle(Color(uiColor: .label).opacity(0.72))
+                        .foregroundStyle(IOSTheme.labelPrimary.opacity(0.72))
                         .padding(.trailing, 4)
                 }
             }

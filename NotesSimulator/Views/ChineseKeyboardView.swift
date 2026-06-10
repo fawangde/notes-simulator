@@ -9,7 +9,7 @@ struct ChineseKeyboardView: View {
                 ForEach(suggestions, id: \.self) { word in
                     Text(word)
                         .font(.system(size: 17))
-                        .foregroundStyle(.primary)
+                        .foregroundStyle(IOSTheme.labelPrimary)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 8)
                 }

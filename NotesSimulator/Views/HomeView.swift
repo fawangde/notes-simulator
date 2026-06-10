@@ -7,23 +7,29 @@ struct HomeView: View {
     @FocusState private var isMessageFieldFocused: Bool
     @FocusState private var isTimeRangeFocused: Bool
     @FocusState private var isSenderLabelFocused: Bool
+    @State private var showActivationSheet = false
+    @State private var showActivationRequiredAlert = false
+    @State private var activationInput = ""
+    @State private var activationErrorMessage: String?
+    @State private var isActivating = false
+    @State private var displayNow = Date()
+
+    private let activationTimer = Timer.publish(every: 30, on: .main, in: .common).autoconnect()
 
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 24) {
                     headerSection
-                    simCardSection
-                    modeSection
-                    timeRangeSection
-                    ios264ThreadHeaderSection
-                    actionSection
+                    activationSection
+                    gatedContent
                     Spacer(minLength: 0)
                 }
                 .padding(20)
                 .frame(maxWidth: .infinity, alignment: .topLeading)
                 .contentShape(Rectangle())
                 .onTapGesture {
+                    guard app.isActivated else { return }
                     isMessageFieldFocused = false
                     isTimeRangeFocused = false
                     isSenderLabelFocused = false
@@ -33,6 +39,122 @@ struct HomeView: View {
             .scrollDismissesKeyboard(.interactively)
             .background(Color(.systemGroupedBackground))
             .navigationTitle("设置")
+            .onReceive(activationTimer) { tick in
+                displayNow = tick
+                app.checkLocalTimeActivationExpiry()
+            }
+            .onChange(of: app.activationExpiresAt) { _ in
+                displayNow = Date()
+            }
+            .onChange(of: app.activationRemainingClicks) { _ in
+                displayNow = Date()
+            }
+            .alert("请先激活 App", isPresented: $showActivationRequiredAlert) {
+                Button("好", role: .cancel) {}
+            }
+            .alert("请先激活 App", isPresented: $app.showActivationRequiredAlert) {
+                Button("好", role: .cancel) {}
+            }
+            .sheet(isPresented: $showActivationSheet) {
+                ActivationSheetView(
+                    code: $activationInput,
+                    isLoading: isActivating,
+                    errorMessage: activationErrorMessage,
+                    onConfirm: { Task { await submitActivation() } },
+                    onCancel: {
+                        showActivationSheet = false
+                        activationInput = ""
+                        activationErrorMessage = nil
+                    }
+                )
+                .presentationDetents([.medium])
+            }
+        }
+    }
+
+    private var gatedContent: some View {
+        VStack(alignment: .leading, spacing: 24) {
+            simCardSection
+            modeSection
+            timeRangeSection
+            ios264ThreadHeaderSection
+            actionSection
+        }
+        .disabled(!app.isActivated && !DevelopmentFlags.bypassActivation)
+        .overlay {
+            if !app.isActivated && !DevelopmentFlags.bypassActivation {
+                Color.clear
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        showActivationRequiredAlert = true
+                    }
+            }
+        }
+    }
+
+    private var activationSection: some View {
+        Group {
+            if app.isActivated {
+                HStack(spacing: 12) {
+                    Image(systemName: "checkmark.seal.fill")
+                        .font(.title3)
+                        .foregroundStyle(.green)
+                    Text(app.activationRemainingText(at: displayNow))
+                        .font(.headline)
+                        .foregroundStyle(IOSTheme.labelPrimary)
+                    Spacer(minLength: 0)
+                }
+                .padding()
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(Color(.secondarySystemGroupedBackground))
+                .clipShape(RoundedRectangle(cornerRadius: 12))
+                .accessibilityLabel(app.activationRemainingText(at: displayNow))
+            } else {
+                Button {
+                    guard NetworkMonitor.shared.isConnected else {
+                        app.showNetworkGuideAlert = true
+                        return
+                    }
+                    activationInput = ""
+                    activationErrorMessage = nil
+                    showActivationSheet = true
+                } label: {
+                    HStack(spacing: 12) {
+                        Image(systemName: "key.fill")
+                            .font(.title3)
+                        Text("请激活APP")
+                            .font(.headline)
+                        Spacer(minLength: 0)
+                        Image(systemName: "chevron.right")
+                            .font(.footnote.weight(.semibold))
+                            .foregroundStyle(.tertiary)
+                    }
+                    .foregroundStyle(IOSTheme.labelPrimary)
+                    .padding()
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(Color(.secondarySystemGroupedBackground))
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                }
+                .buttonStyle(.plain)
+            }
+        }
+    }
+
+    private func submitActivation() async {
+        guard NetworkMonitor.shared.isConnected else {
+            activationErrorMessage = ActivationError.networkUnavailable.errorDescription
+            return
+        }
+        isActivating = true
+        activationErrorMessage = nil
+        defer { isActivating = false }
+        do {
+            try await app.activate(with: activationInput)
+            showActivationSheet = false
+            activationInput = ""
+            displayNow = Date()
+        } catch {
+            activationErrorMessage = ActivationErrorMapper.message(for: error)
         }
     }
 
@@ -146,8 +268,15 @@ struct HomeView: View {
                 .padding(.leading, 4)
 
             VStack(alignment: .leading, spacing: 6) {
-                TextField("09:00-18:00", text: $app.threadTimeRangeInput)
-                    .keyboardType(.numbersAndPunctuation)
+                TextField(
+                    ThreadTimeRangeInputFormatting.placeholder,
+                    text: Binding(
+                        get: { app.threadTimeRangeInput },
+                        set: { app.threadTimeRangeInput = ThreadTimeRangeInputFormatting.formatted(from: $0) }
+                    )
+                )
+                    .keyboardType(.numberPad)
+                    .monospacedDigit()
                     .focused($isTimeRangeFocused)
                 Text("按备忘录非空行数，从上到下在区间内依次分配时间；长按号码打开信息时使用对应行时间。")
                     .font(.caption)
@@ -161,14 +290,21 @@ struct HomeView: View {
 
     private var ios264ThreadHeaderSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("时间小字样式")
+            Text("界面样式")
                 .font(.caption.weight(.semibold))
                 .foregroundStyle(.secondary)
                 .padding(.leading, 4)
 
-            VStack(alignment: .leading, spacing: 8) {
+            VStack(alignment: .leading, spacing: 12) {
+                Toggle("iOS 17–18 备忘录样式", isOn: $app.notesStyleIOS1718)
+                Text("扁平金黄导航/工具栏，无液态玻璃。与系统版本无关，仅切换备忘录页展示。")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+
+                Divider()
+
                 Toggle("iOS 26.4 三行样式", isOn: $app.threadHeaderStyleIOS264)
-                Text("仅切换时间小字排版，不做系统版本判断。iOS 26.4 及以上用户建议开启，以匹配真机 Messages 样式。")
+                Text("仅切换 iMessage 时间小字排版。iOS 26.4 及以上用户建议开启。")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -181,9 +317,15 @@ struct HomeView: View {
     private var actionSection: some View {
         VStack(spacing: 12) {
             Button {
-                app.showIMessage = false
-                app.showPhoneMenu = false
-                app.screen = .notes
+                Task {
+                    guard await app.enterNotesFromSettings() else {
+                        app.presentActivationRequired()
+                        return
+                    }
+                    app.showIMessage = false
+                    app.showPhoneMenu = false
+                    app.screen = .notes
+                }
             } label: {
                 Label("返回备忘录", systemImage: "note.text")
                     .font(.headline)

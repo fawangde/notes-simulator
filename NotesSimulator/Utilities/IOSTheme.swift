@@ -32,6 +32,15 @@ enum IOSTheme {
 
     static var labelPrimary: Color { NotesSemanticColor.label }
     static var labelPrimaryUI: UIColor { NotesSemanticColor.labelUI }
+    static var titleLabel: Color { Color(uiColor: titleLabelUI) }
+    static var titleLabelUI: UIColor {
+        NotesSemanticColor.blendedLabelUI(
+            labelMix: NotesDesignTokens.Official.Title.labelBlendFraction,
+            secondaryMix: NotesDesignTokens.Official.Title.secondaryBlendFraction,
+            tertiaryMix: NotesDesignTokens.Official.Title.tertiaryBlendFraction,
+            quaternaryMix: NotesDesignTokens.Official.Title.quaternaryBlendFraction
+        )
+    }
     static var labelSecondary: Color { NotesSemanticColor.secondaryLabel }
     static var labelTertiary: Color { NotesSemanticColor.tertiaryLabel }
 

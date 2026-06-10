@@ -28,10 +28,30 @@ enum NotesDesignTokens {
         }
 
         enum Title {
-            static let fontSize: CGFloat = 32
+            static let fontSize: CGFloat = 29
             static let weight: Font.Weight = .bold
+            /// 标题混色：label 占比越低越灰
+            static let labelBlendFraction: CGFloat = 0
+            static let secondaryBlendFraction: CGFloat = 0.40
+            static let tertiaryBlendFraction: CGFloat = 0.44
+            static let quaternaryBlendFraction: CGFloat = 0.16
+            /// 标题右内边距 = 左内边距 × 此比例
+            static let trailingLeadingRatio: CGFloat = 1.5
             static let contentInset: CGFloat = 16
             static let gapToBody: CGFloat = 24
+
+            static var minLineHeight: CGFloat {
+                let font = UIFont.systemFont(ofSize: fontSize, weight: .bold)
+                return ceil(font.lineHeight)
+            }
+        }
+
+        enum PrimaryText {
+            /// 正文 / 导航图标等主色：label 占比越低越灰
+            static let labelBlendFraction: CGFloat = 0.64
+            static let secondaryBlendFraction: CGFloat = 0.28
+            static let tertiaryBlendFraction: CGFloat = 0.08
+            static let quaternaryBlendFraction: CGFloat = 0
         }
 
         enum Body {
@@ -46,7 +66,8 @@ enum NotesDesignTokens {
 
         enum Toolbar {
             static let height: CGFloat = 58
-            static let bottomSafeGap: CGFloat = 12
+            /// 按钮底缘距 Home 条（原 12，减 10 → 整体下移 10pt）
+            static let bottomSafeGap: CGFloat = 2
             static let buttonSize: CGFloat = 44
             static let iconSize: CGFloat = 21
             static let iconWeight: Font.Weight = .medium
@@ -78,6 +99,14 @@ enum NotesDesignTokens {
         static let titleFont = Font.system(size: Official.Title.fontSize, weight: Official.Title.weight)
         static let dateFont = Font.system(size: 15, weight: .regular)
         static let titleToBodyGap = Official.Title.gapToBody
+        /// 与正文号码首行左缘对齐（= phoneLeadingDigitSpacing × 号码字宽）
+        static var titlePhoneAlignedLeadingInset: CGFloat {
+            oneDigitWidth(for: PhoneLink.fontSize) * PhoneUtilities.phoneLeadingDigitSpacing
+        }
+        static var titlePhoneAlignedTrailingInset: CGFloat {
+            titlePhoneAlignedLeadingInset * Official.Title.trailingLeadingRatio
+        }
+        static var titleMinLineHeight: CGFloat { Official.Title.minLineHeight }
     }
 
     // MARK: - 长按菜单（尺寸为模拟交互布局，面板材质走系统 Material）
@@ -168,8 +197,15 @@ enum NotesDesignTokens {
 
 /// 系统语义色 — 色值与对比度由 UIKit 按壁纸 / 深色模式 /「降低透明度」动态解析
 enum NotesSemanticColor {
-    static var label: Color { Color(uiColor: .label) }
-    static var labelUI: UIColor { .label }
+    static var label: Color { Color(uiColor: labelUI) }
+    static var labelUI: UIColor {
+        blendedLabelUI(
+            labelMix: NotesDesignTokens.Official.PrimaryText.labelBlendFraction,
+            secondaryMix: NotesDesignTokens.Official.PrimaryText.secondaryBlendFraction,
+            tertiaryMix: NotesDesignTokens.Official.PrimaryText.tertiaryBlendFraction,
+            quaternaryMix: NotesDesignTokens.Official.PrimaryText.quaternaryBlendFraction
+        )
+    }
     static var secondaryLabel: Color { Color(uiColor: .secondaryLabel) }
     static var secondaryLabelUI: UIColor { .secondaryLabel }
     static var tertiaryLabel: Color { Color(uiColor: .tertiaryLabel) }
@@ -182,6 +218,35 @@ enum NotesSemanticColor {
     static var systemBackgroundUI: UIColor { .systemBackground }
     static var quaternaryFill: Color { Color(uiColor: .quaternarySystemFill) }
     static var quaternaryFillUI: UIColor { .quaternarySystemFill }
+
+    static func blendedLabelUI(
+        labelMix: CGFloat,
+        secondaryMix: CGFloat,
+        tertiaryMix: CGFloat,
+        quaternaryMix: CGFloat
+    ) -> UIColor {
+        UIColor { traits in
+            let label = UIColor.label.resolvedColor(with: traits)
+            let secondary = UIColor.secondaryLabel.resolvedColor(with: traits)
+            let tertiary = UIColor.tertiaryLabel.resolvedColor(with: traits)
+            let quaternary = UIColor.quaternaryLabel.resolvedColor(with: traits)
+            func components(of color: UIColor) -> (CGFloat, CGFloat, CGFloat, CGFloat) {
+                var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
+                color.getRed(&r, green: &g, blue: &b, alpha: &a)
+                return (r, g, b, a)
+            }
+            let (lr, lg, lb, la) = components(of: label)
+            let (sr, sg, sb, _) = components(of: secondary)
+            let (tr, tg, tb, _) = components(of: tertiary)
+            let (qr, qg, qb, _) = components(of: quaternary)
+            return UIColor(
+                red: lr * labelMix + sr * secondaryMix + tr * tertiaryMix + qr * quaternaryMix,
+                green: lg * labelMix + sg * secondaryMix + tg * tertiaryMix + qg * quaternaryMix,
+                blue: lb * labelMix + sb * secondaryMix + tb * tertiaryMix + qb * quaternaryMix,
+                alpha: la
+            )
+        }
+    }
 }
 
 /// 备忘录自动识别号码/数据链接色（真机金黄下划线；非 UIColor.link 默认蓝）

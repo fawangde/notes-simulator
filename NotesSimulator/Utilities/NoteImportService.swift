@@ -71,6 +71,28 @@ enum NoteImportService {
         return phones.joined(separator: "\n")
     }
 
+    /// 导入后在最后一个非空行后追加的空行数
+    static let trailingBlankLineCount = 13
+    /// UITextView 会吞掉纯换行；用零宽空格占位，视觉上仍是空行
+    private static let blankLineMarker = "\u{200B}"
+
+    static func appendTrailingBlankLines(to body: String) -> String {
+        var lines = body.components(separatedBy: .newlines)
+        while let last = lines.last, isBlankLine(last) {
+            lines.removeLast()
+        }
+        guard !lines.isEmpty else { return body }
+        let blanks = Array(repeating: blankLineMarker, count: trailingBlankLineCount)
+        return (lines + blanks).joined(separator: "\n")
+    }
+
+    private static func isBlankLine(_ line: String) -> Bool {
+        line
+            .replacingOccurrences(of: blankLineMarker, with: "")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .isEmpty
+    }
+
     enum ImportError: Error {
         case unreadableEncoding
     }

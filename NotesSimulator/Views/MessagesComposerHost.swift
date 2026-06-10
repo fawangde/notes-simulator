@@ -197,7 +197,7 @@ final class MessagesComposerPlateView: UIView {
         field.placeholder = "iMessage 信息"
         field.font = .systemFont(ofSize: IMessageDesignTokens.inputFontSize)
         field.backgroundColor = .clear
-        field.textColor = .label
+        field.textColor = IOSTheme.labelPrimaryUI
         field.borderStyle = .none
         field.autocorrectionType = .default
         let inset = IMessageDesignTokens.inputFieldHorizontalInset

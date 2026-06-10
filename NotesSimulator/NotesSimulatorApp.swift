@@ -26,7 +26,9 @@ struct NotesSimulatorApp: App {
         }
         .onChange(of: scenePhase) { phase in
             if phase == .active {
+                appState.checkLocalTimeActivationExpiry()
                 appState.consumePendingImportIfNeeded()
+                Task { await appState.performPeriodicActivationCheck() }
             }
         }
     }

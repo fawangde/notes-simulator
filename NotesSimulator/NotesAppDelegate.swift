@@ -1,6 +1,18 @@
+import FirebaseCore
 import UIKit
 
 final class NotesAppDelegate: NSObject, UIApplicationDelegate {
+    func application(
+        _ application: UIApplication,
+        didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
+    ) -> Bool {
+        if FirebaseApp.app() == nil {
+            FirebaseApp.configure()
+        }
+        _ = FirebaseDatabaseConfig.database()
+        return true
+    }
+
     func application(
         _ application: UIApplication,
         open url: URL,
