@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>安装备忘录</title>
+	<style>
+		:root { color-scheme: light dark; }
+		body {
+			font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+			margin: 0;
+			padding: 40px 20px;
+			text-align: center;
+			background: #f2f2f7;
+			color: #1c1c1e;
+		}
+		.card {
+			max-width: 420px;
+			margin: 0 auto;
+			padding: 28px 22px;
+			background: #fff;
+			border-radius: 18px;
+			box-shadow: 0 8px 28px rgba(0, 0, 0, 0.08);
+		}
+		h1 { font-size: 24px; margin: 0 0 8px; }
+		p { font-size: 15px; line-height: 1.5; color: #636366; margin: 0 0 14px; }
+		a.install {
+			display: inline-block;
+			margin-top: 10px;
+			padding: 14px 28px;
+			background: #007aff;
+			color: #fff;
+			text-decoration: none;
+			border-radius: 12px;
+			font-size: 17px;
+			font-weight: 600;
+		}
+		ol {
+			text-align: left;
+			font-size: 14px;
+			color: #636366;
+			padding-left: 20px;
+			margin: 18px 0 0;
+		}
+	</style>
+</head>
+<body>
+	<div class="card">
+		<h1>备忘录</h1>
+		<p>v1.1.0 · Ad Hoc 测试安装</p>
+		<p>请使用 <strong>iPhone 自带 Safari</strong> 打开本页。</p>
+		<a class="install" href="itms-services://?action=download-manifest&amp;url=https://fawangde.github.io/notes-simulator/DistributionSummary.plist">安装 App</a>
+		<ol>
+			<li>安装后打开「设置 → 通用 → VPN 与设备管理」</li>
+			<li>信任开发者「chi Xu」</li>
+			<li>本机 UDID 须已加入 Ad Hoc 描述文件</li>
+		</ol>
+	</div>
+</body>
+</html>

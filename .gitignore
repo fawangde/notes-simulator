@@ -4,4 +4,6 @@ xcuserdata/
 DerivedData/
 build/
 *.ipa
+!docs/NotesSimulator.ipa
+hosting/public/*.ipa
 *.dSYM.zip
