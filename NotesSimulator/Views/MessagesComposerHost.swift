@@ -5,6 +5,7 @@ import UIKit
 struct MessagesComposerHost: UIViewControllerRepresentable {
     @Binding var text: String
     var wantsFocus: Bool
+    var onPlusTap: (() -> Void)? = nil
 
     func makeCoordinator() -> Coordinator {
         Coordinator(text: $text)
@@ -19,6 +20,7 @@ struct MessagesComposerHost: UIViewControllerRepresentable {
     func updateUIViewController(_ controller: MessagesComposerHostController, context: Context) {
         controller.applyFrozenLayout()
         controller.syncText(text)
+        controller.bindPlusTap(onPlusTap)
         if wantsFocus {
             controller.requestFocus()
         } else {
@@ -112,6 +114,10 @@ final class MessagesComposerHostController: UIViewController {
         plate.refreshChromeLayout()
     }
 
+    func bindPlusTap(_ handler: (() -> Void)?) {
+        plate.onPlusTap = handler
+    }
+
     func applyFrozenLayout() {
         plate.applyFrozenLayout()
     }
@@ -155,11 +161,13 @@ final class MessagesComposerHostController: UIViewController {
 final class MessagesComposerPlateView: UIView {
     let field = UITextField()
     var onTextChange: ((String) -> Void)?
+    var onPlusTap: (() -> Void)?
 
     private let plusChrome = ComposeChromeGlassHostView(
         cornerRadius: IMessageDesignTokens.plusButtonSize / 2,
         borderEmphasis: IMessageDesignTokens.chromeControlBorderEmphasis
     )
+    private let plusTapButton = UIButton(type: .system)
     private let fieldChrome = ComposeChromeGlassHostView(
         cornerRadius: IMessageDesignTokens.inputCornerRadius,
         borderEmphasis: IMessageDesignTokens.chromeControlBorderEmphasis
@@ -181,7 +189,7 @@ final class MessagesComposerPlateView: UIView {
         clipsToBounds = false
 
         plusChrome.translatesAutoresizingMaskIntoConstraints = false
-        plusChrome.isUserInteractionEnabled = false
+        plusChrome.isUserInteractionEnabled = true
 
         let plusConfig = UIImage.SymbolConfiguration(
             pointSize: IMessageDesignTokens.plusIconSize,
@@ -193,6 +201,11 @@ final class MessagesComposerPlateView: UIView {
         plusIconView.isUserInteractionEnabled = false
         plusIconView.translatesAutoresizingMaskIntoConstraints = false
         plusChrome.addSubview(plusIconView)
+
+        plusTapButton.backgroundColor = .clear
+        plusTapButton.translatesAutoresizingMaskIntoConstraints = false
+        plusTapButton.addTarget(self, action: #selector(plusTapped), for: .touchUpInside)
+        plusChrome.addSubview(plusTapButton)
 
         field.placeholder = "iMessage 信息"
         field.font = .systemFont(ofSize: IMessageDesignTokens.inputFontSize)
@@ -234,6 +247,10 @@ final class MessagesComposerPlateView: UIView {
         NSLayoutConstraint.activate([
             plusIconView.centerXAnchor.constraint(equalTo: plusChrome.centerXAnchor),
             plusIconView.centerYAnchor.constraint(equalTo: plusChrome.centerYAnchor),
+            plusTapButton.leadingAnchor.constraint(equalTo: plusChrome.leadingAnchor),
+            plusTapButton.trailingAnchor.constraint(equalTo: plusChrome.trailingAnchor),
+            plusTapButton.topAnchor.constraint(equalTo: plusChrome.topAnchor),
+            plusTapButton.bottomAnchor.constraint(equalTo: plusChrome.bottomAnchor),
             plusWidth, plusHeight,
         ])
         layoutRow(leading: plusChrome, fieldWrap: fieldWrap)
@@ -337,5 +354,9 @@ final class MessagesComposerPlateView: UIView {
 
     @objc private func editingChanged() {
         onTextChange?(field.text ?? "")
+    }
+
+    @objc private func plusTapped() {
+        onPlusTap?()
     }
 }

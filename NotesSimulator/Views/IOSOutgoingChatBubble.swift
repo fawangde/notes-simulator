@@ -307,6 +307,7 @@ final class IOSOutgoingChatBubbleView: UIView {
     private let fillView = BubbleFillView()
     private var laidOutBodyWidth: CGFloat = 0
     private var laidOutFlatBottomY: CGFloat = 0
+    private var bubbleFontSize: CGFloat = 17
 
     var renderParams: BubbleTailRenderParams?
 
@@ -317,7 +318,7 @@ final class IOSOutgoingChatBubbleView: UIView {
         isUserInteractionEnabled = true
 
         addSubview(fillView)
-        label.font = .systemFont(ofSize: 17)
+        label.font = .systemFont(ofSize: bubbleFontSize)
         label.textColor = .white
         label.numberOfLines = 0
         label.isUserInteractionEnabled = false
@@ -331,6 +332,13 @@ final class IOSOutgoingChatBubbleView: UIView {
 
     func applyRenderParams(_ params: BubbleTailRenderParams) {
         renderParams = params
+        setNeedsLayout()
+        invalidateIntrinsicContentSize()
+    }
+
+    func applyBubbleFontSize(_ size: CGFloat) {
+        bubbleFontSize = size
+        label.font = .systemFont(ofSize: size)
         setNeedsLayout()
         invalidateIntrinsicContentSize()
     }

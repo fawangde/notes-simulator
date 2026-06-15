@@ -813,6 +813,7 @@ final class IOSOutgoingChatBubbleView1718: UIView {
     private var laidOutBodyWidth: CGFloat = 0
     private var laidOutBodyHeight: CGFloat = 0
     private(set) var currentTailParams = IMessage1718BubbleTailParams.default
+    private var bubbleFontSize: CGFloat = 17
 
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -831,7 +832,7 @@ final class IOSOutgoingChatBubbleView1718: UIView {
         tailImageView.isHidden = true
         addSubview(tailImageView)
 
-        label.font = IMessage1718DesignTokens.bubbleFontUI
+        label.font = bubbleFontUI()
         label.textColor = .white
         label.numberOfLines = 0
         label.textAlignment = .left
@@ -849,11 +850,25 @@ final class IOSOutgoingChatBubbleView1718: UIView {
         setNeedsLayout()
     }
 
+    func applyBubbleFontSize(_ size: CGFloat) {
+        bubbleFontSize = size
+        label.font = bubbleFontUI()
+        if let text = label.attributedText?.string ?? label.text {
+            setBubbleText(text)
+        }
+        setNeedsLayout()
+        invalidateIntrinsicContentSize()
+    }
+
+    private func bubbleFontUI() -> UIFont {
+        UIFont.systemFont(ofSize: bubbleFontSize, weight: .regular)
+    }
+
     func setBubbleText(_ text: String) {
         label.attributedText = NSAttributedString(
             string: text,
             attributes: [
-                .font: IMessage1718DesignTokens.bubbleFontUI,
+                .font: bubbleFontUI(),
                 .foregroundColor: UIColor.white,
                 .kern: -0.41,
             ]

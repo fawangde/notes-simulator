@@ -164,6 +164,7 @@ final class AppState: ObservableObject {
     @Published var notesStyleIOS1718 = false
     @Published var notes1718Tuning = Notes1718TuningSettings.default
     @Published var notes26Tuning = Notes26TuningSettings.default
+    @Published var composeBubbleTuning = ComposeBubbleTuningSettings.default
     @Published var selectedPhone: String?
     @Published var phoneMenuAnchor: CGRect = .zero
     @Published var showPhoneMenu = false
@@ -191,6 +192,7 @@ final class AppState: ObservableObject {
         }
         notes1718Tuning = Notes1718TuningStore.load()
         notes26Tuning = Notes26TuningStore.load()
+        composeBubbleTuning = ComposeBubbleTuningStore.load()
         isHydrating = false
         if activationMode == .clicks {
             screen = .home
@@ -476,6 +478,7 @@ final class AppState: ObservableObject {
             $notesStyleIOS1718.map { _ in () }.eraseToAnyPublisher(),
             $notes1718Tuning.map { _ in () }.eraseToAnyPublisher(),
             $notes26Tuning.map { _ in () }.eraseToAnyPublisher(),
+            $composeBubbleTuning.map { _ in () }.eraseToAnyPublisher(),
             $activationExpiresAt.map { _ in () }.eraseToAnyPublisher(),
             $activationCode.map { _ in () }.eraseToAnyPublisher(),
             $activationBoundUID.map { _ in () }.eraseToAnyPublisher(),
@@ -502,6 +505,14 @@ final class AppState: ObservableObject {
             ComposeThread1718PinWarmup.refresh(app: self)
         }
         .store(in: &cancellables)
+
+        $composeBubbleTuning
+            .debounce(for: .milliseconds(120), scheduler: RunLoop.main)
+            .sink { [weak self] _ in
+                guard let self else { return }
+                ComposeThread1718PinWarmup.refresh(app: self)
+            }
+            .store(in: &cancellables)
     }
 
     private func applySnapshot(_ snapshot: AppStateSnapshot) {
@@ -565,6 +576,7 @@ final class AppState: ObservableObject {
         AppStateStore.save(makeSnapshot())
         Notes1718TuningStore.save(notes1718Tuning)
         Notes26TuningStore.save(notes26Tuning)
+        ComposeBubbleTuningStore.save(composeBubbleTuning)
     }
 }
 

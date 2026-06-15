@@ -8,6 +8,7 @@ struct NewIMessageView1718: View {
     @State private var composerText = ""
     @State private var composerFocused = true
     @State private var keyboardTopInset: CGFloat = 0
+    @State private var showBubbleTuningPanel = false
 
     private var recipient: String {
         guard let phone = app.selectedPhone else { return "" }
@@ -74,6 +75,9 @@ struct NewIMessageView1718: View {
             keyboardTopInset = 0
             KeyboardDismiss.resign()
         }
+        .sheet(isPresented: $showBubbleTuningPanel) {
+            ComposeBubbleTuningPanel(settings: $app.composeBubbleTuning)
+        }
     }
 
     /// ignoresSafeArea 后 GeometryReader 的 safeAreaInsets 常为 0，改读 keyWindow
@@ -87,7 +91,11 @@ struct NewIMessageView1718: View {
         VStack(spacing: 0) {
             Spacer(minLength: 0)
                 .allowsHitTesting(false)
-            MessagesComposerHost1718(text: $composerText, wantsFocus: composerFocused)
+            MessagesComposerHost1718(
+                text: $composerText,
+                wantsFocus: composerFocused,
+                onPlusTap: { showBubbleTuningPanel = true }
+            )
                 .frame(height: IMessage1718DesignTokens.layer3ToolbarHeight)
                 .padding(.horizontal, 6)
                 .offset(
@@ -115,7 +123,8 @@ struct NewIMessageView1718: View {
                 bubbleTailParams: IMessage1718BubbleTailPreset.resolvedParams(
                     presetID: app.notes1718Tuning.bubbleTailPresetID,
                     tuning: app.notes1718Tuning
-                )
+                ),
+                bubbleFontSize: CGFloat(app.composeBubbleTuning.fontSize)
             )
             .id(
                 "\(app.mode.rawValue)|\(app.bothContentOrder.rawValue)|"

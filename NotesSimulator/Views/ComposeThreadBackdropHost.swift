@@ -12,6 +12,7 @@ struct ComposeThreadBackdropHost: UIViewRepresentable {
     let showsImage: Bool
     let bothContentOrder: BothContentOrder
     let image: UIImage?
+    var bubbleFontSize: CGFloat = 17
     func makeUIView(context: Context) -> ComposeThreadScrollView {
         ComposeThreadScrollView()
     }
@@ -27,7 +28,8 @@ struct ComposeThreadBackdropHost: UIViewRepresentable {
             showsImage: showsImage,
             bothContentOrder: bothContentOrder,
             image: image,
-            horizontalPadding: IMessageDesignTokens.layer2ThreadPaddingH
+            horizontalPadding: IMessageDesignTokens.layer2ThreadPaddingH,
+            bubbleFontSize: bubbleFontSize
         )
     }
 }
@@ -41,6 +43,7 @@ final class ComposeThreadScrollView: UIView {
     private var lastContentHeight: CGFloat = 0
     private var lastComposerReserve: CGFloat = 0
     private var contentSignature: ThreadContentSignature?
+    private var bubbleFontSize: CGFloat = 17
     private var userDidScroll = false
     /// 长按打开信息页后首屏顶对齐（与参考图一致），文案变长后再走贴底上滚
     private var prefersInitialTopAlignment = true
@@ -127,10 +130,13 @@ final class ComposeThreadScrollView: UIView {
         showsImage: Bool,
         bothContentOrder: BothContentOrder,
         image: UIImage?,
-        horizontalPadding: CGFloat
+        horizontalPadding: CGFloat,
+        bubbleFontSize: CGFloat
     ) {
         let reserveChanged = abs(composerBottomReserve - self.composerBottomReserve) > 0.5
         self.composerBottomReserve = composerBottomReserve
+        let fontChanged = abs(self.bubbleFontSize - bubbleFontSize) > 0.25
+        self.bubbleFontSize = bubbleFontSize
 
         let signature = ThreadContentSignature(
             chromeBottomY: chromeBottomY,
@@ -144,7 +150,12 @@ final class ComposeThreadScrollView: UIView {
         )
 
         if signature == contentSignature {
-            if reserveChanged {
+            if fontChanged {
+                updateVisibleBubbleFontSize(bubbleFontSize)
+                setNeedsLayout()
+                layoutIfNeeded()
+                reconcileScrollOffset(animated: false, forcePin: !userDidScroll)
+            } else if reserveChanged {
                 setNeedsLayout()
             }
             return
@@ -235,6 +246,16 @@ final class ComposeThreadScrollView: UIView {
         stack.arrangedSubviews.forEach { visit($0) }
     }
 
+    private func updateVisibleBubbleFontSize(_ size: CGFloat) {
+        func visit(_ view: UIView) {
+            if let bubble = view as? ComposeBubbleColumnView {
+                bubble.applyBubbleFontSize(size)
+            }
+            view.subviews.forEach { visit($0) }
+        }
+        stack.arrangedSubviews.forEach { visit($0) }
+    }
+
     private func appendMessageContent(
         messageText: String,
         showsText: Bool,
@@ -245,7 +266,7 @@ final class ComposeThreadScrollView: UIView {
     ) {
         let addText = {
             guard showsText else { return }
-            let bubble = ComposeBubbleColumnView(text: messageText)
+            let bubble = ComposeBubbleColumnView(text: messageText, bubbleFontSize: self.bubbleFontSize)
             let bubbleRow = self.trailingRow(
                 bubble,
                 horizontalPadding: IMessageDesignTokens.threadBubbleTrailingInset
@@ -485,7 +506,7 @@ private final class ComposeBubbleColumnView: UIView {
     private var widthConstraint: NSLayoutConstraint?
     private var heightConstraint: NSLayoutConstraint?
 
-    init(text: String) {
+    init(text: String, bubbleFontSize: CGFloat = 17) {
         super.init(frame: .zero)
         clipsToBounds = false
         setContentHuggingPriority(.required, for: .horizontal)
@@ -494,6 +515,7 @@ private final class ComposeBubbleColumnView: UIView {
         setContentCompressionResistancePriority(.required, for: .vertical)
 
         bubbleView.label.text = text
+        bubbleView.applyBubbleFontSize(bubbleFontSize)
         bubbleView.applyRenderParams(Self.composeBubbleParams(.frozenDefault))
 
         delivered.text = "已送达"
@@ -512,6 +534,11 @@ private final class ComposeBubbleColumnView: UIView {
 
     func updateText(_ text: String) {
         bubbleView.label.text = text
+        setNeedsLayout()
+    }
+
+    func applyBubbleFontSize(_ size: CGFloat) {
+        bubbleView.applyBubbleFontSize(size)
         setNeedsLayout()
     }
 

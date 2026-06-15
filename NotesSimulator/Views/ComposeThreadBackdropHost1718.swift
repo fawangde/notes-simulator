@@ -12,6 +12,7 @@ struct ComposeThreadBackdropHost1718: UIViewRepresentable {
     let bothContentOrder: BothContentOrder
     let image: UIImage?
     var bubbleTailParams: IMessage1718BubbleTailParams = .default
+    var bubbleFontSize: CGFloat = 17
 
     func makeUIView(context: Context) -> ComposeThreadScrollView1718 {
         ComposeThreadScrollView1718()
@@ -27,7 +28,8 @@ struct ComposeThreadBackdropHost1718: UIViewRepresentable {
             showsImage: showsImage,
             bothContentOrder: bothContentOrder,
             image: image,
-            bubbleTailParams: bubbleTailParams
+            bubbleTailParams: bubbleTailParams,
+            bubbleFontSize: bubbleFontSize
         )
     }
 }
@@ -42,6 +44,7 @@ final class ComposeThreadScrollView1718: UIView {
     private var lastComposerReserve: CGFloat = 0
     private var contentSignature: ThreadContentSignature?
     private var bubbleTailParams = IMessage1718BubbleTailParams.default
+    private var bubbleFontSize: CGFloat = 17
     private var userDidScroll = false
     /// 默认顶对齐：时间小字在收发件人下 10pt；触线前气泡向下长、offset 保持 0
     private var prefersInitialTopAlignment = true
@@ -215,12 +218,15 @@ final class ComposeThreadScrollView1718: UIView {
         showsImage: Bool,
         bothContentOrder: BothContentOrder,
         image: UIImage?,
-        bubbleTailParams: IMessage1718BubbleTailParams
+        bubbleTailParams: IMessage1718BubbleTailParams,
+        bubbleFontSize: CGFloat
     ) {
         let reserveChanged = abs(composerBottomReserve - self.composerBottomReserve) > 0.5
         self.composerBottomReserve = composerBottomReserve
         let tailParamsChanged = self.bubbleTailParams != bubbleTailParams
         self.bubbleTailParams = bubbleTailParams
+        let fontChanged = abs(self.bubbleFontSize - bubbleFontSize) > 0.25
+        self.bubbleFontSize = bubbleFontSize
 
         let signature = ThreadContentSignature(
             chromeBottomY: chromeBottomY,
@@ -236,8 +242,16 @@ final class ComposeThreadScrollView1718: UIView {
             if tailParamsChanged {
                 updateVisibleBubbleTailParams(bubbleTailParams)
             }
-            if reserveChanged || tailParamsChanged {
+            if fontChanged {
+                updateVisibleBubbleFontSize(bubbleFontSize)
+            }
+            if reserveChanged || tailParamsChanged || fontChanged {
                 setNeedsLayout()
+                if fontChanged {
+                    pendingTargetY = nil
+                    pendingPinLineY = nil
+                    scheduleReconcileAfterLayout()
+                }
             }
             return
         }
@@ -324,7 +338,8 @@ final class ComposeThreadScrollView1718: UIView {
             messageText: signature.messageText,
             dateLine: signature.dateLine,
             chromeBottomY: signature.chromeBottomY,
-            bubbleTailPresetID: bubbleTailParams.presetID
+            bubbleTailPresetID: bubbleTailParams.presetID,
+            bubbleFontSize: bubbleFontSize
         )
         if let prewarm = ComposeThread1718PinWarmup.current, prewarm.cacheKey == cacheKey {
             ComposeThreadPinDebug1718.shared.log(
@@ -380,6 +395,18 @@ final class ComposeThreadScrollView1718: UIView {
         stack.arrangedSubviews.forEach { visit($0) }
     }
 
+    private func updateVisibleBubbleFontSize(_ size: CGFloat) {
+        func visit(_ view: UIView) {
+            if let bubble = view as? ComposeBubbleColumnView1718 {
+                bubble.applyBubbleFontSize(size)
+            }
+            view.subviews.forEach { visit($0) }
+        }
+        stack.arrangedSubviews.forEach { visit($0) }
+        stack.setNeedsLayout()
+        setNeedsLayout()
+    }
+
     private func updateVisibleMessageText(_ text: String, dateLine: String) {
         func visit(_ view: UIView) {
             if let bubble = view as? ComposeBubbleColumnView1718 {
@@ -407,7 +434,8 @@ final class ComposeThreadScrollView1718: UIView {
             guard showsText else { return }
             let bubble = ComposeBubbleColumnView1718(
                 text: messageText,
-                bubbleTailParams: self.bubbleTailParams
+                bubbleTailParams: self.bubbleTailParams,
+                bubbleFontSize: self.bubbleFontSize
             )
             let bubbleRow = self.trailingRow(
                 bubble,
@@ -810,7 +838,8 @@ private final class ComposeBubbleColumnView1718: UIView {
 
     init(
         text: String,
-        bubbleTailParams: IMessage1718BubbleTailParams
+        bubbleTailParams: IMessage1718BubbleTailParams,
+        bubbleFontSize: CGFloat = 17
     ) {
         self.bubbleTailParams = bubbleTailParams
         bubbleView = IOSOutgoingChatBubbleView1718(tailParams: bubbleTailParams)
@@ -821,7 +850,7 @@ private final class ComposeBubbleColumnView1718: UIView {
         setContentCompressionResistancePriority(.required, for: .horizontal)
         setContentCompressionResistancePriority(.required, for: .vertical)
 
-        bubbleView.label.text = text
+        bubbleView.applyBubbleFontSize(bubbleFontSize)
         bubbleView.setBubbleText(text)
 
         delivered.text = "已送达"
@@ -847,6 +876,11 @@ private final class ComposeBubbleColumnView1718: UIView {
     func applyTailParams(_ params: IMessage1718BubbleTailParams) {
         bubbleTailParams = params
         bubbleView.applyTailParams(params)
+        setNeedsLayout()
+    }
+
+    func applyBubbleFontSize(_ size: CGFloat) {
+        bubbleView.applyBubbleFontSize(size)
         setNeedsLayout()
     }
 
@@ -1003,9 +1037,10 @@ enum ComposeThread1718PinWarmup {
         messageText: String,
         dateLine: String,
         chromeBottomY: CGFloat,
-        bubbleTailPresetID: String
+        bubbleTailPresetID: String,
+        bubbleFontSize: CGFloat
     ) -> String {
-        "\(messageText)|\(dateLine)|\(chromeBottomY)|\(bubbleTailPresetID)"
+        "\(messageText)|\(dateLine)|\(chromeBottomY)|\(bubbleTailPresetID)|\(bubbleFontSize)"
     }
 
     @MainActor
@@ -1044,7 +1079,8 @@ enum ComposeThread1718PinWarmup {
             messageText: app.messagePreviewText,
             dateLine: app.threadDateLine,
             chromeBottomY: chromeBottomY,
-            bubbleTailPresetID: tailParams.presetID
+            bubbleTailPresetID: tailParams.presetID,
+            bubbleFontSize: CGFloat(app.composeBubbleTuning.fontSize)
         )
 
         if current?.cacheKey == cacheKey { return }
@@ -1054,6 +1090,7 @@ enum ComposeThread1718PinWarmup {
             dateLine: app.threadDateLine,
             chromeBottomY: chromeBottomY,
             bubbleTailParams: tailParams,
+            bubbleFontSize: CGFloat(app.composeBubbleTuning.fontSize),
             viewport: viewport,
             insetBottom: insetBottom,
             contentWidth: bounds.width
@@ -1086,6 +1123,7 @@ private enum ComposeThread1718MeasureHarness {
         dateLine: String,
         chromeBottomY: CGFloat,
         bubbleTailParams: IMessage1718BubbleTailParams,
+        bubbleFontSize: CGFloat,
         viewport: CGFloat,
         insetBottom: CGFloat,
         contentWidth: CGFloat
@@ -1146,7 +1184,8 @@ private enum ComposeThread1718MeasureHarness {
 
         let bubble = ComposeBubbleColumnView1718(
             text: messageText,
-            bubbleTailParams: bubbleTailParams
+            bubbleTailParams: bubbleTailParams,
+            bubbleFontSize: bubbleFontSize
         )
         let bubbleRow = UIView()
         bubbleRow.translatesAutoresizingMaskIntoConstraints = false

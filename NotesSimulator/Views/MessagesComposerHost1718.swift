@@ -5,6 +5,7 @@ import UIKit
 struct MessagesComposerHost1718: UIViewControllerRepresentable {
     @Binding var text: String
     var wantsFocus: Bool
+    var onPlusTap: (() -> Void)? = nil
 
     func makeCoordinator() -> Coordinator {
         Coordinator(text: $text)
@@ -18,6 +19,7 @@ struct MessagesComposerHost1718: UIViewControllerRepresentable {
 
     func updateUIViewController(_ controller: MessagesComposerHost1718Controller, context: Context) {
         controller.syncText(text)
+        controller.bindPlusTap(onPlusTap)
         if wantsFocus {
             controller.requestFocus()
         } else {
@@ -71,6 +73,10 @@ final class MessagesComposerHost1718Controller: UIViewController {
         if wantsFocus { scheduleFocus() }
     }
 
+    func bindPlusTap(_ handler: (() -> Void)?) {
+        plate.onPlusTap = handler
+    }
+
     func syncText(_ value: String) {
         if plate.field.text != value {
             plate.field.text = value
@@ -106,8 +112,10 @@ final class MessagesComposerHost1718Controller: UIViewController {
 final class MessagesComposerPlate1718View: UIView {
     let field = UITextField()
     var onTextChange: ((String) -> Void)?
+    var onPlusTap: (() -> Void)?
 
     private let plusButton = UIView()
+    private let plusTapButton = UIButton(type: .system)
     private let plusIconView = UIImageView()
     private let fieldWrap = UIView()
     private let mic = UIImageView()
@@ -119,7 +127,7 @@ final class MessagesComposerPlate1718View: UIView {
 
         plusButton.backgroundColor = IMessage1718DesignTokens.plusButtonBackgroundUI
         plusButton.layer.cornerRadius = IMessage1718DesignTokens.layer3PlusSize / 2
-        plusButton.isUserInteractionEnabled = false
+        plusButton.isUserInteractionEnabled = true
         plusButton.translatesAutoresizingMaskIntoConstraints = false
 
         let plusConfig = UIImage.SymbolConfiguration(
@@ -131,6 +139,11 @@ final class MessagesComposerPlate1718View: UIView {
         plusIconView.contentMode = .scaleAspectFit
         plusIconView.translatesAutoresizingMaskIntoConstraints = false
         plusButton.addSubview(plusIconView)
+
+        plusTapButton.backgroundColor = .clear
+        plusTapButton.translatesAutoresizingMaskIntoConstraints = false
+        plusTapButton.addTarget(self, action: #selector(plusTapped), for: .touchUpInside)
+        plusButton.addSubview(plusTapButton)
 
         fieldWrap.backgroundColor = IMessage1718DesignTokens.inputBackgroundUI
         fieldWrap.layer.cornerRadius = IMessage1718DesignTokens.inputCornerRadius
@@ -190,6 +203,10 @@ final class MessagesComposerPlate1718View: UIView {
             plusButton.heightAnchor.constraint(equalToConstant: IMessage1718DesignTokens.layer3PlusSize),
             plusIconView.centerXAnchor.constraint(equalTo: plusButton.centerXAnchor),
             plusIconView.centerYAnchor.constraint(equalTo: plusButton.centerYAnchor),
+            plusTapButton.leadingAnchor.constraint(equalTo: plusButton.leadingAnchor),
+            plusTapButton.trailingAnchor.constraint(equalTo: plusButton.trailingAnchor),
+            plusTapButton.topAnchor.constraint(equalTo: plusButton.topAnchor),
+            plusTapButton.bottomAnchor.constraint(equalTo: plusButton.bottomAnchor),
 
             fieldWrap.heightAnchor.constraint(equalToConstant: IMessage1718DesignTokens.layer3InputHeight),
 
@@ -213,5 +230,9 @@ final class MessagesComposerPlate1718View: UIView {
 
     @objc private func editingChanged() {
         onTextChange?(field.text ?? "")
+    }
+
+    @objc private func plusTapped() {
+        onPlusTap?()
     }
 }
