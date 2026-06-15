@@ -106,7 +106,7 @@ struct NewIMessageView: View {
                 showsText: app.showsMessageText,
                 showsImage: app.showsMessageImage,
                 bothContentOrder: app.bothContentOrder,
-                image: app.messageImage,
+                image: app.messageImage
             )
             .id(
                 "\(app.mode.rawValue)|\(app.bothContentOrder.rawValue)|"

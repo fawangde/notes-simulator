@@ -5,37 +5,70 @@ import UniformTypeIdentifiers
 struct NotesView: View {
     @EnvironmentObject private var app: AppState
     @State private var showTextImporter = false
+    @State private var showTuningPanel = false
     @State private var rootFrameGlobal: CGRect = .zero
+    @State private var frozenWindowAnchor: CGRect = .zero
     @State private var frozenMenuAnchor: CGRect = .zero
     @State private var noteDisplayedDate = Date()
+    @State private var bottomSafeInset: CGFloat = 0
+    @State private var transitionProgress: CGFloat = 0
     var body: some View {
         ZStack {
+            if app.notesStyleIOS1718, app.showIMessage {
+                Color.black
+                    .ignoresSafeArea()
+                    .allowsHitTesting(false)
+            }
+
             notesLayer
 
             if app.showPhoneMenu, let phone = app.selectedPhone {
-                PhoneActionMenuView(
-                    phone: phone,
-                    anchor: frozenMenuAnchor,
-                    onMessage: openIMessage,
-                    onCopy: {
-                        UIPasteboard.general.string = phone
-                        app.showPhoneMenu = false
-                    },
-                    onDismiss: { app.showPhoneMenu = false }
-                )
-                .zIndex(20)
+                if app.notesStyleIOS1718 {
+                    PhoneActionMenuView1718(
+                        phone: phone,
+                        windowAnchor: frozenWindowAnchor,
+                        presentation: app.phoneMenuPresentation,
+                        tuning: app.notes1718Tuning,
+                        onMessage: openIMessage,
+                        onCopy: {
+                            UIPasteboard.general.string = phone
+                            app.showPhoneMenu = false
+                        },
+                        onDismiss: {
+                            app.phoneMenuBackdropStrength = 0
+                            app.showPhoneMenu = false
+                        }
+                    )
+                    .transition(.opacity)
+                    .zIndex(20)
+                } else {
+                    PhoneActionMenuView(
+                        phone: phone,
+                        anchor: frozenMenuAnchor,
+                        onMessage: openIMessage,
+                        onCopy: {
+                            UIPasteboard.general.string = phone
+                            app.showPhoneMenu = false
+                        },
+                        onDismiss: { app.showPhoneMenu = false }
+                    )
+                    .zIndex(20)
+                }
             }
 
-            if app.showIMessage {
-                NewIMessageView(onClose: closeIMessage)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .ignoresSafeArea()
-                    .transition(.move(edge: .bottom))
-                    .zIndex(30)
-            }
+            imessageOverlay
         }
-        .animation(imessageTransitionAnimation, value: app.showIMessage)
-        .animation(.spring(response: 0.48, dampingFraction: 0.82), value: app.showPhoneMenu)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .animation(
+            app.notesStyleIOS1718
+                ? .easeOut(duration: IMessage1718DesignTokens.messagesPresentDuration)
+                : imessageTransitionAnimation,
+            value: app.showIMessage
+        )
+        .animation(
+            app.notesStyleIOS1718 ? nil : .spring(response: 0.48, dampingFraction: 0.82),
+            value: app.showPhoneMenu
+        )
         .alert("请先激活 App", isPresented: $app.showActivationRequiredAlert) {
             Button("好", role: .cancel) {}
         }
@@ -43,9 +76,16 @@ struct NotesView: View {
             if !active {
                 app.showPhoneMenu = false
                 app.showIMessage = false
+                transitionProgress = 0
                 if app.activationMode == .clicks {
                     app.leaveNotesToSettings()
                 }
+            }
+        }
+        .background {
+            if !app.notesStyleIOS1718 {
+                notesPaperBackground
+                    .ignoresSafeArea()
             }
         }
         .background(
@@ -59,9 +99,41 @@ struct NotesView: View {
         )
     }
 
-    /// 备忘录主页：点「信息」后整体压暗，关闭信息页恢复（压暗不放在撰写页内，避免随底板滑动）
+    @ViewBuilder
+    /// iOS 17–18 信息页：与 iOS 26 相同 `.transition(.move(edge: .bottom))` 整页一体上滑。
+    /// 禁止 progress offset / scroll 冻结 / 预估键盘（内部 scroll 与 26 同算法，仅 token 不同）。
+    private var imessageOverlay: some View {
+        if app.notesStyleIOS1718 {
+            if app.showIMessage {
+                NewIMessageView1718(onClose: closeIMessage)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .ignoresSafeArea()
+                    .transition(.move(edge: .bottom))
+                    .zIndex(30)
+            }
+        } else if app.showIMessage {
+            NewIMessageView(onClose: closeIMessage)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .ignoresSafeArea()
+                .transition(.move(edge: .bottom))
+                .zIndex(30)
+        }
+    }
+
+    /// iOS 26：点「信息」后整体压暗（原逻辑）
     private var notesLayer: some View {
+        Group {
+            if app.notesStyleIOS1718 {
+                notesLayer1718
+            } else {
+                notesLayerIOS26
+            }
+        }
+    }
+
+    private var notesLayerIOS26: some View {
         notesContent
+            .blur(radius: longPressNotesBlurRadius)
             .background {
                 notesPaperBackground
                     .ignoresSafeArea()
@@ -78,24 +150,252 @@ struct NotesView: View {
             .animation(imessageTransitionAnimation, value: app.showIMessage)
     }
 
+    /// iOS 17–18：固定屏高一体板 + compositingGroup，再 uniform scale
+    private var notesLayer1718: some View {
+        GeometryReader { geo in
+            let safeTop = resolvedStatusBarTop(fallback: geo.safeAreaInsets.top)
+            let safeBottom = resolvedHomeIndicatorBottom(fallback: geo.safeAreaInsets.bottom)
+
+            notes1718FullScreenCard(
+                width: geo.size.width,
+                height: geo.size.height,
+                safeTop: safeTop,
+                safeBottom: safeBottom
+            )
+            .frame(width: geo.size.width, height: geo.size.height)
+            .onAppear { bottomSafeInset = safeBottom }
+            .onChange(of: geo.safeAreaInsets.bottom) { bottomSafeInset = $0 }
+        }
+        .ignoresSafeArea()
+        .allowsHitTesting(transitionProgress < 0.01)
+        .sheet(isPresented: $showTuningPanel) {
+            if app.notesStyleIOS1718 {
+                Notes1718TuningPanel(settings: $app.notes1718Tuning)
+            } else {
+                Notes26TuningPanel(settings: $app.notes26Tuning)
+            }
+        }
+        .onAppear { noteDisplayedDate = Date() }
+        .onChange(of: app.noteTitle) { _ in touchNoteDate() }
+        .onChange(of: app.noteBody) { _ in touchNoteDate() }
+        .fileImporter(
+            isPresented: $showTextImporter,
+            allowedContentTypes: [.plainText, .text, .data],
+            allowsMultipleSelection: false
+        ) { result in
+            guard case .success(let urls) = result, let url = urls.first else { return }
+            app.importTextFile(from: url)
+        }
+    }
+
+    private func notes1718FullScreenCard(
+        width: CGFloat,
+        height: CGFloat,
+        safeTop: CGFloat,
+        safeBottom: CGFloat
+    ) -> some View {
+        let navH = NotesDesignTokens.Layout.navBarHeight
+        let chromeBelow = NotesStyle1718Tokens.chromeBelowNav
+
+        return ZStack(alignment: .bottom) {
+            VStack(spacing: 0) {
+                Color.clear.frame(height: safeTop)
+                Color.clear.frame(height: NotesStyle1718Tokens.unifiedNavExtraDownShift)
+
+                classicNavBar
+                    .padding(.horizontal, NotesDesignTokens.Official.Nav.horizontalMargin)
+                    .frame(height: navH)
+
+                Color.clear
+                    .frame(height: chromeBelow)
+                    .frame(maxWidth: .infinity)
+
+                ScrollView(showsIndicators: false) {
+                    notes1718ScrollBody
+                        .padding(.bottom, 8 + notes1718ToolbarScrollReserve(safeBottom: safeBottom))
+                }
+            }
+
+            notes1718BottomToolbarOverlay(safeBottom: safeBottom)
+        }
+        .frame(width: width, height: height, alignment: .top)
+        .background {
+            paper1718
+                .frame(width: width, height: height)
+        }
+        .blur(radius: longPressNotesBlurRadius)
+        .animation(
+            app.phoneMenuBackdropStrength > 0 && app.phoneMenuBackdropStrength < 1
+                ? nil
+                : .easeOut(duration: PhoneMenu1718Layout.Animation.overlayEnterDuration),
+            value: app.phoneMenuBackdropStrength
+        )
+        .overlay {
+            notes1718BackdropDimOverlay
+        }
+        .compositingGroup()
+        .modifier(
+            Notes1718FromViewModalLayer(
+                progress: transitionProgress,
+                screenWidth: width,
+                screenHeight: height,
+                safeTop: safeTop
+            )
+        )
+    }
+
+    private func notes1718ToolbarScrollReserve(safeBottom: CGFloat) -> CGFloat {
+        let barH = NotesDesignTokens.Layout.bottomToolbarHeight
+        let chromeAbove = NotesStyle1718Tokens.chromeAboveToolbar
+        return chromeAbove
+            + barH
+            + safeBottom
+            + NotesStyle1718Tokens.unifiedBottomPlateExtraDownShift
+    }
+
+    /// 1718 一体板底栏：与 classicBottomBar 同结构的可见纸底板 + 按键居中
+    private func notes1718BottomToolbarOverlay(safeBottom: CGFloat) -> some View {
+        let barH = NotesDesignTokens.Layout.bottomToolbarHeight
+        let chromeAbove = NotesStyle1718Tokens.chromeAboveToolbar
+        let plateDown = NotesStyle1718Tokens.unifiedBottomPlateExtraDownShift
+        let iconBandHeight = chromeAbove + barH
+
+        return ZStack(alignment: .bottom) {
+            GeometryReader { proxy in
+                let homeIndicator = max(proxy.safeAreaInsets.bottom, safeBottom)
+                let plateHeight = iconBandHeight + homeIndicator + plateDown
+
+                paper1718
+                    .frame(maxWidth: .infinity)
+                    .frame(height: plateHeight)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
+            }
+            .ignoresSafeArea(edges: .bottom)
+
+            ZStack {
+                classicBottomBarIcons
+                    .padding(.horizontal, NotesDesignTokens.Official.Nav.horizontalMargin)
+            }
+            .frame(height: iconBandHeight)
+            .padding(.bottom, safeBottom)
+        }
+        .frame(height: iconBandHeight + plateDown)
+        .frame(maxWidth: .infinity)
+    }
+
+    /// 与 iOS 26 composeBackdropDim 同思路：黑色遮罩压暗，避免 ignoresSafeArea 顶/底栏不吃 opacity 叠出亮层
+    @ViewBuilder
+    private var notes1718BackdropDimOverlay: some View {
+        let amount = notes1718BackdropDimAmount
+        if amount > 0.001 {
+            Color.black
+                .opacity(amount)
+                .ignoresSafeArea()
+                .allowsHitTesting(false)
+        }
+    }
+
+    private var notes1718BackdropDimAmount: CGFloat {
+        guard app.notesStyleIOS1718, app.showIMessage || transitionProgress > 0.001 else {
+            return 0
+        }
+        let p = min(max(transitionProgress, 0), 1)
+        return p * (1 - IMessage1718DesignTokens.fromViewEndAlpha)
+    }
+
+    private var notes1718ScrollBody: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            ZStack(alignment: .topLeading) {
+                if app.noteTitle.isEmpty {
+                    Text("标题")
+                        .font(IOSTheme.titleFont)
+                        .foregroundStyle(IOSTheme.labelTertiary)
+                        .allowsHitTesting(false)
+                }
+                NotesTitleEditor(
+                    text: $app.noteTitle,
+                    usesIOS1718Style: true,
+                    tuning1718: app.notes1718Tuning
+                )
+                .fixedSize(horizontal: false, vertical: true)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.leading, NotesDesignTokens.Layout.titlePhoneAlignedLeadingInset)
+            .padding(.trailing, NotesDesignTokens.Layout.titlePhoneAlignedTrailingInset)
+            .padding(.bottom, NotesDesignTokens.Layout.titleToBodyGap)
+
+            NotesBodyEditor(
+                text: $app.noteBody,
+                hiddenPhone: hiddenPhoneForMenu,
+                usesIOS1718Style: true,
+                tuning1718: app.notes1718Tuning
+            ) { phone, windowRect, presentation in
+                guard app.canUseSimulationFeatures else {
+                    app.presentActivationRequired()
+                    return
+                }
+                app.selectedPhone = phone
+                app.phoneMenuPresentation = presentation
+                app.phoneMenuAnchor = windowRect
+                frozenWindowAnchor = windowRect
+                frozenMenuAnchor = localAnchor(windowRect)
+                withAnimation(.spring(response: 0.48, dampingFraction: 0.82)) {
+                    app.showPhoneMenu = true
+                }
+            }
+            .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(.horizontal, NotesDesignTokens.Layout.contentInset)
+        .padding(.top, 6)
+    }
+
     private var notesPaperBackground: some View {
         Group {
             if app.notesStyleIOS1718 {
-                NotesStyle1718Tokens.paperBackground
+                app.notes1718Tuning.paperBackgroundColor()
             } else {
                 IOSTheme.notesPaper
             }
         }
     }
 
-    /// 上弹匀速；下收保持原弹簧
+    private var paper1718: Color {
+        app.notes1718Tuning.paperBackgroundColor()
+    }
+
+    /// 1718：打开/关闭信息页动画（easeOut，时长见 messagesPresentDuration）
     private var imessageTransitionAnimation: Animation {
-        app.showIMessage
+        if app.notesStyleIOS1718 {
+            return app.showIMessage
+                ? .easeOut(duration: IMessage1718DesignTokens.messagesPresentDuration)
+                : .easeOut(duration: IMessage1718DesignTokens.messagesDismissDuration)
+        }
+        return app.showIMessage
             ? .linear(duration: IMessageDesignTokens.presentLinearDuration)
             : .spring(
                 response: IMessageDesignTokens.dismissSpringResponse,
                 dampingFraction: IMessageDesignTokens.dismissSpringDamping
             )
+    }
+
+    private var notes1718FromViewOpenAnimation: Animation {
+        .easeOut(duration: IMessage1718DesignTokens.systemModalDuration)
+    }
+
+    private var notes1718FromViewCloseAnimation: Animation {
+        .easeOut(duration: IMessage1718DesignTokens.fromViewDismissDuration)
+    }
+
+    private var notes1718MessagesOpenAnimation: Animation {
+        .easeOut(duration: IMessage1718DesignTokens.messagesPresentDuration)
+    }
+
+    private var notes1718MessagesCloseAnimation: Animation {
+        .easeOut(duration: IMessage1718DesignTokens.messagesDismissDuration)
+    }
+
+    private func resolvedScreenHeight() -> CGFloat {
+        max(keyWindow?.bounds.height ?? 0, UIScreen.main.bounds.height)
     }
 
     private func localAnchor(_ windowRect: CGRect) -> CGRect {
@@ -128,7 +428,9 @@ struct NotesView: View {
                     }
                     NotesTitleEditor(
                         text: $app.noteTitle,
-                        usesIOS1718Style: app.notesStyleIOS1718
+                        usesIOS1718Style: app.notesStyleIOS1718,
+                        tuning1718: app.notes1718Tuning,
+                        tuning26: app.notes26Tuning
                     )
                         .fixedSize(horizontal: false, vertical: true)
                 }
@@ -139,14 +441,19 @@ struct NotesView: View {
 
                 NotesBodyEditor(
                     text: $app.noteBody,
-                    hiddenPhone: app.showPhoneMenu ? app.selectedPhone : nil
-                ) { phone, windowRect in
+                    hiddenPhone: hiddenPhoneForMenu,
+                    usesIOS1718Style: app.notesStyleIOS1718,
+                    tuning1718: app.notes1718Tuning,
+                    tuning26: app.notes26Tuning
+                ) { phone, windowRect, presentation in
                     guard app.canUseSimulationFeatures else {
                         app.presentActivationRequired()
                         return
                     }
                     app.selectedPhone = phone
+                    app.phoneMenuPresentation = presentation
                     app.phoneMenuAnchor = windowRect
+                    frozenWindowAnchor = windowRect
                     frozenMenuAnchor = localAnchor(windowRect)
                     withAnimation(.spring(response: 0.48, dampingFraction: 0.82)) {
                         app.showPhoneMenu = true
@@ -156,7 +463,7 @@ struct NotesView: View {
             }
             .padding(.horizontal, NotesDesignTokens.Layout.contentInset)
             .padding(.top, 6)
-            .padding(.bottom, 8)
+            .padding(.bottom, 8 + bottomToolbarReserve)
         }
         .overlay(alignment: .top) {
             if !app.notesStyleIOS1718 {
@@ -167,8 +474,25 @@ struct NotesView: View {
         .safeAreaInset(edge: .top, spacing: 0) {
             navBar
         }
-        .safeAreaInset(edge: .bottom, spacing: 0) {
+        .overlay(alignment: .bottom) {
             bottomBar
+                .ignoresSafeArea(.keyboard, edges: .bottom)
+        }
+        .sheet(isPresented: $showTuningPanel) {
+            if app.notesStyleIOS1718 {
+                Notes1718TuningPanel(settings: $app.notes1718Tuning)
+            } else {
+                Notes26TuningPanel(settings: $app.notes26Tuning)
+            }
+        }
+        .background {
+            GeometryReader { geo in
+                Color.clear
+                    .onAppear { bottomSafeInset = geo.safeAreaInsets.bottom }
+                    .onChange(of: geo.safeAreaInsets.bottom) {
+                        bottomSafeInset = $0
+                    }
+            }
         }
         .onAppear {
             noteDisplayedDate = Date()
@@ -185,8 +509,39 @@ struct NotesView: View {
         }
     }
 
+    private var hiddenPhoneForMenu: String? {
+        guard app.showPhoneMenu, let phone = app.selectedPhone else { return nil }
+        if app.notesStyleIOS1718, app.phoneMenuPresentation == .longPress {
+            return phone
+        }
+        if app.notesStyleIOS1718 { return nil }
+        return phone
+    }
+
+    /// 长按时糊正文/顶栏/底栏，纸面背景保持清晰
+    private var longPressNotesBlurRadius: CGFloat {
+        guard app.notesStyleIOS1718,
+              app.showPhoneMenu,
+              app.phoneMenuPresentation == .longPress else { return 0 }
+        return CGFloat(app.notes1718Tuning.longPressTextBlurRadius) * CGFloat(app.phoneMenuBackdropStrength)
+    }
+
     private func touchNoteDate() {
         noteDisplayedDate = Date()
+    }
+
+    /// 为底栏预留滚动空间（底栏 overlay 固定屏幕底部，不随键盘上移）
+    private var bottomToolbarReserve: CGFloat {
+        let barH = NotesDesignTokens.Layout.bottomToolbarHeight
+        let gap = NotesDesignTokens.Official.Toolbar.bottomSafeGap
+        if app.notesStyleIOS1718 {
+            return barH
+                + NotesStyle1718Tokens.toolbarExtraDownShift
+                + NotesStyle1718Tokens.chromeAboveToolbar
+                + gap
+                + bottomSafeInset
+        }
+        return barH + gap + bottomSafeInset
     }
 
     private var navBar: some View {
@@ -209,10 +564,9 @@ struct NotesView: View {
         return ZStack(alignment: .top) {
             GeometryReader { proxy in
                 let safeTop = resolvedStatusBarTop(fallback: proxy.safeAreaInsets.top)
-                // 底板贴屏幕最顶；下缘到导航栏下方 chromeBelow（与底栏对称）
                 let plateHeight = safeTop + navH + chromeBelow
 
-                NotesStyle1718Tokens.paperBackground
+                paper1718
                     .frame(maxWidth: .infinity)
                     .frame(height: plateHeight)
                     .offset(y: -safeTop)
@@ -224,7 +578,6 @@ struct NotesView: View {
                 .padding(.horizontal, NotesDesignTokens.Official.Nav.horizontalMargin)
                 .frame(height: navH)
                 .frame(maxWidth: .infinity)
-                .background(NotesStyle1718Tokens.paperBackground)
         }
         .frame(height: navH + chromeBelow)
         .frame(maxWidth: .infinity)
@@ -302,7 +655,12 @@ struct NotesView: View {
                     NotesDesignTokens.Official.Toolbar.markupIcon,
                 ],
                 iconSize: NotesDesignTokens.Official.Toolbar.iconSize,
-                weight: NotesDesignTokens.Official.Toolbar.iconWeight
+                weight: NotesDesignTokens.Official.Toolbar.iconWeight,
+                onTap: { index in
+                    if index == 0 {
+                        showTuningPanel = true
+                    }
+                }
             )
 
             Spacer(minLength: 0)
@@ -311,6 +669,38 @@ struct NotesView: View {
                 systemName: NotesDesignTokens.Official.Toolbar.composeIcon,
                 iconSize: NotesDesignTokens.Official.Toolbar.iconSize,
                 weight: NotesDesignTokens.Official.Toolbar.iconWeight
+            ) {}
+        }
+    }
+
+    private var classicBottomBarIcons: some View {
+        HStack(spacing: 0) {
+            NotesClassicIconButton(
+                systemName: NotesStyle1718Tokens.toolbarChecklistIcon,
+                iconSize: NotesStyle1718Tokens.toolbarIconSize
+            ) {
+                showTuningPanel = true
+            }
+
+            Spacer(minLength: 0)
+
+            NotesClassicIconButton(
+                systemName: NotesStyle1718Tokens.toolbarCameraIcon,
+                iconSize: NotesStyle1718Tokens.toolbarIconSize
+            ) {}
+
+            Spacer(minLength: 0)
+
+            NotesClassicIconButton(
+                systemName: NotesStyle1718Tokens.toolbarMarkupIcon,
+                iconSize: NotesStyle1718Tokens.toolbarIconSize
+            ) {}
+
+            Spacer(minLength: 0)
+
+            NotesClassicIconButton(
+                systemName: NotesStyle1718Tokens.toolbarComposeIcon,
+                iconSize: NotesStyle1718Tokens.toolbarIconSize
             ) {}
         }
     }
@@ -324,42 +714,19 @@ struct NotesView: View {
         return ZStack(alignment: .bottom) {
             GeometryReader { proxy in
                 let homeIndicator = proxy.safeAreaInsets.bottom
-                // 底板贴屏幕最底；上缘仅到图标上方 chromeAbove，不随图标 offset
                 let plateHeight = chromeAbove + barH + down + homeIndicator
 
-                NotesStyle1718Tokens.paperBackground
+                paper1718
                     .frame(maxWidth: .infinity)
                     .frame(height: plateHeight)
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
             }
             .ignoresSafeArea(edges: .bottom)
 
-            HStack(alignment: .center) {
-                HStack(spacing: NotesStyle1718Tokens.toolbarSpacing) {
-                    NotesClassicIconButton(
-                        systemName: NotesStyle1718Tokens.toolbarChecklistIcon,
-                        iconSize: NotesStyle1718Tokens.toolbarIconSize
-                    ) {}
-                    NotesClassicIconButton(
-                        systemName: NotesStyle1718Tokens.toolbarCameraIcon,
-                        iconSize: NotesStyle1718Tokens.toolbarIconSize
-                    ) {}
-                    NotesClassicIconButton(
-                        systemName: NotesStyle1718Tokens.toolbarMarkupIcon,
-                        iconSize: NotesStyle1718Tokens.toolbarIconSize
-                    ) {}
-                }
-
-                Spacer(minLength: 0)
-
-                NotesClassicIconButton(
-                    systemName: NotesStyle1718Tokens.toolbarComposeIcon,
-                    iconSize: NotesStyle1718Tokens.toolbarIconSize
-                ) {}
-            }
-            .padding(.horizontal, NotesDesignTokens.Official.Nav.horizontalMargin)
-            .padding(.bottom, bottomGap)
-            .offset(y: down)
+            classicBottomBarIcons
+                .padding(.horizontal, NotesDesignTokens.Official.Nav.horizontalMargin)
+                .padding(.bottom, bottomGap)
+                .offset(y: down)
         }
         .frame(height: barH + down)
         .frame(maxWidth: .infinity)
@@ -371,6 +738,11 @@ struct NotesView: View {
         return max(fallback, windowTop)
     }
 
+    private func resolvedHomeIndicatorBottom(fallback: CGFloat) -> CGFloat {
+        let windowBottom = keyWindow?.safeAreaInsets.bottom ?? 0
+        return max(fallback, windowBottom)
+    }
+
     private var keyWindow: UIWindow? {
         UIApplication.shared.connectedScenes
             .compactMap { $0 as? UIWindowScene }
@@ -378,16 +750,40 @@ struct NotesView: View {
             .first { $0.isKeyWindow }
     }
 
+    /// 1718 打开信息：菜单淡出 → 备忘录缩小 + 信息页一体上滑（并行，各自动画 token）
     private func openIMessage() {
         guard app.canUseSimulationFeatures else {
             app.presentActivationRequired()
             return
         }
-        app.showPhoneMenu = false
-        app.showIMessage = true
+        if app.notesStyleIOS1718 {
+            ComposeThread1718PinWarmup.refresh(app: app)
+            withAnimation(.easeIn(duration: IMessage1718DesignTokens.phoneMenuFadeOutDuration)) {
+                app.showPhoneMenu = false
+                app.phoneMenuBackdropStrength = 0
+            }
+            withAnimation(notes1718FromViewOpenAnimation) {
+                transitionProgress = 1
+            }
+            withAnimation(notes1718MessagesOpenAnimation) {
+                app.showIMessage = true
+            }
+        } else {
+            app.showPhoneMenu = false
+            app.showIMessage = true
+        }
     }
 
     private func closeIMessage() {
-        app.showIMessage = false
+        if app.notesStyleIOS1718 {
+            withAnimation(notes1718MessagesCloseAnimation) {
+                app.showIMessage = false
+            }
+            withAnimation(notes1718FromViewCloseAnimation) {
+                transitionProgress = 0
+            }
+        } else {
+            app.showIMessage = false
+        }
     }
 }

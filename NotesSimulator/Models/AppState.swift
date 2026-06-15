@@ -162,9 +162,14 @@ final class AppState: ObservableObject {
     @Published var threadHeaderStyleIOS264 = false
     /// 备忘录页 iOS 17–18 扁平金黄样式（与系统版本无关，仅改展示）
     @Published var notesStyleIOS1718 = false
+    @Published var notes1718Tuning = Notes1718TuningSettings.default
+    @Published var notes26Tuning = Notes26TuningSettings.default
     @Published var selectedPhone: String?
     @Published var phoneMenuAnchor: CGRect = .zero
     @Published var showPhoneMenu = false
+    @Published var phoneMenuPresentation: PhoneMenuPresentation = .longPress
+    /// 长按菜单压暗 + 正文模糊强度（0 正常，1 完全生效）
+    @Published var phoneMenuBackdropStrength: Double = 0
     @Published var showIMessage = false
     @Published var activationExpiresAt: Date?
     @Published var activationCode: String?
@@ -184,6 +189,8 @@ final class AppState: ObservableObject {
         if let saved = AppStateStore.load() {
             applySnapshot(saved)
         }
+        notes1718Tuning = Notes1718TuningStore.load()
+        notes26Tuning = Notes26TuningStore.load()
         isHydrating = false
         if activationMode == .clicks {
             screen = .home
@@ -191,7 +198,9 @@ final class AppState: ObservableObject {
         }
         installPersistence()
         startPeriodicActivationCheck()
-        Task { await refreshActivationOnLaunch() }
+        Task { @MainActor in
+            await refreshActivationOnLaunch()
+        }
     }
 
     /// 每 5 分钟校验时间码是否到期（本地 + 联网时同步 Realtime Database）
@@ -465,6 +474,8 @@ final class AppState: ObservableObject {
             $threadTimeRangeInput.map { _ in () }.eraseToAnyPublisher(),
             $threadHeaderStyleIOS264.map { _ in () }.eraseToAnyPublisher(),
             $notesStyleIOS1718.map { _ in () }.eraseToAnyPublisher(),
+            $notes1718Tuning.map { _ in () }.eraseToAnyPublisher(),
+            $notes26Tuning.map { _ in () }.eraseToAnyPublisher(),
             $activationExpiresAt.map { _ in () }.eraseToAnyPublisher(),
             $activationCode.map { _ in () }.eraseToAnyPublisher(),
             $activationBoundUID.map { _ in () }.eraseToAnyPublisher(),
@@ -478,6 +489,19 @@ final class AppState: ObservableObject {
                 self?.persist()
             }
             .store(in: &cancellables)
+
+        Publishers.CombineLatest4(
+            $messageText,
+            $simCardMode,
+            $notes1718Tuning.map { $0.bubbleTailPresetID }.eraseToAnyPublisher(),
+            $notesStyleIOS1718
+        )
+        .debounce(for: .milliseconds(120), scheduler: RunLoop.main)
+        .sink { [weak self] _, _, _, _ in
+            guard let self else { return }
+            ComposeThread1718PinWarmup.refresh(app: self)
+        }
+        .store(in: &cancellables)
     }
 
     private func applySnapshot(_ snapshot: AppStateSnapshot) {
@@ -539,6 +563,8 @@ final class AppState: ObservableObject {
     private func persist() {
         guard !isHydrating else { return }
         AppStateStore.save(makeSnapshot())
+        Notes1718TuningStore.save(notes1718Tuning)
+        Notes26TuningStore.save(notes26Tuning)
     }
 }
 

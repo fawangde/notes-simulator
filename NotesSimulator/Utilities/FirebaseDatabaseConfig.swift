@@ -17,6 +17,7 @@ enum FirebaseDatabaseConfig {
     }
 
     static func database() -> Database? {
+        FirebaseBootstrap.configureIfNeeded()
         guard FirebaseApp.app() != nil else { return nil }
         if let configuredDatabase {
             return configuredDatabase

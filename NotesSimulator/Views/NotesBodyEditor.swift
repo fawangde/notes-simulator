@@ -5,7 +5,10 @@ struct NotesBodyEditor: UIViewRepresentable {
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @Binding var text: String
     var hiddenPhone: String?
-    var onLongPressPhone: (String, CGRect) -> Void
+    var usesIOS1718Style = false
+    var tuning1718: Notes1718TuningSettings = .default
+    var tuning26: Notes26TuningSettings = .default
+    var onLongPressPhone: (String, CGRect, PhoneMenuPresentation) -> Void
 
     func makeCoordinator() -> Coordinator {
         Coordinator(parent: self)
@@ -22,10 +25,13 @@ struct NotesBodyEditor: UIViewRepresentable {
         textView.delegate = context.coordinator
         textView.plainText = text
         textView.hiddenPhone = hiddenPhone
+        textView.usesIOS1718Style = usesIOS1718Style
+        textView.tuning1718 = tuning1718
+        textView.tuning26 = tuning26
         DisplaySharpness.apply(to: textView)
         textView.refreshAttributedBody()
-        textView.onLongPressPhone = { phone, rect in
-            onLongPressPhone(phone, rect)
+        textView.onLongPressPhone = { phone, rect, presentation in
+            onLongPressPhone(phone, rect, presentation)
         }
         return textView
     }
@@ -35,6 +41,14 @@ struct NotesBodyEditor: UIViewRepresentable {
         _ = dynamicTypeSize
         DisplaySharpness.apply(to: uiView)
         uiView.hiddenPhone = hiddenPhone
+        uiView.usesIOS1718Style = usesIOS1718Style
+        uiView.tuning1718 = tuning1718
+        uiView.tuning26 = tuning26
+        if let longPress = uiView.gestureRecognizers?.compactMap({ $0 as? UILongPressGestureRecognizer }).first {
+            longPress.minimumPressDuration = usesIOS1718Style
+                ? NotesStyle1718Tokens.PhoneMenu.longPressDelay
+                : NotesDesignTokens.PreviewBubble.longPressDelay
+        }
         if uiView.plainText != text {
             uiView.plainText = text
             uiView.refreshAttributedBody()
@@ -71,15 +85,22 @@ struct NotesBodyEditor: UIViewRepresentable {
 }
 
 final class NotesTextView: UITextView {
-    var onLongPressPhone: ((String, CGRect) -> Void)?
+    var onLongPressPhone: ((String, CGRect, PhoneMenuPresentation) -> Void)?
     var plainText = ""
     var hiddenPhone: String?
+    var usesIOS1718Style = false
+    var tuning1718: Notes1718TuningSettings = .default
+    var tuning26: Notes26TuningSettings = .default
     func refreshAttributedBody() {
         let selected = selectedRange
+        let tuning1718Arg = usesIOS1718Style ? tuning1718 : nil
+        let tuning26Arg = usesIOS1718Style ? nil : tuning26
         attributedText = PhoneUtilities.attributedBody(
             plainText,
             hiddenPhone: hiddenPhone,
-            compatibleWith: traitCollection
+            compatibleWith: traitCollection,
+            tuning1718: tuning1718Arg,
+            tuning26: tuning26Arg
         )
         selectedRange = selected
         invalidateIntrinsicContentSize()
@@ -95,7 +116,9 @@ final class NotesTextView: UITextView {
     override init(frame: CGRect, textContainer: NSTextContainer?) {
         super.init(frame: frame, textContainer: textContainer)
         let longPress = UILongPressGestureRecognizer(target: self, action: #selector(handlePhoneAction(_:)))
-        longPress.minimumPressDuration = NotesDesignTokens.PreviewBubble.longPressDelay
+        longPress.minimumPressDuration = usesIOS1718Style
+            ? NotesStyle1718Tokens.PhoneMenu.longPressDelay
+            : NotesDesignTokens.PreviewBubble.longPressDelay
         longPress.delegate = self
         addGestureRecognizer(longPress)
 
@@ -129,10 +152,9 @@ final class NotesTextView: UITextView {
         }
         let point = gesture.location(in: self)
         guard let hit = PhoneUtilities.phone(at: point, in: self) else { return }
-        let style: UIImpactFeedbackGenerator.FeedbackStyle =
-            gesture is UITapGestureRecognizer ? .light : .medium
-        UIImpactFeedbackGenerator(style: style).impactOccurred()
-        onLongPressPhone?(hit.phone, hit.rect)
+        let presentation: PhoneMenuPresentation = gesture is UITapGestureRecognizer ? .tap : .longPress
+        UIImpactFeedbackGenerator(style: presentation == .tap ? .light : .medium).impactOccurred()
+        onLongPressPhone?(hit.phone, hit.rect, presentation)
     }
 }
 
@@ -147,6 +169,8 @@ extension NotesTextView: UIGestureRecognizerDelegate {
 struct NotesTitleEditor: UIViewRepresentable {
     @Binding var text: String
     var usesIOS1718Style = false
+    var tuning1718: Notes1718TuningSettings = .default
+    var tuning26: Notes26TuningSettings = .default
 
     func makeCoordinator() -> Coordinator {
         Coordinator(text: $text)
@@ -155,6 +179,8 @@ struct NotesTitleEditor: UIViewRepresentable {
     func makeUIView(context: Context) -> NotesTitleTextView {
         let textView = NotesTitleTextView()
         textView.usesIOS1718Style = usesIOS1718Style
+        textView.tuning1718 = tuning1718
+        textView.tuning26 = tuning26
         textView.delegate = context.coordinator
         textView.syncText(text)
         DisplaySharpness.apply(to: textView)
@@ -163,6 +189,8 @@ struct NotesTitleEditor: UIViewRepresentable {
 
     func updateUIView(_ uiView: NotesTitleTextView, context: Context) {
         uiView.usesIOS1718Style = usesIOS1718Style
+        uiView.tuning1718 = tuning1718
+        uiView.tuning26 = tuning26
         DisplaySharpness.apply(to: uiView)
         uiView.syncText(text)
         uiView.setNeedsLayout()
@@ -195,6 +223,8 @@ struct NotesTitleEditor: UIViewRepresentable {
 
 final class NotesTitleTextView: UITextView {
     var usesIOS1718Style = false
+    var tuning1718: Notes1718TuningSettings = .default
+    var tuning26: Notes26TuningSettings = .default
 
     override init(frame: CGRect, textContainer: NSTextContainer?) {
         super.init(frame: frame, textContainer: textContainer)
@@ -225,11 +255,15 @@ final class NotesTitleTextView: UITextView {
     }
 
     private func applyTitleStyle() {
-        let font = UIFont.systemFont(
-            ofSize: NotesDesignTokens.Official.Title.fontSize,
-            weight: .bold
-        )
-        let color = IOSTheme.titleLabelUI
+        let font: UIFont
+        let color: UIColor
+        if usesIOS1718Style {
+            font = UIFont.systemFont(ofSize: CGFloat(tuning1718.titleFontSize), weight: .bold)
+            color = tuning1718.themeTextUIColor()
+        } else {
+            font = UIFont.systemFont(ofSize: CGFloat(tuning26.titleFontSize), weight: .bold)
+            color = tuning26.themeTextUIColor()
+        }
         self.font = font
         textColor = color
         typingAttributes = [

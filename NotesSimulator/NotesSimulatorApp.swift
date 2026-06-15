@@ -1,10 +1,21 @@
+import FirebaseCore
 import SwiftUI
 
 @main
 struct NotesSimulatorApp: App {
     @UIApplicationDelegateAdaptor(NotesAppDelegate.self) private var appDelegate
     @Environment(\.scenePhase) private var scenePhase
-    @StateObject private var appState = AppState()
+    @StateObject private var appState: AppState
+
+    init() {
+        FirebaseBootstrap.configureIfNeeded()
+        #if DEBUG
+        if FirebaseApp.app() == nil {
+            print("[Firebase] configure 未成功，请确认 GoogleService-Info.plist 已加入 NotesSimulator target")
+        }
+        #endif
+        _appState = StateObject(wrappedValue: AppState())
+    }
 
     var body: some Scene {
         WindowGroup {

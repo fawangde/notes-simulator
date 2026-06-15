@@ -15,6 +15,14 @@ enum PhoneUtilities {
     /// 预览泡内号码左移字宽数（泡左缘不动，右侧同比收窄以保持居中）
     static let previewBubbleNumberShiftLeftDigits: CGFloat = 0.5
 
+    static func formatSpacedMobile(_ phone: String) -> String {
+        let digits = phone.filter(\.isNumber)
+        guard digits.count == 11 else { return phone }
+        let i = digits.index(digits.startIndex, offsetBy: 3)
+        let j = digits.index(i, offsetBy: 4)
+        return "\(digits[..<i]) \(digits[i..<j]) \(digits[j...])"
+    }
+
     static func formatIMessage(_ phone: String) -> String {
         guard phone.count == 11 else { return phone }
         let a = phone.prefix(3)
@@ -28,17 +36,47 @@ enum PhoneUtilities {
     static func attributedBody(
         _ text: String,
         hiddenPhone: String? = nil,
-        compatibleWith traitCollection: UITraitCollection = .current
+        compatibleWith traitCollection: UITraitCollection = .current,
+        tuning1718: Notes1718TuningSettings? = nil,
+        tuning26: Notes26TuningSettings? = nil
     ) -> NSAttributedString {
-        let bodyFont = IOSTheme.bodyUIFont(compatibleWith: traitCollection)
-        let phoneFont = IOSTheme.phoneUIFont(
-            baseSize: NotesDesignTokens.PhoneLink.fontSize,
+        let bodyBaseSize: CGFloat
+        let phoneBaseSize: CGFloat
+        let textColor: UIColor
+        let rowHeight: CGFloat
+        let paragraphGap: CGFloat
+
+        if let tuning1718 {
+            bodyBaseSize = CGFloat(tuning1718.bodyFontSize)
+            phoneBaseSize = CGFloat(tuning1718.phoneFontSize)
+            textColor = tuning1718.themeTextUIColor()
+            rowHeight = tuning1718.bodyPhoneLineHeight
+            paragraphGap = tuning1718.bodyPhoneParagraphSpacing
+        } else if let tuning26 {
+            bodyBaseSize = CGFloat(tuning26.bodyFontSize)
+            phoneBaseSize = CGFloat(tuning26.phoneFontSize)
+            textColor = tuning26.bodyTextUIColor()
+            rowHeight = tuning26.bodyPhoneLineHeight
+            paragraphGap = tuning26.bodyPhoneParagraphSpacing
+        } else {
+            bodyBaseSize = NotesDesignTokens.Official.Body.fontSize
+            phoneBaseSize = NotesDesignTokens.PhoneLink.fontSize
+            textColor = NotesSemanticColor.labelUI
+            let scale = CGFloat(1)
+            rowHeight = NotesDesignTokens.Official.Body.phoneListRowHeight * scale
+            paragraphGap = NotesDesignTokens.Official.Body.phoneListParagraphSpacing * scale
+        }
+
+        let bodyFont = IOSTheme.scaledUIFont(
+            baseSize: bodyBaseSize,
+            weight: NotesDesignTokens.Official.Body.weight,
             compatibleWith: traitCollection
         )
-        let scale = phoneFont.pointSize / NotesDesignTokens.Official.Body.fontSize
-        let rowHeight = NotesDesignTokens.Official.Body.phoneListRowHeight * scale
-        let paragraphGap = NotesDesignTokens.Official.Body.phoneListParagraphSpacing * scale
-        let indentWidth = NotesDesignTokens.oneDigitWidth(for: NotesDesignTokens.PhoneLink.fontSize) * phoneLeadingDigitSpacing
+        let phoneFont = IOSTheme.phoneUIFont(
+            baseSize: phoneBaseSize,
+            compatibleWith: traitCollection
+        )
+        let indentWidth = NotesDesignTokens.oneDigitWidth(for: phoneBaseSize) * phoneLeadingDigitSpacing
 
         let baseStyle = NSMutableParagraphStyle()
         baseStyle.minimumLineHeight = rowHeight
@@ -48,7 +86,7 @@ enum PhoneUtilities {
 
         let baseAttrs: [NSAttributedString.Key: Any] = [
             .font: bodyFont,
-            .foregroundColor: IOSTheme.labelPrimaryUI,
+            .foregroundColor: textColor,
             .paragraphStyle: baseStyle,
         ]
 

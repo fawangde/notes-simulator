@@ -6,9 +6,7 @@ final class NotesAppDelegate: NSObject, UIApplicationDelegate {
         _ application: UIApplication,
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
     ) -> Bool {
-        if FirebaseApp.app() == nil {
-            FirebaseApp.configure()
-        }
+        FirebaseBootstrap.configureIfNeeded()
         _ = FirebaseDatabaseConfig.database()
         return true
     }

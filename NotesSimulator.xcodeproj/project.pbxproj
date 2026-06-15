@@ -41,6 +41,11 @@
 		BF0000010000000000000029 /* ComposeGlassSurface.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR0000010000000000000031 /* ComposeGlassSurface.swift */; };
 		BF000001000000000000002A /* ComposeBackdropDim.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR0000010000000000000032 /* ComposeBackdropDim.swift */; };
 		BF000001000000000000002B /* ComposeThreadBackdropHost.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR0000010000000000000033 /* ComposeThreadBackdropHost.swift */; };
+		BF0000010000000000000080 /* ComposeThreadBackdropHost1718.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR0000010000000000000080 /* ComposeThreadBackdropHost1718.swift */; };
+		BF0000010000000000000081 /* Notes1718FromViewShell.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR0000010000000000000081 /* Notes1718FromViewShell.swift */; };
+		BF0000010000000000000082 /* ComposeThreadPinDebug1718.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR0000010000000000000082 /* ComposeThreadPinDebug1718.swift */; };
+		BF0000010000000000000083 /* Notes26TuningSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR0000010000000000000083 /* Notes26TuningSettings.swift */; };
+		BF0000010000000000000084 /* Notes26TuningPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR0000010000000000000084 /* Notes26TuningPanel.swift */; };
 		BF000001000000000000002C /* ComposeMaterialRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR0000010000000000000034 /* ComposeMaterialRenderer.swift */; };
 		BF000001000000000000002D /* IOSOutgoingChatBubble.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR0000010000000000000035 /* IOSOutgoingChatBubble.swift */; };
 		BF0000010000000000000040 /* BubbleRenderParams.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR0000010000000000000040 /* BubbleRenderParams.swift */; };
@@ -59,9 +64,32 @@
 		BF0000010000000000000059 /* FirebaseReachability.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR0000010000000000000059 /* FirebaseReachability.swift */; };
 		BF0000010000000000000060 /* DeviceIdentity.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR0000010000000000000060 /* DeviceIdentity.swift */; };
 		BF0000010000000000000061 /* FirebaseDatabaseConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR0000010000000000000061 /* FirebaseDatabaseConfig.swift */; };
+		BF0000010000000000000075 /* FirebaseBootstrap.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR0000010000000000000075 /* FirebaseBootstrap.swift */; };
 		BF0000010000000000000062 /* DevelopmentFlags.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR0000010000000000000062 /* DevelopmentFlags.swift */; };
 		BF0000010000000000000063 /* NotesStyle1718Tokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR0000010000000000000063 /* NotesStyle1718Tokens.swift */; };
 		BF0000010000000000000064 /* NotesClassicControls.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR0000010000000000000064 /* NotesClassicControls.swift */; };
+		BF0000010000000000000066 /* PhoneMenuPresentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR0000010000000000000066 /* PhoneMenuPresentation.swift */; };
+		BF0000010000000000000067 /* PhoneActionMenuView1718.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR0000010000000000000067 /* PhoneActionMenuView1718.swift */; };
+		BF0000010000000000000069 /* PhoneMenu1718ProbeOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR0000010000000000000069 /* PhoneMenu1718ProbeOverlay.swift */; };
+		BF000001000000000000006A /* ContactPlaceholderAvatar1718.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR000001000000000000006A /* ContactPlaceholderAvatar1718.swift */; };
+		BF0000010000000000000068 /* PhoneMenu1718Layout.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR0000010000000000000068 /* PhoneMenu1718Layout.swift */; };
+		BF000001000000000000006B /* Notes1718TuningSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR000001000000000000006B /* Notes1718TuningSettings.swift */; };
+		BF000001000000000000006C /* Notes1718TuningPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR000001000000000000006C /* Notes1718TuningPanel.swift */; };
+		BF000001000000000000006D /* Notes1718AvatarTuningPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR000001000000000000006D /* Notes1718AvatarTuningPanel.swift */; };
+		BF000001000000000000006E /* IMessage1718DesignTokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR000001000000000000006E /* IMessage1718DesignTokens.swift */; };
+		BF000001000000000000006F /* NewIMessageView1718.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR000001000000000000006F /* NewIMessageView1718.swift */; };
+		BF0000010000000000000070 /* MessagesComposerHost1718.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR0000010000000000000070 /* MessagesComposerHost1718.swift */; };
+		BF0000010000000000000071 /* IOSOutgoingBubble1718.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR0000010000000000000071 /* IOSOutgoingBubble1718.swift */; };
+		BF0000010000000000000072 /* IMessage1718BubbleTailTuningSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR0000010000000000000072 /* IMessage1718BubbleTailTuningSettings.swift */; };
+		BF0000010000000000000073 /* IMessage1718BubbleTailPreset.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR0000010000000000000073 /* IMessage1718BubbleTailPreset.swift */; };
+		BF0000010000000000000074 /* BubbleTail1718PickerPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR0000010000000000000074 /* BubbleTail1718PickerPanel.swift */; };
+		BF0000010000000000000076 /* BubbleTail1718TuningPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR0000010000000000000076 /* BubbleTail1718TuningPanel.swift */; };
+		BF0000010000000000000077 /* BubbleTail1718ProbeOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR0000010000000000000077 /* BubbleTail1718ProbeOverlay.swift */; };
+		BF0000010000000000000078 /* BubbleTail1718ProbeRegistry.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR0000010000000000000078 /* BubbleTail1718ProbeRegistry.swift */; };
+		BF0000010000000000000079 /* BubbleTail1718AnchorEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR0000010000000000000079 /* BubbleTail1718AnchorEditor.swift */; };
+		BF000001000000000000007A /* BubbleTail1718AnchorEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR000001000000000000007A /* BubbleTail1718AnchorEditorView.swift */; };
+		BF000001000000000000007B /* BubbleTail1718ComposePlotOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR000001000000000000007B /* BubbleTail1718ComposePlotOverlay.swift */; };
+		BF000001000000000000007C /* BubbleTail1718MagnifiedPlotCanvas.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR000001000000000000007C /* BubbleTail1718MagnifiedPlotCanvas.swift */; };
 		BF0000010000000000000049 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = FR0000010000000000000049 /* GoogleService-Info.plist */; };
 		BF0000010000000000000054 /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = FIREBASE000000000002 /* FirebaseCore */; };
 		BF0000010000000000000055 /* FirebaseDatabase in Frameworks */ = {isa = PBXBuildFile; productRef = FIREBASE000000000004 /* FirebaseDatabase */; };
@@ -126,6 +154,11 @@
 		FR0000010000000000000031 /* ComposeGlassSurface.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComposeGlassSurface.swift; sourceTree = "<group>"; };
 		FR0000010000000000000032 /* ComposeBackdropDim.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComposeBackdropDim.swift; sourceTree = "<group>"; };
 		FR0000010000000000000033 /* ComposeThreadBackdropHost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComposeThreadBackdropHost.swift; sourceTree = "<group>"; };
+		FR0000010000000000000080 /* ComposeThreadBackdropHost1718.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComposeThreadBackdropHost1718.swift; sourceTree = "<group>"; };
+		FR0000010000000000000081 /* Notes1718FromViewShell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Notes1718FromViewShell.swift; sourceTree = "<group>"; };
+		FR0000010000000000000082 /* ComposeThreadPinDebug1718.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComposeThreadPinDebug1718.swift; sourceTree = "<group>"; };
+		FR0000010000000000000083 /* Notes26TuningSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Notes26TuningSettings.swift; sourceTree = "<group>"; };
+		FR0000010000000000000084 /* Notes26TuningPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Notes26TuningPanel.swift; sourceTree = "<group>"; };
 		FR0000010000000000000034 /* ComposeMaterialRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComposeMaterialRenderer.swift; sourceTree = "<group>"; };
 		FR0000010000000000000035 /* IOSOutgoingChatBubble.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IOSOutgoingChatBubble.swift; sourceTree = "<group>"; };
 		FR0000010000000000000040 /* BubbleRenderParams.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BubbleRenderParams.swift; sourceTree = "<group>"; };
@@ -143,9 +176,32 @@
 		FR0000010000000000000059 /* FirebaseReachability.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirebaseReachability.swift; sourceTree = "<group>"; };
 		FR0000010000000000000060 /* DeviceIdentity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceIdentity.swift; sourceTree = "<group>"; };
 		FR0000010000000000000061 /* FirebaseDatabaseConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirebaseDatabaseConfig.swift; sourceTree = "<group>"; };
+		FR0000010000000000000075 /* FirebaseBootstrap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirebaseBootstrap.swift; sourceTree = "<group>"; };
 		FR0000010000000000000062 /* DevelopmentFlags.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DevelopmentFlags.swift; sourceTree = "<group>"; };
 		FR0000010000000000000063 /* NotesStyle1718Tokens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotesStyle1718Tokens.swift; sourceTree = "<group>"; };
 		FR0000010000000000000064 /* NotesClassicControls.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotesClassicControls.swift; sourceTree = "<group>"; };
+		FR0000010000000000000066 /* PhoneMenuPresentation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneMenuPresentation.swift; sourceTree = "<group>"; };
+		FR0000010000000000000067 /* PhoneActionMenuView1718.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneActionMenuView1718.swift; sourceTree = "<group>"; };
+		FR0000010000000000000068 /* PhoneMenu1718Layout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneMenu1718Layout.swift; sourceTree = "<group>"; };
+		FR0000010000000000000069 /* PhoneMenu1718ProbeOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneMenu1718ProbeOverlay.swift; sourceTree = "<group>"; };
+		FR000001000000000000006A /* ContactPlaceholderAvatar1718.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContactPlaceholderAvatar1718.swift; sourceTree = "<group>"; };
+		FR000001000000000000006B /* Notes1718TuningSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Notes1718TuningSettings.swift; sourceTree = "<group>"; };
+		FR000001000000000000006C /* Notes1718TuningPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Notes1718TuningPanel.swift; sourceTree = "<group>"; };
+		FR000001000000000000006D /* Notes1718AvatarTuningPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Notes1718AvatarTuningPanel.swift; sourceTree = "<group>"; };
+		FR000001000000000000006E /* IMessage1718DesignTokens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IMessage1718DesignTokens.swift; sourceTree = "<group>"; };
+		FR000001000000000000006F /* NewIMessageView1718.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewIMessageView1718.swift; sourceTree = "<group>"; };
+		FR0000010000000000000070 /* MessagesComposerHost1718.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessagesComposerHost1718.swift; sourceTree = "<group>"; };
+		FR0000010000000000000071 /* IOSOutgoingBubble1718.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IOSOutgoingBubble1718.swift; sourceTree = "<group>"; };
+		FR0000010000000000000072 /* IMessage1718BubbleTailTuningSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IMessage1718BubbleTailTuningSettings.swift; sourceTree = "<group>"; };
+		FR0000010000000000000073 /* IMessage1718BubbleTailPreset.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IMessage1718BubbleTailPreset.swift; sourceTree = "<group>"; };
+		FR0000010000000000000074 /* BubbleTail1718PickerPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BubbleTail1718PickerPanel.swift; sourceTree = "<group>"; };
+		FR0000010000000000000076 /* BubbleTail1718TuningPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BubbleTail1718TuningPanel.swift; sourceTree = "<group>"; };
+		FR0000010000000000000077 /* BubbleTail1718ProbeOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BubbleTail1718ProbeOverlay.swift; sourceTree = "<group>"; };
+		FR0000010000000000000078 /* BubbleTail1718ProbeRegistry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BubbleTail1718ProbeRegistry.swift; sourceTree = "<group>"; };
+		FR0000010000000000000079 /* BubbleTail1718AnchorEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BubbleTail1718AnchorEditor.swift; sourceTree = "<group>"; };
+		FR000001000000000000007A /* BubbleTail1718AnchorEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BubbleTail1718AnchorEditorView.swift; sourceTree = "<group>"; };
+		FR000001000000000000007B /* BubbleTail1718ComposePlotOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BubbleTail1718ComposePlotOverlay.swift; sourceTree = "<group>"; };
+		FR000001000000000000007C /* BubbleTail1718MagnifiedPlotCanvas.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BubbleTail1718MagnifiedPlotCanvas.swift; sourceTree = "<group>"; };
 		FR0000010000000000000049 /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		FR0000010000000000000050 /* ShareViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareViewController.swift; sourceTree = "<group>"; };
 		FR0000010000000000000051 /* ImportPayload.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImportPayload.swift; sourceTree = "<group>"; };
@@ -214,6 +270,7 @@
 			children = (
 				FR0000010000000000000002 /* AppState.swift */,
 				FR0000010000000000000056 /* ActivationMode.swift */,
+				FR0000010000000000000066 /* PhoneMenuPresentation.swift */,
 				FR0000010000000000000040 /* BubbleRenderParams.swift */,
 			);
 			path = Models;
@@ -235,10 +292,20 @@
 				FR0000010000000000000059 /* FirebaseReachability.swift */,
 				FR0000010000000000000060 /* DeviceIdentity.swift */,
 				FR0000010000000000000061 /* FirebaseDatabaseConfig.swift */,
+				FR0000010000000000000075 /* FirebaseBootstrap.swift */,
 				FR0000010000000000000062 /* DevelopmentFlags.swift */,
 				FR0000010000000000000063 /* NotesStyle1718Tokens.swift */,
+				FR000001000000000000006B /* Notes1718TuningSettings.swift */,
+				FR0000010000000000000083 /* Notes26TuningSettings.swift */,
+				FR0000010000000000000082 /* ComposeThreadPinDebug1718.swift */,
+				FR0000010000000000000068 /* PhoneMenu1718Layout.swift */,
 				FR0000010000000000000018 /* DisplaySharpness.swift */,
 				FR0000010000000000000022 /* IMessageDesignTokens.swift */,
+				FR000001000000000000006E /* IMessage1718DesignTokens.swift */,
+				FR0000010000000000000072 /* IMessage1718BubbleTailTuningSettings.swift */,
+				FR0000010000000000000073 /* IMessage1718BubbleTailPreset.swift */,
+				FR0000010000000000000078 /* BubbleTail1718ProbeRegistry.swift */,
+				FR0000010000000000000079 /* BubbleTail1718AnchorEditor.swift */,
 			);
 			path = Utilities;
 			sourceTree = "<group>";
@@ -253,15 +320,26 @@
 				FR0000010000000000000007 /* NotesBodyEditor.swift */,
 				FR0000010000000000000008 /* PhoneActionMenuView.swift */,
 				FR0000010000000000000009 /* NewIMessageView.swift */,
+				FR000001000000000000006F /* NewIMessageView1718.swift */,
 				FR0000010000000000000025 /* SystemGlassEffectView.swift */,
 				FR0000010000000000000026 /* SystemPopoverGlassView.swift */,
 				FR0000010000000000000027 /* MessagesComposerHost.swift */,
+				FR0000010000000000000070 /* MessagesComposerHost1718.swift */,
 				FR0000010000000000000028 /* MessagesComposeHairline.swift */,
 				FR0000010000000000000031 /* ComposeGlassSurface.swift */,
 				FR0000010000000000000032 /* ComposeBackdropDim.swift */,
 				FR0000010000000000000033 /* ComposeThreadBackdropHost.swift */,
+				FR0000010000000000000080 /* ComposeThreadBackdropHost1718.swift */,
+				FR0000010000000000000081 /* Notes1718FromViewShell.swift */,
 				FR0000010000000000000034 /* ComposeMaterialRenderer.swift */,
 				FR0000010000000000000035 /* IOSOutgoingChatBubble.swift */,
+				FR0000010000000000000071 /* IOSOutgoingBubble1718.swift */,
+				FR0000010000000000000074 /* BubbleTail1718PickerPanel.swift */,
+				FR0000010000000000000076 /* BubbleTail1718TuningPanel.swift */,
+				FR000001000000000000007A /* BubbleTail1718AnchorEditorView.swift */,
+				FR000001000000000000007B /* BubbleTail1718ComposePlotOverlay.swift */,
+				FR000001000000000000007C /* BubbleTail1718MagnifiedPlotCanvas.swift */,
+				FR0000010000000000000077 /* BubbleTail1718ProbeOverlay.swift */,
 				FR0000010000000000000029 /* SystemMessagesMaterial.swift */,
 				FR000001000000000000002A /* IMessageBubbleBackground.swift */,
 				FR000001000000000000000C /* MessageBubbleShape.swift */,
@@ -272,6 +350,12 @@
 				FR0000010000000000000015 /* NotesTopGlassFade.swift */,
 				FR0000010000000000000016 /* NotesGlassControls.swift */,
 				FR0000010000000000000064 /* NotesClassicControls.swift */,
+				FR0000010000000000000067 /* PhoneActionMenuView1718.swift */,
+				FR0000010000000000000069 /* PhoneMenu1718ProbeOverlay.swift */,
+				FR000001000000000000006A /* ContactPlaceholderAvatar1718.swift */,
+				FR000001000000000000006C /* Notes1718TuningPanel.swift */,
+				FR0000010000000000000084 /* Notes26TuningPanel.swift */,
+				FR000001000000000000006D /* Notes1718AvatarTuningPanel.swift */,
 				FR0000010000000000000021 /* PreviewBubbleGlassBackground.swift */,
 			);
 			path = Views;
@@ -411,6 +495,7 @@
 				BF0000010000000000000007 /* NotesBodyEditor.swift in Sources */,
 				BF0000010000000000000008 /* PhoneActionMenuView.swift in Sources */,
 				BF0000010000000000000009 /* NewIMessageView.swift in Sources */,
+				BF000001000000000000006F /* NewIMessageView1718.swift in Sources */,
 				BF000001000000000000000B /* IOSTheme.swift in Sources */,
 				BF000001000000000000000C /* MessageBubbleShape.swift in Sources */,
 				BF000001000000000000000D /* ChineseKeyboardView.swift in Sources */,
@@ -432,21 +517,48 @@
 				BF0000010000000000000059 /* FirebaseReachability.swift in Sources */,
 				BF0000010000000000000060 /* DeviceIdentity.swift in Sources */,
 				BF0000010000000000000061 /* FirebaseDatabaseConfig.swift in Sources */,
+				BF0000010000000000000075 /* FirebaseBootstrap.swift in Sources */,
 				BF0000010000000000000062 /* DevelopmentFlags.swift in Sources */,
 				BF0000010000000000000063 /* NotesStyle1718Tokens.swift in Sources */,
 				BF0000010000000000000064 /* NotesClassicControls.swift in Sources */,
+				BF0000010000000000000066 /* PhoneMenuPresentation.swift in Sources */,
+				BF0000010000000000000067 /* PhoneActionMenuView1718.swift in Sources */,
+				BF0000010000000000000069 /* PhoneMenu1718ProbeOverlay.swift in Sources */,
+				BF000001000000000000006A /* ContactPlaceholderAvatar1718.swift in Sources */,
+				BF0000010000000000000068 /* PhoneMenu1718Layout.swift in Sources */,
+				BF000001000000000000006B /* Notes1718TuningSettings.swift in Sources */,
+				BF0000010000000000000083 /* Notes26TuningSettings.swift in Sources */,
+				BF000001000000000000006C /* Notes1718TuningPanel.swift in Sources */,
+				BF0000010000000000000084 /* Notes26TuningPanel.swift in Sources */,
+				BF000001000000000000006D /* Notes1718AvatarTuningPanel.swift in Sources */,
 				BF0000010000000000000016 /* DisplaySharpness.swift in Sources */,
 				BF0000010000000000000019 /* PreviewBubbleGlassBackground.swift in Sources */,
 				BF000001000000000000001A /* IMessageDesignTokens.swift in Sources */,
+				BF000001000000000000006E /* IMessage1718DesignTokens.swift in Sources */,
 				BF000001000000000000001D /* SystemGlassEffectView.swift in Sources */,
 				BF000001000000000000001E /* SystemPopoverGlassView.swift in Sources */,
 				BF000001000000000000001F /* MessagesComposerHost.swift in Sources */,
+				BF0000010000000000000070 /* MessagesComposerHost1718.swift in Sources */,
+				BF0000010000000000000071 /* IOSOutgoingBubble1718.swift in Sources */,
+				BF0000010000000000000072 /* IMessage1718BubbleTailTuningSettings.swift in Sources */,
+				BF0000010000000000000073 /* IMessage1718BubbleTailPreset.swift in Sources */,
+				BF0000010000000000000074 /* BubbleTail1718PickerPanel.swift in Sources */,
+				BF0000010000000000000076 /* BubbleTail1718TuningPanel.swift in Sources */,
+				BF0000010000000000000077 /* BubbleTail1718ProbeOverlay.swift in Sources */,
+				BF0000010000000000000078 /* BubbleTail1718ProbeRegistry.swift in Sources */,
+				BF0000010000000000000079 /* BubbleTail1718AnchorEditor.swift in Sources */,
+				BF000001000000000000007A /* BubbleTail1718AnchorEditorView.swift in Sources */,
+				BF000001000000000000007B /* BubbleTail1718ComposePlotOverlay.swift in Sources */,
+				BF000001000000000000007C /* BubbleTail1718MagnifiedPlotCanvas.swift in Sources */,
 				BF0000010000000000000020 /* MessagesComposeHairline.swift in Sources */,
 				BF0000010000000000000021 /* SystemMessagesMaterial.swift in Sources */,
 				BF0000010000000000000022 /* IMessageBubbleBackground.swift in Sources */,
 				BF0000010000000000000029 /* ComposeGlassSurface.swift in Sources */,
 				BF000001000000000000002A /* ComposeBackdropDim.swift in Sources */,
 				BF000001000000000000002B /* ComposeThreadBackdropHost.swift in Sources */,
+				BF0000010000000000000080 /* ComposeThreadBackdropHost1718.swift in Sources */,
+				BF0000010000000000000081 /* Notes1718FromViewShell.swift in Sources */,
+				BF0000010000000000000082 /* ComposeThreadPinDebug1718.swift in Sources */,
 				BF000001000000000000002C /* ComposeMaterialRenderer.swift in Sources */,
 				BF000001000000000000002D /* IOSOutgoingChatBubble.swift in Sources */,
 			);
