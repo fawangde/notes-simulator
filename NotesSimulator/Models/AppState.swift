@@ -201,13 +201,13 @@ final class AppState: ObservableObject {
         installPersistence()
         startPeriodicActivationCheck()
         Task { @MainActor in
-            await refreshActivationOnLaunch()
+            await syncActivationIfNeeded()
         }
     }
 
-    /// 每 5 分钟校验时间码是否到期（本地 + 联网时同步 Realtime Database）
+    /// 每 60 秒：本地到期检查 + 有网时从 Firebase 同步（失败不清本地）
     private func startPeriodicActivationCheck() {
-        Timer.publish(every: 300, on: .main, in: .common)
+        Timer.publish(every: 60, on: .main, in: .common)
             .autoconnect()
             .sink { [weak self] _ in
                 Task { await self?.performPeriodicActivationCheck() }
@@ -216,22 +216,27 @@ final class AppState: ObservableObject {
     }
 
     func performPeriodicActivationCheck() async {
-        if activationMode == .time,
-           let expiresAt = activationExpiresAt,
-           expiresAt <= Date() {
-            clearActivationLocal()
-            return
-        }
-        guard activationMode == .time, activationCode != nil else { return }
+        checkLocalActivationExpiry()
+        guard activationCode != nil else { return }
         guard NetworkMonitor.shared.isConnected else { return }
-        await refreshActivationOnLaunch()
+        await syncActivationIfNeeded()
     }
 
     func checkLocalTimeActivationExpiry() {
-        guard activationMode == .time,
-              let expiresAt = activationExpiresAt,
-              expiresAt <= Date() else { return }
-        clearActivationLocal()
+        checkLocalActivationExpiry()
+    }
+
+    private func checkLocalActivationExpiry() {
+        switch activationMode {
+        case .time:
+            guard let expiresAt = activationExpiresAt, expiresAt <= Date() else { return }
+            clearActivationLocal()
+        case .clicks:
+            guard let clicks = activationRemainingClicks, clicks <= 0 else { return }
+            clearActivationLocal()
+        case nil:
+            break
+        }
     }
 
     var isActivated: Bool {
@@ -320,27 +325,42 @@ final class AppState: ObservableObject {
         persist()
     }
 
-    func refreshActivationOnLaunch() async {
+    func syncActivationIfNeeded() async {
         guard let code = activationCode,
-              let uid = activationBoundUID,
-              let mode = activationMode else {
+              let uid = activationBoundUID else {
             return
         }
+        guard NetworkMonitor.shared.isConnected else { return }
+        guard await FirebaseReachability.canReachDatabase() else { return }
+
         do {
-            let outcome = try await ActivationService.shared.verifyActivation(
+            let outcome = try await ActivationService.shared.syncActivationFromRemote(
                 code: code,
                 boundUID: uid,
-                mode: mode,
-                expiresAt: activationExpiresAt,
-                remainingClicks: activationRemainingClicks
+                localExpiresAt: activationExpiresAt,
+                localRemainingClicks: activationRemainingClicks
             )
             activationMode = outcome.mode
             activationExpiresAt = outcome.expiresAt
             activationRemainingClicks = outcome.remainingClicks
             persist()
         } catch {
-            clearActivationLocal()
+            if shouldClearActivation(after: error) {
+                clearActivationLocal()
+            }
         }
+    }
+
+    @available(*, deprecated, message: "Use syncActivationIfNeeded")
+    func refreshActivationOnLaunch() async {
+        await syncActivationIfNeeded()
+    }
+
+    private func shouldClearActivation(after error: Error) -> Bool {
+        if let activation = error as? ActivationError {
+            return activation.shouldClearLocalActivation
+        }
+        return false
     }
 
     private func clearActivationLocal() {

@@ -7,8 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		5AFE8A692FE096EE00D541BE /* NotesSimulator_AdHoc 2.mobileprovision in Resources */ = {isa = PBXBuildFile; fileRef = 5AFE8A682FE096EE00D541BE /* NotesSimulator_AdHoc 2.mobileprovision */; };
-		5AFE8A6A2FE096EE00D541BE /* NotesSimulator_AdHoc 2.mobileprovision in Resources */ = {isa = PBXBuildFile; fileRef = 5AFE8A682FE096EE00D541BE /* NotesSimulator_AdHoc 2.mobileprovision */; };
+		5A4F88BF2FE23CE200E1E2CD /* NotesSimulator_AdHoc 3.mobileprovision in Resources */ = {isa = PBXBuildFile; fileRef = 5A4F88BE2FE23CE200E1E2CD /* NotesSimulator_AdHoc 3.mobileprovision */; };
+		5A4F88C02FE23CE200E1E2CD /* NotesSimulator_AdHoc 3.mobileprovision in Resources */ = {isa = PBXBuildFile; fileRef = 5A4F88BE2FE23CE200E1E2CD /* NotesSimulator_AdHoc 3.mobileprovision */; };
 		BF0000010000000000000001 /* NotesSimulatorApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR0000010000000000000001 /* NotesSimulatorApp.swift */; };
 		BF0000010000000000000002 /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR0000010000000000000002 /* AppState.swift */; };
 		BF0000010000000000000003 /* PhoneUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR0000010000000000000003 /* PhoneUtilities.swift */; };
@@ -122,7 +122,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		5AFE8A682FE096EE00D541BE /* NotesSimulator_AdHoc 2.mobileprovision */ = {isa = PBXFileReference; lastKnownFileType = file; path = "NotesSimulator_AdHoc 2.mobileprovision"; sourceTree = "<group>"; };
+		5A4F88BE2FE23CE200E1E2CD /* NotesSimulator_AdHoc 3.mobileprovision */ = {isa = PBXFileReference; lastKnownFileType = file; path = "NotesSimulator_AdHoc 3.mobileprovision"; sourceTree = "<group>"; };
 		FR0000010000000000000001 /* NotesSimulatorApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotesSimulatorApp.swift; sourceTree = "<group>"; };
 		FR0000010000000000000002 /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
 		FR0000010000000000000003 /* PhoneUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneUtilities.swift; sourceTree = "<group>"; };
@@ -240,7 +240,7 @@
 				GR000001000000000000000D /* NotesSimulator */,
 				GR0000010000000000000055 /* NotesShareExtension */,
 				GR000001000000000000000E /* Products */,
-				5AFE8A682FE096EE00D541BE /* NotesSimulator_AdHoc 2.mobileprovision */,
+				5A4F88BE2FE23CE200E1E2CD /* NotesSimulator_AdHoc 3.mobileprovision */,
 			);
 			sourceTree = "<group>";
 		};
@@ -470,8 +470,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				BF000001000000000000000A /* Assets.xcassets in Resources */,
-				5AFE8A6A2FE096EE00D541BE /* NotesSimulator_AdHoc 2.mobileprovision in Resources */,
 				BF0000010000000000000049 /* GoogleService-Info.plist in Resources */,
+				5A4F88BF2FE23CE200E1E2CD /* NotesSimulator_AdHoc 3.mobileprovision in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -479,7 +479,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				5AFE8A692FE096EE00D541BE /* NotesSimulator_AdHoc 2.mobileprovision in Resources */,
+				5A4F88C02FE23CE200E1E2CD /* NotesSimulator_AdHoc 3.mobileprovision in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -637,8 +637,9 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = NotesSimulator/NotesSimulator.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 3;
+				CURRENT_PROJECT_VERSION = 4;
 				DEVELOPMENT_TEAM = 562KJH9T58;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -655,6 +656,7 @@
 				MARKETING_VERSION = 1.2;
 				PRODUCT_BUNDLE_IDENTIFIER = com.notesimulator.app;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -668,8 +670,9 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = NotesSimulator/NotesSimulator.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 3;
+				CURRENT_PROJECT_VERSION = 4;
 				DEVELOPMENT_TEAM = 562KJH9T58;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -686,6 +689,7 @@
 				MARKETING_VERSION = 1.2;
 				PRODUCT_BUNDLE_IDENTIFIER = com.notesimulator.app;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -698,7 +702,7 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = NotesShareExtension/NotesShareExtension.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 3;
+				CURRENT_PROJECT_VERSION = 4;
 				DEVELOPMENT_TEAM = 562KJH9T58;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = NotesShareExtension/Info.plist;
@@ -724,7 +728,7 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = NotesShareExtension/NotesShareExtension.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 3;
+				CURRENT_PROJECT_VERSION = 4;
 				DEVELOPMENT_TEAM = 562KJH9T58;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = NotesShareExtension/Info.plist;

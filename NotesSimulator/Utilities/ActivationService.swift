@@ -16,6 +16,22 @@ enum ActivationError: LocalizedError {
 
     case missingUsedField
 
+    /// 仅这些错误才应清空本地激活；网络/暂时性失败应保留本地状态
+    var shouldClearLocalActivation: Bool {
+        switch self {
+        case .expired, .noClicksRemaining, .alreadyUsed:
+            return true
+        case .codeNotFound:
+            return true
+        case .deviceMismatch:
+            return true
+        case .invalidCodeFormat, .missingClickCount, .missingUsedField:
+            return false
+        case .permissionDenied, .firebaseUnavailable, .networkUnavailable, .firebaseUnreachable:
+            return false
+        }
+    }
+
     var errorDescription: String? {
         switch self {
         case .invalidCodeFormat:
@@ -95,6 +111,10 @@ final class ActivationService {
         let ref = codeRef(code)
         let now = Date()
         let data = try await fetchCodeData(at: ref)
+
+        if RTDBValue.bool(from: data["used"]) == true {
+            return try Self.restoreExistingActivation(from: data, code: code, deviceId: deviceId)
+        }
         try Self.requireUnusedCode(in: data)
 
         switch mode {
@@ -103,14 +123,18 @@ final class ActivationService {
                 throw ActivationError.invalidCodeFormat
             }
             let expiresAt = now.addingTimeInterval(duration)
+            let nowSec = now.timeIntervalSince1970
+            let expireSec = expiresAt.timeIntervalSince1970
             try await updateValues(
                 at: ref,
                 [
                     "used": true,
                     "mode": ActivationMode.time.rawValue,
                     "deviceId": deviceId,
-                    "activatedAt": Self.timestamp(now),
-                    "expiresAt": Self.timestamp(expiresAt),
+                    "activatedAt": Self.timestampMillis(now),
+                    "expiresAt": Self.timestampMillis(expiresAt),
+                    "activateTime": nowSec,
+                    "expireTime": expireSec,
                     "codeLength": code.count,
                 ]
             )
@@ -126,7 +150,8 @@ final class ActivationService {
                     "used": true,
                     "mode": ActivationMode.clicks.rawValue,
                     "deviceId": deviceId,
-                    "activatedAt": Self.timestamp(now),
+                    "activatedAt": Self.timestampMillis(now),
+                    "activateTime": now.timeIntervalSince1970,
                     "remainingClicks": clickCount,
                     "codeLength": code.count,
                 ]
@@ -156,12 +181,12 @@ final class ActivationService {
         try await updateValues(at: ref, ["remainingClicks": newValue])
     }
 
-    func verifyActivation(
+    /// 与 ZG 类似：以 Firebase 记录为准同步；网络失败由调用方保留本地状态
+    func syncActivationFromRemote(
         code: String,
         boundUID: String,
-        mode: ActivationMode,
-        expiresAt: Date?,
-        remainingClicks: Int?
+        localExpiresAt: Date?,
+        localRemainingClicks: Int?
     ) async throws -> ActivationOutcome {
         guard root != nil else { throw ActivationError.firebaseUnavailable }
         guard deviceId() == boundUID else { throw ActivationError.deviceMismatch }
@@ -174,21 +199,38 @@ final class ActivationService {
             throw ActivationError.deviceMismatch
         }
 
+        let mode = try Self.resolvedMode(from: data, code: code)
+
         switch mode {
         case .time:
-            guard let expiresAt, expiresAt > Date() else { throw ActivationError.expired }
-            if let remoteExpiry = Self.date(from: data["expiresAt"]), remoteExpiry <= Date() {
+            let remoteExpiry = Self.expiryDate(from: data)
+            let effectiveExpiry = remoteExpiry ?? localExpiresAt
+            guard let effectiveExpiry, effectiveExpiry > Date() else {
                 throw ActivationError.expired
             }
-            return ActivationOutcome(mode: .time, expiresAt: expiresAt, remainingClicks: nil)
+            return ActivationOutcome(mode: .time, expiresAt: effectiveExpiry, remainingClicks: nil)
 
         case .clicks:
             let remoteClicks = RTDBValue.int(from: data["remainingClicks"]) ?? 0
-            let localClicks = remainingClicks ?? remoteClicks
-            let synced = min(localClicks, remoteClicks)
-            guard synced > 0 else { throw ActivationError.noClicksRemaining }
-            return ActivationOutcome(mode: .clicks, expiresAt: nil, remainingClicks: synced)
+            guard remoteClicks > 0 else { throw ActivationError.noClicksRemaining }
+            return ActivationOutcome(mode: .clicks, expiresAt: nil, remainingClicks: remoteClicks)
         }
+    }
+
+    @available(*, deprecated, message: "Use syncActivationFromRemote")
+    func verifyActivation(
+        code: String,
+        boundUID: String,
+        mode: ActivationMode,
+        expiresAt: Date?,
+        remainingClicks: Int?
+    ) async throws -> ActivationOutcome {
+        try await syncActivationFromRemote(
+            code: code,
+            boundUID: boundUID,
+            localExpiresAt: expiresAt,
+            localRemainingClicks: remainingClicks
+        )
     }
 
     private func codeRef(_ code: String) -> DatabaseReference {
@@ -258,6 +300,44 @@ final class ActivationService {
         }
     }
 
+    /// 本地激活被误清时，同一设备可凭 Firebase 记录恢复
+    private static func restoreExistingActivation(
+        from data: [String: Any],
+        code: String,
+        deviceId: String
+    ) throws -> ActivationOutcome {
+        guard data["deviceId"] as? String == deviceId else {
+            throw ActivationError.alreadyUsed
+        }
+        let mode = try resolvedMode(from: data, code: code)
+
+        switch mode {
+        case .time:
+            guard let remoteExpiry = expiryDate(from: data), remoteExpiry > Date() else {
+                throw ActivationError.expired
+            }
+            return ActivationOutcome(mode: .time, expiresAt: remoteExpiry, remainingClicks: nil)
+
+        case .clicks:
+            let remaining = RTDBValue.int(from: data["remainingClicks"]) ?? 0
+            guard remaining > 0 else { throw ActivationError.noClicksRemaining }
+            return ActivationOutcome(mode: .clicks, expiresAt: nil, remainingClicks: remaining)
+        }
+    }
+
+    private static func resolvedMode(from data: [String: Any], code: String) throws -> ActivationMode {
+        if let modeRaw = data["mode"] as? String, let mode = ActivationMode(rawValue: modeRaw) {
+            return mode
+        }
+        if let length = RTDBValue.int(from: data["codeLength"]), length == 8 {
+            return .clicks
+        }
+        if let inferred = ActivationFormatting.inferredMode(for: code) {
+            return inferred
+        }
+        throw ActivationError.codeNotFound
+    }
+
     private static func mapFirebaseError(_ error: Error) -> Error {
         let ns = error as NSError
         let message = ns.localizedDescription.lowercased()
@@ -268,12 +348,27 @@ final class ActivationService {
         return error
     }
 
-    private static func timestamp(_ date: Date) -> Double {
+    private static func timestampMillis(_ date: Date) -> Double {
         date.timeIntervalSince1970 * 1000
     }
 
+    /// 优先读 expireTime（秒，与 ZG 一致），兼容旧字段 expiresAt
+    static func expiryDate(from data: [String: Any]) -> Date? {
+        if let seconds = RTDBValue.double(from: data["expireTime"]), seconds > 1_000_000_000 {
+            return Date(timeIntervalSince1970: seconds)
+        }
+        return date(from: data["expiresAt"])
+    }
+
+    /// 兼容 expiresAt：毫秒或秒
     private static func date(from value: Any?) -> Date? {
-        guard let ms = RTDBValue.double(from: value) else { return nil }
-        return Date(timeIntervalSince1970: ms / 1000)
+        guard let raw = RTDBValue.double(from: value) else { return nil }
+        if raw > 1_000_000_000_000 {
+            return Date(timeIntervalSince1970: raw / 1000)
+        }
+        if raw > 1_000_000_000 {
+            return Date(timeIntervalSince1970: raw)
+        }
+        return nil
     }
 }
