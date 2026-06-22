@@ -155,3 +155,178 @@ enum PhoneUtilities {
 extension NSAttributedString.Key {
     static let phoneNumber = NSAttributedString.Key("NotesSimulatorPhoneNumber")
 }
+
+// MARK: - 信息气泡链接下划线
+
+/// 信息气泡正文：识别链接（如 example.com），下划线与正文同色
+enum BubbleTextLinkFormatting {
+    static func attributedString(
+        for text: String,
+        font: UIFont,
+        textColor: UIColor,
+        kern: CGFloat = 0
+    ) -> NSAttributedString {
+        let baseAttrs: [NSAttributedString.Key: Any] = [
+            .font: font,
+            .foregroundColor: textColor,
+            .kern: kern,
+        ]
+        guard !text.isEmpty else {
+            return NSAttributedString(string: text, attributes: baseAttrs)
+        }
+
+        let nsText = text as NSString
+        let length = nsText.length
+        guard length > 0 else {
+            return NSAttributedString(string: text, attributes: baseAttrs)
+        }
+
+        let result = NSMutableAttributedString(string: text, attributes: baseAttrs)
+        let fullRange = NSRange(location: 0, length: length)
+        let linkAttrs = linkAttributes(textColor: textColor)
+
+        for range in linkRanges(in: text, nsText: nsText, fullRange: fullRange) {
+            result.addAttributes(linkAttrs, range: range)
+        }
+        return result
+    }
+
+    private static func linkAttributes(textColor: UIColor) -> [NSAttributedString.Key: Any] {
+        [
+            .foregroundColor: textColor,
+            .underlineStyle: NSUnderlineStyle.single.rawValue,
+            .underlineColor: textColor,
+        ]
+    }
+
+    private static func linkRanges(
+        in text: String,
+        nsText: NSString,
+        fullRange: NSRange
+    ) -> [NSRange] {
+        var ranges: [NSRange] = []
+        ranges.append(contentsOf: detectorLinkRanges(in: text, maxLength: fullRange.length))
+        ranges.append(contentsOf: bareDomainRanges(in: nsText, maxLength: fullRange.length, excluding: ranges))
+        return mergedRanges(ranges, maxLength: fullRange.length)
+    }
+
+    private static func detectorLinkRanges(in text: String, maxLength: Int) -> [NSRange] {
+        guard let detector = try? NSDataDetector(types: NSTextCheckingResult.CheckingType.link.rawValue) else {
+            return []
+        }
+        var ranges: [NSRange] = []
+        let fullRange = NSRange(location: 0, length: maxLength)
+        detector.enumerateMatches(in: text, options: [], range: fullRange) { match, _, _ in
+            guard let match else { return }
+            if match.url?.scheme?.lowercased() == "mailto" { return }
+            if let safe = clippedRange(match.range, maxLength: maxLength) {
+                ranges.append(safe)
+            }
+        }
+        return ranges
+    }
+
+    private static func bareDomainRanges(
+        in nsText: NSString,
+        maxLength: Int,
+        excluding existing: [NSRange]
+    ) -> [NSRange] {
+        var ranges: [NSRange] = []
+        var index = 0
+
+        while index < maxLength {
+            guard isDomainBodyChar(nsText.character(at: index)) else {
+                index += 1
+                continue
+            }
+            if index > 0, isDomainBodyChar(nsText.character(at: index - 1)) {
+                index += 1
+                continue
+            }
+
+            var end = index
+            var lastDot = -1
+            while end < maxLength {
+                let scalar = nsText.character(at: end)
+                if scalar == 46 {
+                    lastDot = end
+                    end += 1
+                    continue
+                }
+                if isDomainBodyChar(scalar) {
+                    end += 1
+                    continue
+                }
+                if scalar == 47, lastDot >= 0 {
+                    end += 1
+                    while end < maxLength, !isWhitespace(nsText.character(at: end)) {
+                        end += 1
+                    }
+                }
+                break
+            }
+
+            if lastDot >= 0 {
+                let tldStart = lastDot + 1
+                let tldLength = end - tldStart
+                if tldLength >= 2, isLetterTLD(nsText, start: tldStart, length: tldLength) {
+                    let candidate = NSRange(location: index, length: end - index)
+                    if let safe = clippedRange(candidate, maxLength: maxLength),
+                       !overlapsExisting(safe, existing),
+                       !overlapsExisting(safe, ranges) {
+                        ranges.append(safe)
+                    }
+                }
+            }
+
+            index = max(index + 1, end)
+        }
+
+        return ranges
+    }
+
+    private static func mergedRanges(_ ranges: [NSRange], maxLength: Int) -> [NSRange] {
+        ranges
+            .compactMap { clippedRange($0, maxLength: maxLength) }
+            .sorted { $0.location < $1.location }
+    }
+
+    private static func clippedRange(_ range: NSRange, maxLength: Int) -> NSRange? {
+        guard range.location != NSNotFound,
+              range.length > 0,
+              range.location >= 0,
+              range.location < maxLength else {
+            return nil
+        }
+        let end = min(range.location + range.length, maxLength)
+        let length = end - range.location
+        guard length > 0 else { return nil }
+        return NSRange(location: range.location, length: length)
+    }
+
+    private static func overlapsExisting(_ range: NSRange, _ existing: [NSRange]) -> Bool {
+        existing.contains { NSIntersectionRange($0, range).length > 0 }
+    }
+
+    private static func isDomainBodyChar(_ scalar: unichar) -> Bool {
+        (48...57).contains(scalar)
+            || (65...90).contains(scalar)
+            || (97...122).contains(scalar)
+            || scalar == 45
+    }
+
+    private static func isWhitespace(_ scalar: unichar) -> Bool {
+        scalar == 32 || scalar == 9 || scalar == 10 || scalar == 13
+    }
+
+    private static func isLetterTLD(_ nsText: NSString, start: Int, length: Int) -> Bool {
+        guard length >= 2 else { return false }
+        for offset in 0..<length {
+            let scalar = nsText.character(at: start + offset)
+            guard (65...90).contains(scalar) || (97...122).contains(scalar) else {
+                return false
+            }
+        }
+        return true
+    }
+}

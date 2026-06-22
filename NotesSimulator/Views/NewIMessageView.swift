@@ -112,6 +112,7 @@ struct NewIMessageView: View {
                 showsImage: app.showsMessageImage,
                 bothContentOrder: app.bothContentOrder,
                 image: app.messageImage,
+                senderLineLabel: app.senderLineLabel,
                 bubbleFontSize: CGFloat(app.composeBubbleTuning.fontSize)
             )
             .id(

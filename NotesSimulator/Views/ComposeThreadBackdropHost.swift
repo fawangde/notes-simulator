@@ -12,6 +12,7 @@ struct ComposeThreadBackdropHost: UIViewRepresentable {
     let showsImage: Bool
     let bothContentOrder: BothContentOrder
     let image: UIImage?
+    let senderLineLabel: String
     var bubbleFontSize: CGFloat = 17
     func makeUIView(context: Context) -> ComposeThreadScrollView {
         ComposeThreadScrollView()
@@ -28,6 +29,7 @@ struct ComposeThreadBackdropHost: UIViewRepresentable {
             showsImage: showsImage,
             bothContentOrder: bothContentOrder,
             image: image,
+            senderLineLabel: senderLineLabel,
             horizontalPadding: IMessageDesignTokens.layer2ThreadPaddingH,
             bubbleFontSize: bubbleFontSize
         )
@@ -130,6 +132,7 @@ final class ComposeThreadScrollView: UIView {
         showsImage: Bool,
         bothContentOrder: BothContentOrder,
         image: UIImage?,
+        senderLineLabel: String,
         horizontalPadding: CGFloat,
         bubbleFontSize: CGFloat
     ) {
@@ -211,6 +214,7 @@ final class ComposeThreadScrollView: UIView {
             showsImage: showsImage,
             bothContentOrder: bothContentOrder,
             image: image,
+            senderLineLabel: senderLineLabel,
             horizontalPadding: horizontalPadding
         )
 
@@ -262,6 +266,7 @@ final class ComposeThreadScrollView: UIView {
         showsImage: Bool,
         bothContentOrder: BothContentOrder,
         image: UIImage?,
+        senderLineLabel: String,
         horizontalPadding: CGFloat
     ) {
         let addText = {
@@ -276,16 +281,13 @@ final class ComposeThreadScrollView: UIView {
 
         let addImage = {
             guard showsImage, let image else { return }
-            let imageView = UIImageView(image: image)
-            imageView.contentMode = .scaleAspectFit
-            imageView.clipsToBounds = true
-            imageView.layer.cornerRadius = 14
-            imageView.translatesAutoresizingMaskIntoConstraints = false
-            imageView.widthAnchor.constraint(
-                lessThanOrEqualToConstant: IMessageDesignTokens.imageBubbleMaxWidth
-            ).isActive = true
+            let column = ComposeImageColumnView(
+                image: image,
+                senderLineLabel: senderLineLabel,
+                showsDelivered: !showsText
+            )
             let imageRow = self.trailingRow(
-                imageView,
+                column,
                 horizontalPadding: IMessageDesignTokens.threadBubbleTrailingInset
             )
             self.stack.addArrangedSubview(imageRow)
@@ -435,9 +437,9 @@ final class ComposeThreadScrollView: UIView {
                 column.layoutIfNeeded()
                 return column.convert(CGPoint(x: 0, y: column.bounds.height), to: stack).y
             }
-            if let image = child as? UIImageView, image.image != nil {
-                image.layoutIfNeeded()
-                return image.convert(CGPoint(x: 0, y: image.bounds.height), to: stack).y
+            if let column = child as? ComposeImageColumnView {
+                column.layoutIfNeeded()
+                return column.convert(CGPoint(x: 0, y: column.bounds.height), to: stack).y
             }
         }
         return nil
@@ -514,7 +516,7 @@ private final class ComposeBubbleColumnView: UIView {
         setContentCompressionResistancePriority(.required, for: .horizontal)
         setContentCompressionResistancePriority(.required, for: .vertical)
 
-        bubbleView.label.text = text
+        bubbleView.setBubbleText(text)
         bubbleView.applyBubbleFontSize(bubbleFontSize)
         bubbleView.applyRenderParams(Self.composeBubbleParams(.frozenDefault))
 
@@ -533,7 +535,7 @@ private final class ComposeBubbleColumnView: UIView {
     }
 
     func updateText(_ text: String) {
-        bubbleView.label.text = text
+        bubbleView.setBubbleText(text)
         setNeedsLayout()
     }
 
@@ -596,6 +598,113 @@ private final class ComposeBubbleColumnView: UIView {
 
         widthConstraint?.constant = bubbleSize.width
         heightConstraint?.constant = max(bubbleSize.height, delivered.frame.maxY)
+    }
+
+    @available(*, unavailable)
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+}
+
+/// iOS 26 单图：固定右缘 20pt；满宽按发件人首字中心→右缘推算，尺寸规则同比缩放
+private final class ComposeImageColumnView: UIView {
+    private let imageBubbleView: IOSOutgoingImageBubbleView
+    private let delivered = UILabel()
+    private let senderLineLabel: String
+    private let showsDelivered: Bool
+    private var widthConstraint: NSLayoutConstraint?
+    private var heightConstraint: NSLayoutConstraint?
+
+    init(image: UIImage, senderLineLabel: String, showsDelivered: Bool) {
+        self.senderLineLabel = senderLineLabel
+        self.showsDelivered = showsDelivered
+        imageBubbleView = IOSOutgoingImageBubbleView(image: image)
+        super.init(frame: .zero)
+        clipsToBounds = false
+        setContentHuggingPriority(.required, for: .horizontal)
+        setContentHuggingPriority(.required, for: .vertical)
+        setContentCompressionResistancePriority(.required, for: .horizontal)
+        setContentCompressionResistancePriority(.required, for: .vertical)
+
+        imageBubbleView.applyRenderParams(.frozenDefault)
+
+        delivered.text = "已送达"
+        delivered.font = IMessageDesignTokens.deliveredFontUI
+        delivered.textColor = IMessageDesignTokens.threadMetaTextUI
+        delivered.textAlignment = .right
+        delivered.isHidden = !showsDelivered
+
+        addSubview(imageBubbleView)
+        addSubview(delivered)
+
+        widthConstraint = widthAnchor.constraint(equalToConstant: 120)
+        heightConstraint = heightAnchor.constraint(equalToConstant: 60)
+        widthConstraint?.isActive = true
+        heightConstraint?.isActive = true
+    }
+
+    /// 线程区全宽（= 屏宽），用于首字→右缘满宽推算
+    private func threadContentWidth() -> CGFloat {
+        var view: UIView? = self
+        while let current = view {
+            if let scroll = current.superview as? UIScrollView {
+                let width = scroll.bounds.width
+                if width > 1 { return width }
+                break
+            }
+            view = current.superview
+        }
+        return UIScreen.main.bounds.width
+    }
+
+    private func imageLayoutMaxWidth() -> CGFloat {
+        IMessageDesignTokens.imageBubbleMaxLayoutWidth(
+            contentWidth: threadContentWidth(),
+            senderLineLabel: senderLineLabel
+        )
+    }
+
+    override func layoutSubviews() {
+        super.layoutSubviews()
+
+        let maxLayoutWidth = imageLayoutMaxWidth()
+        guard maxLayoutWidth > 1 else { return }
+
+        let bubbleSize = imageBubbleView.sizeThatFits(
+            CGSize(width: maxLayoutWidth, height: .greatestFiniteMagnitude)
+        )
+        guard bubbleSize.width > 1, bubbleSize.height > 1 else { return }
+
+        widthConstraint?.constant = bubbleSize.width
+        heightConstraint?.constant = bubbleSize.height
+
+        imageBubbleView.frame = CGRect(
+            x: 0,
+            y: 0,
+            width: bubbleSize.width,
+            height: bubbleSize.height
+        )
+        imageBubbleView.layoutIfNeeded()
+
+        var contentHeight = imageBubbleView.frame.maxY
+        if showsDelivered {
+            let deliveredSize = delivered.sizeThatFits(
+                CGSize(width: bounds.width, height: .greatestFiniteMagnitude)
+            )
+            let tailAnchorX = imageBubbleView.frame.minX + imageBubbleView.tailAnchorPointInSelf().x
+            let tailBottomY = imageBubbleView.frame.minY + imageBubbleView.tailTipPointInSelf().y
+            let deliveredY = tailBottomY - deliveredSize.height
+                + IMessageDesignTokens.deliveredOffsetBelowTailBottom
+            delivered.frame = CGRect(
+                x: tailAnchorX - deliveredSize.width - IMessageDesignTokens.deliveredTrailingInset,
+                y: deliveredY,
+                width: deliveredSize.width,
+                height: deliveredSize.height
+            )
+            contentHeight = max(contentHeight, delivered.frame.maxY)
+        }
+
+        heightConstraint?.constant = contentHeight
     }
 
     @available(*, unavailable)

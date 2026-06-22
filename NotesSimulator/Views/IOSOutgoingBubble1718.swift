@@ -865,13 +865,11 @@ final class IOSOutgoingChatBubbleView1718: UIView {
     }
 
     func setBubbleText(_ text: String) {
-        label.attributedText = NSAttributedString(
-            string: text,
-            attributes: [
-                .font: bubbleFontUI(),
-                .foregroundColor: UIColor.white,
-                .kern: -0.41,
-            ]
+        label.attributedText = BubbleTextLinkFormatting.attributedString(
+            for: text,
+            font: bubbleFontUI(),
+            textColor: .white,
+            kern: -0.41
         )
         setNeedsLayout()
     }

@@ -7,8 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		5A4F88BF2FE23CE200E1E2CD /* NotesSimulator_AdHoc 3.mobileprovision in Resources */ = {isa = PBXBuildFile; fileRef = 5A4F88BE2FE23CE200E1E2CD /* NotesSimulator_AdHoc 3.mobileprovision */; };
-		5A4F88C02FE23CE200E1E2CD /* NotesSimulator_AdHoc 3.mobileprovision in Resources */ = {isa = PBXBuildFile; fileRef = 5A4F88BE2FE23CE200E1E2CD /* NotesSimulator_AdHoc 3.mobileprovision */; };
+		5A6377D02FE9BB8000628CC6 /* NotesSimulator_AdHoc 4.mobileprovision in Resources */ = {isa = PBXBuildFile; fileRef = 5A6377CF2FE9BB8000628CC6 /* NotesSimulator_AdHoc 4.mobileprovision */; };
+		5A6377D12FE9BB8000628CC6 /* NotesSimulator_AdHoc 4.mobileprovision in Resources */ = {isa = PBXBuildFile; fileRef = 5A6377CF2FE9BB8000628CC6 /* NotesSimulator_AdHoc 4.mobileprovision */; };
 		BF0000010000000000000001 /* NotesSimulatorApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR0000010000000000000001 /* NotesSimulatorApp.swift */; };
 		BF0000010000000000000002 /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR0000010000000000000002 /* AppState.swift */; };
 		BF0000010000000000000003 /* PhoneUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR0000010000000000000003 /* PhoneUtilities.swift */; };
@@ -95,6 +95,7 @@
 		BF0000010000000000000084 /* Notes26TuningPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR0000010000000000000084 /* Notes26TuningPanel.swift */; };
 		BF0000010000000000000085 /* ComposeBubbleTuningSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR0000010000000000000085 /* ComposeBubbleTuningSettings.swift */; };
 		BF0000010000000000000086 /* ComposeBubbleTuningPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR0000010000000000000086 /* ComposeBubbleTuningPanel.swift */; };
+		BF000001000000000000008A /* NotesReadingProgressBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR000001000000000000008A /* NotesReadingProgressBar.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -122,7 +123,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		5A4F88BE2FE23CE200E1E2CD /* NotesSimulator_AdHoc 3.mobileprovision */ = {isa = PBXFileReference; lastKnownFileType = file; path = "NotesSimulator_AdHoc 3.mobileprovision"; sourceTree = "<group>"; };
+		5A6377CF2FE9BB8000628CC6 /* NotesSimulator_AdHoc 4.mobileprovision */ = {isa = PBXFileReference; lastKnownFileType = file; path = "NotesSimulator_AdHoc 4.mobileprovision"; sourceTree = "<group>"; };
 		FR0000010000000000000001 /* NotesSimulatorApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotesSimulatorApp.swift; sourceTree = "<group>"; };
 		FR0000010000000000000002 /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
 		FR0000010000000000000003 /* PhoneUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneUtilities.swift; sourceTree = "<group>"; };
@@ -212,6 +213,7 @@
 		FR0000010000000000000084 /* Notes26TuningPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Notes26TuningPanel.swift; sourceTree = "<group>"; };
 		FR0000010000000000000085 /* ComposeBubbleTuningSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComposeBubbleTuningSettings.swift; sourceTree = "<group>"; };
 		FR0000010000000000000086 /* ComposeBubbleTuningPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComposeBubbleTuningPanel.swift; sourceTree = "<group>"; };
+		FR000001000000000000008A /* NotesReadingProgressBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotesReadingProgressBar.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -240,7 +242,7 @@
 				GR000001000000000000000D /* NotesSimulator */,
 				GR0000010000000000000055 /* NotesShareExtension */,
 				GR000001000000000000000E /* Products */,
-				5A4F88BE2FE23CE200E1E2CD /* NotesSimulator_AdHoc 3.mobileprovision */,
+				5A6377CF2FE9BB8000628CC6 /* NotesSimulator_AdHoc 4.mobileprovision */,
 			);
 			sourceTree = "<group>";
 		};
@@ -353,6 +355,7 @@
 				FR0000010000000000000010 /* TopRoundedRectangle.swift */,
 				FR0000010000000000000013 /* NotesFrostedBackground.swift */,
 				FR0000010000000000000015 /* NotesTopGlassFade.swift */,
+				FR000001000000000000008A /* NotesReadingProgressBar.swift */,
 				FR0000010000000000000016 /* NotesGlassControls.swift */,
 				FR0000010000000000000064 /* NotesClassicControls.swift */,
 				FR0000010000000000000067 /* PhoneActionMenuView1718.swift */,
@@ -469,9 +472,9 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				5A6377D12FE9BB8000628CC6 /* NotesSimulator_AdHoc 4.mobileprovision in Resources */,
 				BF000001000000000000000A /* Assets.xcassets in Resources */,
 				BF0000010000000000000049 /* GoogleService-Info.plist in Resources */,
-				5A4F88BF2FE23CE200E1E2CD /* NotesSimulator_AdHoc 3.mobileprovision in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -479,7 +482,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				5A4F88C02FE23CE200E1E2CD /* NotesSimulator_AdHoc 3.mobileprovision in Resources */,
+				5A6377D02FE9BB8000628CC6 /* NotesSimulator_AdHoc 4.mobileprovision in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -510,6 +513,7 @@
 				BF0000010000000000000011 /* NotesFrostedBackground.swift in Sources */,
 				BF0000010000000000000012 /* NotesDesignTokens.swift in Sources */,
 				BF0000010000000000000013 /* NotesTopGlassFade.swift in Sources */,
+				BF000001000000000000008A /* NotesReadingProgressBar.swift in Sources */,
 				BF0000010000000000000014 /* NotesGlassControls.swift in Sources */,
 				BF0000010000000000000015 /* NoteDateFormatting.swift in Sources */,
 				BF0000010000000000000041 /* NoteImportService.swift in Sources */,
@@ -639,7 +643,7 @@
 				CODE_SIGN_ENTITLEMENTS = NotesSimulator/NotesSimulator.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 5;
+				CURRENT_PROJECT_VERSION = 6;
 				DEVELOPMENT_TEAM = 562KJH9T58;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -672,7 +676,7 @@
 				CODE_SIGN_ENTITLEMENTS = NotesSimulator/NotesSimulator.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 5;
+				CURRENT_PROJECT_VERSION = 6;
 				DEVELOPMENT_TEAM = 562KJH9T58;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -702,7 +706,7 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = NotesShareExtension/NotesShareExtension.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 5;
+				CURRENT_PROJECT_VERSION = 6;
 				DEVELOPMENT_TEAM = 562KJH9T58;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = NotesShareExtension/Info.plist;
@@ -728,7 +732,7 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = NotesShareExtension/NotesShareExtension.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 5;
+				CURRENT_PROJECT_VERSION = 6;
 				DEVELOPMENT_TEAM = 562KJH9T58;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = NotesShareExtension/Info.plist;

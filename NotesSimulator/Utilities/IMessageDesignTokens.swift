@@ -239,6 +239,88 @@ enum IMessageDesignTokens {
     static let bubbleShadowOffset = CGSize.zero
     static let bubbleShadowRadius: CGFloat = 0
     static let imageBubbleMaxWidth: CGFloat = 220
+    /// 真机对照比例基准（仅用于同比缩放，非实际 pt 值）
+    static let imageBubbleReferenceMaxWidth: CGFloat = 280
+    static let imageBubbleReferenceMaxHeight: CGFloat = 320
+    static let imageBubbleReferenceMinWidth: CGFloat = 120
+    /// 单图圆角与撰写页发送气泡一致
+    static var imageBubbleCornerRadius: CGFloat { bubbleCornerTLCompose }
+
+    /// 发件人标签（如「副号」）首字中心 X
+    static func threadImageLeadingCenterX(senderLineLabel: String) -> CGFloat {
+        let labelFont = UIFont.systemFont(ofSize: 15, weight: .regular)
+        let badgeFont = UIFont.systemFont(ofSize: senderBadgeFontSize, weight: .regular)
+        let trimmed = senderLineLabel.trimmingCharacters(in: .whitespacesAndNewlines)
+        let lineLabel = trimmed.isEmpty ? "副号" : trimmed
+        let badgeText = lineLabel.count <= 2 ? lineLabel : String(lineLabel.prefix(2))
+        let badgeTextWidth = (badgeText as NSString).size(withAttributes: [.font: badgeFont]).width
+        let badgeWidth = badgeTextWidth + senderBadgeHPadding * 2
+        let firstChar = String(lineLabel.prefix(1))
+        let firstCharWidth = (firstChar as NSString).size(withAttributes: [.font: labelFont]).width
+        let prefixWidth = ("发件人：" as NSString).size(withAttributes: [.font: labelFont]).width
+        let rowSpacing: CGFloat = 4
+
+        return layer3AddressCardHPadding
+            + addressLeadingInset
+            + prefixWidth
+            + rowSpacing
+            + badgeWidth
+            + rowSpacing
+            + firstCharWidth * 0.5
+    }
+
+    /// 单图满宽：发件人标签首字中心 → 气泡右缘（20pt）
+    static func imageBubbleMaxLayoutWidth(contentWidth: CGFloat, senderLineLabel: String) -> CGFloat {
+        guard contentWidth > 0 else { return 0 }
+        let leadingX = threadImageLeadingCenterX(senderLineLabel: senderLineLabel)
+        return max(0, contentWidth - threadBubbleTrailingInset - leadingX)
+    }
+
+    /// 按真机 280:320:120 比例，同比映射到首字满宽
+    static func imageBubbleScaledLimits(forMaxLayoutWidth maxLayoutWidth: CGFloat) -> (
+        maxHeight: CGFloat,
+        minWidth: CGFloat
+    ) {
+        guard imageBubbleReferenceMaxWidth > 0 else {
+            return (imageBubbleReferenceMaxHeight, imageBubbleReferenceMinWidth)
+        }
+        let widthScale = maxLayoutWidth / imageBubbleReferenceMaxWidth
+        return (
+            imageBubbleReferenceMaxHeight * widthScale,
+            imageBubbleReferenceMinWidth * widthScale
+        )
+    }
+
+    /// 单条静态图：满宽 = 首字中心→右缘；高/宽下限按 320:120 同比缩放
+    static func imageBubbleBodySize(
+        imagePixelSize: CGSize,
+        maxLayoutWidth: CGFloat
+    ) -> CGSize {
+        let pixelW = imagePixelSize.width
+        let pixelH = imagePixelSize.height
+        guard pixelW > 0, pixelH > 0, maxLayoutWidth > 0 else { return .zero }
+
+        let limits = imageBubbleScaledLimits(forMaxLayoutWidth: maxLayoutWidth)
+        let maxHeight = limits.maxHeight
+        let minWidth = limits.minWidth
+
+        let heightAtMaxWidth = maxLayoutWidth * (pixelH / pixelW)
+        let candidate: CGSize
+        if heightAtMaxWidth <= maxHeight {
+            candidate = CGSize(width: maxLayoutWidth, height: heightAtMaxWidth)
+        } else {
+            let widthAtMaxHeight = maxHeight * (pixelW / pixelH)
+            candidate = CGSize(width: widthAtMaxHeight, height: maxHeight)
+        }
+
+        if candidate.width >= minWidth {
+            return candidate
+        }
+
+        let forcedWidth = minWidth
+        let forcedHeight = minWidth * (pixelH / pixelW)
+        return CGSize(width: forcedWidth, height: forcedHeight)
+    }
 
     // MARK: - 五、时间戳 / 状态
 

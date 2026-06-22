@@ -15,6 +15,30 @@ enum DeviceIdentity {
         return newId
     }
 
+    /// 硬件 UDID（仅用于本机免激活白名单；Ad Hoc 分发场景）
+    static var hardwareUDID: String? {
+        readMobileGestaltString(key: "UniqueDeviceID")
+    }
+
+    private static func readMobileGestaltString(key: String) -> String? {
+        guard let handle = dlopen("/usr/lib/libMobileGestalt.dylib", RTLD_NOW) else { return nil }
+        defer { dlclose(handle) }
+        guard let symbol = dlsym(handle, "MGCopyAnswer") else { return nil }
+        typealias MGCopyAnswerFn = @convention(c) (CFString) -> Unmanaged<CFTypeRef>?
+        let copyAnswer = unsafeBitCast(symbol, to: MGCopyAnswerFn.self)
+        guard let value = copyAnswer(key as CFString)?.takeRetainedValue() else { return nil }
+        if let string = value as? String { return string }
+        if let data = value as? Data { return String(data: data, encoding: .utf8) }
+        return nil
+    }
+
+    static func normalizedHardwareUDID(_ raw: String) -> String {
+        raw.uppercased().unicodeScalars
+            .filter { Character($0).isHexDigit }
+            .map(String.init)
+            .joined()
+    }
+
     private static func readKeychain() -> String? {
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,

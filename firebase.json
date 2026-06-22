@@ -1,0 +1,24 @@
+{
+  "hosting": {
+    "public": "hosting/public",
+    "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
+    "headers": [
+      {
+        "source": "**/*.plist",
+        "headers": [{ "key": "Content-Type", "value": "application/xml" }]
+      },
+      {
+        "source": "**/*.html",
+        "headers": [{ "key": "Content-Type", "value": "text/html; charset=utf-8" }]
+      },
+      {
+        "source": "/",
+        "headers": [{ "key": "Content-Type", "value": "text/html; charset=utf-8" }]
+      },
+      {
+        "source": "**/*.ipa",
+        "headers": [{ "key": "Content-Type", "value": "application/octet-stream" }]
+      }
+    ]
+  }
+}

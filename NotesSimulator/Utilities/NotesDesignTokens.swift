@@ -109,6 +109,33 @@ enum NotesDesignTokens {
         static var titleMinLineHeight: CGFloat { Official.Title.minLineHeight }
     }
 
+    /// iOS 26 备忘录正文阅读进度条（系统滚动条风格，仅滑块、不可拖拽）
+    enum ReadingProgress {
+        static let thumbWidth: CGFloat = 3
+        static let thumbMinHeight: CGFloat = 48
+        static let thumbMaxHeight: CGFloat = 72
+        static let trailingInset: CGFloat = 2.5
+        static let verticalInset: CGFloat = 8
+        static let autoHideDelay: TimeInterval = 1.2
+        static let revealFadeDuration: TimeInterval = 0.2
+        static let hideFadeDuration: TimeInterval = 0.35
+        static let thumbColor = Color.primary.opacity(0.36)
+
+        /// 与系统滚动条一致：滑块长度随可见比例缩短，并限制在 min/max 之间
+        static func thumbHeight(
+            trackHeight: CGFloat,
+            viewportHeight: CGFloat,
+            contentHeight: CGFloat
+        ) -> CGFloat {
+            guard contentHeight > viewportHeight, viewportHeight > 0, trackHeight > 0 else {
+                return thumbMaxHeight
+            }
+            let visibleRatio = viewportHeight / contentHeight
+            let proportional = trackHeight * visibleRatio
+            return min(max(proportional, thumbMinHeight), thumbMaxHeight)
+        }
+    }
+
     // MARK: - 长按菜单（尺寸为模拟交互布局，面板材质走系统 Material）
 
     enum PhoneMenu {
