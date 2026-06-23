@@ -12,11 +12,6 @@ struct NotesView: View {
     @State private var noteDisplayedDate = Date()
     @State private var bottomSafeInset: CGFloat = 0
     @State private var transitionProgress: CGFloat = 0
-    @State private var notesScrollOffsetY: CGFloat = 0
-    @State private var notesScrollContentHeight: CGFloat = 0
-    @State private var notesScrollViewportHeight: CGFloat = 0
-    @State private var notesScrollIndicatorVisible = false
-    @State private var notesScrollIndicatorHideTask: Task<Void, Never>?
     var body: some View {
         ZStack {
             if app.notesStyleIOS1718, app.showIMessage {
@@ -215,27 +210,13 @@ struct NotesView: View {
                     .frame(height: chromeBelow)
                     .frame(maxWidth: .infinity)
 
-                ScrollView(showsIndicators: false) {
-                    notes1718ScrollBody
-                        .trackNotesScrollContentMetrics()
-                        .padding(.bottom, 8 + notes1718ToolbarScrollReserve(safeBottom: safeBottom))
-                }
-                .trackNotesScrollMetrics(
-                    offsetY: $notesScrollOffsetY,
-                    contentHeight: $notesScrollContentHeight,
-                    viewportHeight: $notesScrollViewportHeight
-                )
-                .onChange(of: notesScrollOffsetY) { _ in
-                    noteScrollIndicatorDidScroll()
-                }
-                .onChange(of: notesScrollContentHeight) { _ in
-                    if !showsNotesScrollProgress {
-                        hideNotesScrollIndicatorImmediately()
-                    }
-                }
-                .onChange(of: notesScrollViewportHeight) { _ in
-                    if !showsNotesScrollProgress {
-                        hideNotesScrollIndicatorImmediately()
+                NotesReadingProgressAttachment(
+                    trackStyle: .ios1718(safeBottom: safeBottom)
+                ) {
+                    ScrollView(showsIndicators: false) {
+                        notes1718ScrollBody
+                            .trackNotesReadingScrollContent()
+                            .padding(.bottom, 8 + notes1718ToolbarScrollReserve(safeBottom: safeBottom))
                     }
                 }
             }
@@ -256,13 +237,6 @@ struct NotesView: View {
         )
         .overlay {
             notes1718BackdropDimOverlay
-        }
-        .overlay(alignment: .trailing) {
-            notesReadingProgressOverlay1718(
-                cardHeight: height,
-                safeTop: safeTop,
-                safeBottom: safeBottom
-            )
         }
         .compositingGroup()
         .modifier(
@@ -440,8 +414,9 @@ struct NotesView: View {
     }
 
     private var notesContent: some View {
-        ScrollView(showsIndicators: false) {
-            VStack(alignment: .leading, spacing: 0) {
+        NotesReadingProgressAttachment(trackStyle: .ios26) {
+            ScrollView(showsIndicators: false) {
+                VStack(alignment: .leading, spacing: 0) {
                 if !app.notesStyleIOS1718 {
                     Text(NoteDateFormatting.string(from: noteDisplayedDate))
                         .font(NotesDesignTokens.Layout.dateFont)
@@ -492,27 +467,10 @@ struct NotesView: View {
                 }
                 .fixedSize(horizontal: false, vertical: true)
             }
-            .padding(.horizontal, NotesDesignTokens.Layout.contentInset)
-            .padding(.top, 6)
-            .padding(.bottom, 8 + bottomToolbarReserve)
-            .trackNotesScrollContentMetrics()
-        }
-        .trackNotesScrollMetrics(
-            offsetY: $notesScrollOffsetY,
-            contentHeight: $notesScrollContentHeight,
-            viewportHeight: $notesScrollViewportHeight
-        )
-        .onChange(of: notesScrollOffsetY) { _ in
-            noteScrollIndicatorDidScroll()
-        }
-        .onChange(of: notesScrollContentHeight) { _ in
-            if !showsNotesScrollProgress {
-                hideNotesScrollIndicatorImmediately()
-            }
-        }
-        .onChange(of: notesScrollViewportHeight) { _ in
-            if !showsNotesScrollProgress {
-                hideNotesScrollIndicatorImmediately()
+                .padding(.horizontal, NotesDesignTokens.Layout.contentInset)
+                .padding(.top, 6)
+                .padding(.bottom, 8 + bottomToolbarReserve)
+                .trackNotesReadingScrollContent()
             }
         }
         .overlay(alignment: .top) {
@@ -527,9 +485,6 @@ struct NotesView: View {
         .overlay(alignment: .bottom) {
             bottomBar
                 .ignoresSafeArea(.keyboard, edges: .bottom)
-        }
-        .overlay(alignment: .trailing) {
-            notesReadingProgressOverlay
         }
         .sheet(isPresented: $showTuningPanel) {
             if app.notesStyleIOS1718 {
@@ -581,91 +536,6 @@ struct NotesView: View {
 
     private func touchNoteDate() {
         noteDisplayedDate = Date()
-    }
-
-    private var notesScrollProgress: CGFloat {
-        let maxScroll = max(notesScrollContentHeight - notesScrollViewportHeight, 1)
-        return min(max(notesScrollOffsetY / maxScroll, 0), 1)
-    }
-
-    private var showsNotesScrollProgress: Bool {
-        notesScrollViewportHeight > 0
-            && notesScrollContentHeight > notesScrollViewportHeight + 1
-    }
-
-    @ViewBuilder
-    private var notesReadingProgressOverlay: some View {
-        if showsNotesScrollProgress {
-            GeometryReader { geo in
-                let bounds = NotesReadingProgressTrackBounds.ios26(
-                    safeAreaInsets: geo.safeAreaInsets,
-                    containerHeight: geo.size.height
-                )
-
-                NotesReadingProgressOverlay(
-                    progress: notesScrollProgress,
-                    trackHeight: bounds.height,
-                    viewportHeight: notesScrollViewportHeight,
-                    contentHeight: notesScrollContentHeight,
-                    isVisible: notesScrollIndicatorVisible
-                )
-                .padding(.top, bounds.top)
-                .padding(.bottom, bounds.bottom)
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
-            }
-        }
-    }
-
-    @ViewBuilder
-    private func notesReadingProgressOverlay1718(
-        cardHeight: CGFloat,
-        safeTop: CGFloat,
-        safeBottom: CGFloat
-    ) -> some View {
-        if showsNotesScrollProgress {
-            let bounds = NotesReadingProgressTrackBounds.ios1718(
-                safeTop: safeTop,
-                safeBottom: safeBottom,
-                containerHeight: cardHeight
-            )
-
-            NotesReadingProgressOverlay(
-                progress: notesScrollProgress,
-                trackHeight: bounds.height,
-                viewportHeight: notesScrollViewportHeight,
-                contentHeight: notesScrollContentHeight,
-                isVisible: notesScrollIndicatorVisible
-            )
-            .padding(.top, bounds.top)
-            .padding(.bottom, bounds.bottom)
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
-        }
-    }
-
-    private func noteScrollIndicatorDidScroll() {
-        guard showsNotesScrollProgress else { return }
-        notesScrollIndicatorHideTask?.cancel()
-
-        if !notesScrollIndicatorVisible {
-            withAnimation(.easeOut(duration: NotesDesignTokens.ReadingProgress.revealFadeDuration)) {
-                notesScrollIndicatorVisible = true
-            }
-        }
-
-        let delay = NotesDesignTokens.ReadingProgress.autoHideDelay
-        notesScrollIndicatorHideTask = Task { @MainActor in
-            try? await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
-            guard !Task.isCancelled else { return }
-            withAnimation(.easeOut(duration: NotesDesignTokens.ReadingProgress.hideFadeDuration)) {
-                notesScrollIndicatorVisible = false
-            }
-        }
-    }
-
-    private func hideNotesScrollIndicatorImmediately() {
-        notesScrollIndicatorHideTask?.cancel()
-        notesScrollIndicatorHideTask = nil
-        notesScrollIndicatorVisible = false
     }
 
     /// 为底栏预留滚动空间（底栏 overlay 固定屏幕底部，不随键盘上移）

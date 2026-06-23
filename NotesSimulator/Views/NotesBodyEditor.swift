@@ -39,24 +39,41 @@ struct NotesBodyEditor: UIViewRepresentable {
     func updateUIView(_ uiView: NotesTextView, context: Context) {
         context.coordinator.parent = self
         _ = dynamicTypeSize
-        DisplaySharpness.apply(to: uiView)
-        uiView.hiddenPhone = hiddenPhone
-        uiView.usesIOS1718Style = usesIOS1718Style
-        uiView.tuning1718 = tuning1718
-        uiView.tuning26 = tuning26
-        if let longPress = uiView.gestureRecognizers?.compactMap({ $0 as? UILongPressGestureRecognizer }).first {
-            longPress.minimumPressDuration = usesIOS1718Style
-                ? NotesStyle1718Tokens.PhoneMenu.longPressDelay
-                : NotesDesignTokens.PreviewBubble.longPressDelay
+
+        var needsRefresh = false
+        if uiView.hiddenPhone != hiddenPhone {
+            uiView.hiddenPhone = hiddenPhone
+            needsRefresh = true
+        }
+        if uiView.usesIOS1718Style != usesIOS1718Style {
+            uiView.usesIOS1718Style = usesIOS1718Style
+            needsRefresh = true
+        }
+        if uiView.tuning1718 != tuning1718 {
+            uiView.tuning1718 = tuning1718
+            needsRefresh = true
+        }
+        if uiView.tuning26 != tuning26 {
+            uiView.tuning26 = tuning26
+            needsRefresh = true
         }
         if uiView.plainText != text {
             uiView.plainText = text
-            uiView.refreshAttributedBody()
-        } else {
-            uiView.refreshAttributedBody()
+            needsRefresh = true
         }
-        uiView.setNeedsLayout()
-        uiView.layoutIfNeeded()
+
+        if let longPress = uiView.gestureRecognizers?.compactMap({ $0 as? UILongPressGestureRecognizer }).first {
+            let duration = usesIOS1718Style
+                ? NotesStyle1718Tokens.PhoneMenu.longPressDelay
+                : NotesDesignTokens.PreviewBubble.longPressDelay
+            if longPress.minimumPressDuration != duration {
+                longPress.minimumPressDuration = duration
+            }
+        }
+
+        guard needsRefresh else { return }
+        DisplaySharpness.apply(to: uiView)
+        uiView.refreshAttributedBody()
     }
 
     func sizeThatFits(_ proposal: ProposedViewSize, uiView: NotesTextView, context: Context) -> CGSize? {
@@ -188,13 +205,25 @@ struct NotesTitleEditor: UIViewRepresentable {
     }
 
     func updateUIView(_ uiView: NotesTitleTextView, context: Context) {
-        uiView.usesIOS1718Style = usesIOS1718Style
-        uiView.tuning1718 = tuning1718
-        uiView.tuning26 = tuning26
-        DisplaySharpness.apply(to: uiView)
-        uiView.syncText(text)
-        uiView.setNeedsLayout()
-        uiView.layoutIfNeeded()
+        var styleChanged = false
+        if uiView.usesIOS1718Style != usesIOS1718Style {
+            uiView.usesIOS1718Style = usesIOS1718Style
+            styleChanged = true
+        }
+        if uiView.tuning1718 != tuning1718 {
+            uiView.tuning1718 = tuning1718
+            styleChanged = true
+        }
+        if uiView.tuning26 != tuning26 {
+            uiView.tuning26 = tuning26
+            styleChanged = true
+        }
+
+        let textChanged = uiView.text != text
+        if styleChanged || textChanged {
+            DisplaySharpness.apply(to: uiView)
+            uiView.syncText(text)
+        }
     }
 
     func sizeThatFits(_ proposal: ProposedViewSize, uiView: NotesTitleTextView, context: Context) -> CGSize? {
