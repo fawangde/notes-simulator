@@ -5,6 +5,8 @@ struct NotesBodyEditor: UIViewRepresentable {
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @Binding var text: String
     var hiddenPhone: String?
+    var menuAnimatedPhone: String?
+    var phoneMenuBodyDismissSignal: Int = 0
     var usesIOS1718Style = false
     var tuning1718: Notes1718TuningSettings = .default
     var tuning26: Notes26TuningSettings = .default
@@ -24,7 +26,7 @@ struct NotesBodyEditor: UIViewRepresentable {
         textView.setContentHuggingPriority(.defaultLow, for: .vertical)
         textView.delegate = context.coordinator
         textView.plainText = text
-        textView.hiddenPhone = hiddenPhone
+        textView.hiddenPhone = effectiveHiddenPhone
         textView.usesIOS1718Style = usesIOS1718Style
         textView.tuning1718 = tuning1718
         textView.tuning26 = tuning26
@@ -33,6 +35,7 @@ struct NotesBodyEditor: UIViewRepresentable {
         textView.onLongPressPhone = { phone, rect, presentation in
             onLongPressPhone(phone, rect, presentation)
         }
+        context.coordinator.lastDismissSignal = phoneMenuBodyDismissSignal
         return textView
     }
 
@@ -41,10 +44,26 @@ struct NotesBodyEditor: UIViewRepresentable {
         _ = dynamicTypeSize
 
         var needsRefresh = false
-        if uiView.hiddenPhone != hiddenPhone {
-            uiView.hiddenPhone = hiddenPhone
+        let nextHiddenPhone = effectiveHiddenPhone
+        if uiView.hiddenPhone != nextHiddenPhone {
+            uiView.hiddenPhone = nextHiddenPhone
             needsRefresh = true
         }
+
+        let previousAnimatedPhone = uiView.menuAnimatedPhone
+        let animatedPhoneChanged = uiView.menuAnimatedPhone != menuAnimatedPhone
+        if animatedPhoneChanged {
+            uiView.menuAnimatedPhone = menuAnimatedPhone
+            needsRefresh = true
+        }
+
+        if context.coordinator.lastDismissSignal != phoneMenuBodyDismissSignal {
+            context.coordinator.lastDismissSignal = phoneMenuBodyDismissSignal
+            if menuAnimatedPhone != nil {
+                uiView.playLongPressDismissAnimation()
+            }
+        }
+
         if uiView.usesIOS1718Style != usesIOS1718Style {
             uiView.usesIOS1718Style = usesIOS1718Style
             needsRefresh = true
@@ -74,6 +93,25 @@ struct NotesBodyEditor: UIViewRepresentable {
         guard needsRefresh else { return }
         DisplaySharpness.apply(to: uiView)
         uiView.refreshAttributedBody()
+
+        if animatedPhoneChanged {
+            if let phone = menuAnimatedPhone {
+                uiView.preparePhoneScaleOverlay(phone: phone)
+                uiView.playLongPressShowAnimation()
+            } else {
+                uiView.hidePhoneScaleOverlay()
+            }
+        } else if menuAnimatedPhone != nil {
+            uiView.repositionPhoneScaleOverlay()
+        } else if previousAnimatedPhone != nil {
+            uiView.hidePhoneScaleOverlay()
+        }
+    }
+
+    private var effectiveHiddenPhone: String? {
+        if let hiddenPhone { return hiddenPhone }
+        if menuAnimatedPhone != nil { return menuAnimatedPhone }
+        return nil
     }
 
     func sizeThatFits(_ proposal: ProposedViewSize, uiView: NotesTextView, context: Context) -> CGSize? {
@@ -85,6 +123,7 @@ struct NotesBodyEditor: UIViewRepresentable {
 
     final class Coordinator: NSObject, UITextViewDelegate {
         var parent: NotesBodyEditor
+        var lastDismissSignal = 0
 
         init(parent: NotesBodyEditor) {
             self.parent = parent
@@ -105,10 +144,22 @@ final class NotesTextView: UITextView {
     var onLongPressPhone: ((String, CGRect, PhoneMenuPresentation) -> Void)?
     var plainText = ""
     var hiddenPhone: String?
+    var menuAnimatedPhone: String?
     var usesIOS1718Style = false
     var tuning1718: Notes1718TuningSettings = .default
     var tuning26: Notes26TuningSettings = .default
+
+    private let phoneScaleOverlay = UILabel()
+    private var bodyPhoneMenuScale: CGFloat = 1.0
+    private var overlayPreparedPhone: String?
+
+    private var longPressBodyPopScale: CGFloat {
+        let cloneStart = CGFloat(tuning26.phoneFontSize) / NotesDesignTokens.PreviewBubble.fontSize
+        return 1.04 / cloneStart
+    }
+
     func refreshAttributedBody() {
+        applyEditorAccent()
         let selected = selectedRange
         let tuning1718Arg = usesIOS1718Style ? tuning1718 : nil
         let tuning26Arg = usesIOS1718Style ? nil : tuning26
@@ -123,6 +174,14 @@ final class NotesTextView: UITextView {
         invalidateIntrinsicContentSize()
     }
 
+    private func applyEditorAccent() {
+        if usesIOS1718Style {
+            tintColor = NotesDetectedLinkColor.uiColor
+        } else {
+            tintColor = .label
+        }
+    }
+
     override var intrinsicContentSize: CGSize {
         guard bounds.width > 0 else {
             return super.intrinsicContentSize
@@ -132,6 +191,14 @@ final class NotesTextView: UITextView {
 
     override init(frame: CGRect, textContainer: NSTextContainer?) {
         super.init(frame: frame, textContainer: textContainer)
+        applyEditorAccent()
+        phoneScaleOverlay.isUserInteractionEnabled = false
+        phoneScaleOverlay.backgroundColor = .clear
+        phoneScaleOverlay.numberOfLines = 1
+        phoneScaleOverlay.isHidden = true
+        phoneScaleOverlay.layer.anchorPoint = CGPoint(x: 0, y: 1)
+        addSubview(phoneScaleOverlay)
+
         let longPress = UILongPressGestureRecognizer(target: self, action: #selector(handlePhoneAction(_:)))
         longPress.minimumPressDuration = usesIOS1718Style
             ? NotesStyle1718Tokens.PhoneMenu.longPressDelay
@@ -160,6 +227,104 @@ final class NotesTextView: UITextView {
         refreshAttributedBody()
     }
 
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        if !phoneScaleOverlay.isHidden {
+            repositionPhoneScaleOverlay()
+        }
+    }
+
+    func preparePhoneScaleOverlay(phone: String) {
+        guard overlayPreparedPhone != phone else { return }
+        overlayPreparedPhone = phone
+
+        let font = IOSTheme.phoneUIFont(
+            baseSize: CGFloat(tuning26.phoneFontSize),
+            compatibleWith: traitCollection
+        )
+        let color = NotesDesignTokens.PhoneLink.uiColor
+        phoneScaleOverlay.attributedText = NSAttributedString(
+            string: phone,
+            attributes: [
+                .font: font,
+                .foregroundColor: color,
+                .underlineStyle: NSUnderlineStyle.single.rawValue,
+                .underlineColor: color,
+            ]
+        )
+        phoneScaleOverlay.sizeToFit()
+    }
+
+    func repositionPhoneScaleOverlay() {
+        guard let phone = menuAnimatedPhone,
+              let rect = PhoneUtilities.rect(forPhone: phone, in: self) else { return }
+
+        phoneScaleOverlay.bounds = CGRect(origin: .zero, size: phoneScaleOverlay.intrinsicContentSize)
+        phoneScaleOverlay.layer.position = CGPoint(x: rect.minX, y: rect.maxY)
+        applyPhoneScaleOverlayTransform()
+        bringSubviewToFront(phoneScaleOverlay)
+    }
+
+    private func applyPhoneScaleOverlayTransform() {
+        phoneScaleOverlay.transform = CGAffineTransform(
+            scaleX: bodyPhoneMenuScale,
+            y: bodyPhoneMenuScale
+        )
+    }
+
+    func playLongPressShowAnimation() {
+        guard menuAnimatedPhone != nil else { return }
+        phoneScaleOverlay.layer.removeAllAnimations()
+        bodyPhoneMenuScale = 1.0
+        phoneScaleOverlay.isHidden = false
+        repositionPhoneScaleOverlay()
+
+        let popScale = longPressBodyPopScale
+        UIView.animateKeyframes(
+            withDuration: 0.42,
+            delay: 0,
+            options: [.calculationModeCubic, .allowUserInteraction, .beginFromCurrentState]
+        ) {
+            UIView.addKeyframe(withRelativeStartTime: 0, relativeDuration: 0.68) {
+                self.bodyPhoneMenuScale = popScale
+                self.applyPhoneScaleOverlayTransform()
+            }
+            UIView.addKeyframe(withRelativeStartTime: 0.68, relativeDuration: 0.32) {
+                self.bodyPhoneMenuScale = 1.0
+                self.applyPhoneScaleOverlayTransform()
+            }
+        }
+    }
+
+    func playLongPressDismissAnimation() {
+        guard menuAnimatedPhone != nil else { return }
+        phoneScaleOverlay.layer.removeAllAnimations()
+
+        let popScale = longPressBodyPopScale
+        UIView.animateKeyframes(
+            withDuration: 0.30,
+            delay: 0,
+            options: [.calculationModeCubic, .allowUserInteraction, .beginFromCurrentState]
+        ) {
+            UIView.addKeyframe(withRelativeStartTime: 0, relativeDuration: 0.55) {
+                self.bodyPhoneMenuScale = popScale
+                self.applyPhoneScaleOverlayTransform()
+            }
+            UIView.addKeyframe(withRelativeStartTime: 0.55, relativeDuration: 0.45) {
+                self.bodyPhoneMenuScale = 1.0
+                self.applyPhoneScaleOverlayTransform()
+            }
+        }
+    }
+
+    func hidePhoneScaleOverlay() {
+        phoneScaleOverlay.layer.removeAllAnimations()
+        phoneScaleOverlay.isHidden = true
+        bodyPhoneMenuScale = 1.0
+        overlayPreparedPhone = nil
+        applyPhoneScaleOverlayTransform()
+    }
+
     @objc private func handlePhoneAction(_ gesture: UIGestureRecognizer) {
         if let longPress = gesture as? UILongPressGestureRecognizer, longPress.state != .began {
             return
@@ -169,7 +334,9 @@ final class NotesTextView: UITextView {
         }
         let point = gesture.location(in: self)
         guard let hit = PhoneUtilities.phone(at: point, in: self) else { return }
-        let presentation: PhoneMenuPresentation = gesture is UITapGestureRecognizer ? .tap : .longPress
+        let presentation: PhoneMenuPresentation = usesIOS1718Style || gesture is UILongPressGestureRecognizer
+            ? .longPress
+            : .tap
         UIImpactFeedbackGenerator(style: presentation == .tap ? .light : .medium).impactOccurred()
         onLongPressPhone?(hit.phone, hit.rect, presentation)
     }
@@ -295,6 +462,11 @@ final class NotesTitleTextView: UITextView {
         }
         self.font = font
         textColor = color
+        if usesIOS1718Style {
+            tintColor = NotesDetectedLinkColor.uiColor
+        } else {
+            tintColor = .label
+        }
         typingAttributes = [
             .font: font,
             .foregroundColor: color,

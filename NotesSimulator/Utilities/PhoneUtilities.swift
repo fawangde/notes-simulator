@@ -150,6 +150,30 @@ enum PhoneUtilities {
         rect = textView.convert(rect, to: textView.window)
         return (phone, rect)
     }
+
+    /// 正文号码在 `textView` 坐标系下的字形包围盒
+    static func rect(forPhone phone: String, in textView: UITextView) -> CGRect? {
+        let storage = textView.textStorage
+        var matchRange: NSRange?
+        storage.enumerateAttribute(.phoneNumber, in: NSRange(location: 0, length: storage.length)) { value, range, stop in
+            guard let matched = value as? String, matched == phone else { return }
+            matchRange = range
+            stop.pointee = true
+        }
+        guard let range = matchRange else { return nil }
+
+        let glyphRange = textView.layoutManager.glyphRange(
+            forCharacterRange: range,
+            actualCharacterRange: nil
+        )
+        var rect = textView.layoutManager.boundingRect(
+            forGlyphRange: glyphRange,
+            in: textView.textContainer
+        )
+        rect.origin.x += textView.textContainerInset.left
+        rect.origin.y += textView.textContainerInset.top
+        return rect
+    }
 }
 
 extension NSAttributedString.Key {

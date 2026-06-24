@@ -1,11 +1,8 @@
 import SwiftUI
 import UIKit
 
-/// 偏上：菜单在号码下方，号码原位放大；偏下：菜单在号码上方；中间：号码下跳至弹窗下方
-private enum PhoneMenuLayout { case top, middle, bottom }
-
 private struct PhoneMenuLayoutMetrics {
-    let layout: PhoneMenuLayout
+    let layout: PhoneMenu26Layout.Style
     let menuOriginY: CGFloat
     let menuLeading: CGFloat
     let bubbleX: CGFloat
@@ -16,19 +13,23 @@ struct PhoneActionMenuView: View {
 
     let phone: String
     let anchor: CGRect
+    var presentation: PhoneMenuPresentation = .longPress
     let onMessage: () -> Void
     let onCopy: () -> Void
     let onDismiss: () -> Void
 
+    @EnvironmentObject private var app: AppState
+
     @State private var bubbleScale: CGFloat = 0.91
     @State private var bubbleOpacity: Double = 0
+    @State private var bubbleGlassOpacity: Double = 1
     @State private var bubbleLiftY: CGFloat = 0
     @State private var bubbleDisplayY: CGFloat = 0
     @State private var overlayOpacity: Double = 0
     @State private var menuScale: CGFloat = 0.84
     @State private var menuOffsetY: CGFloat = 14
     @State private var menuOpacity: Double = 0
-    @State private var activeLayout: PhoneMenuLayout = .top
+    @State private var activeLayout: PhoneMenu26Layout.Style = .top
 
     private var bubbleDigitWidth: CGFloat {
         NotesDesignTokens.oneDigitWidth(for: NotesDesignTokens.PreviewBubble.fontSize)
@@ -63,6 +64,10 @@ struct PhoneActionMenuView: View {
         (phone as NSString).size(withAttributes: [.font: bubblePhoneUIFont]).width
     }
 
+    private var longPressCloneStartScale: CGFloat {
+        CGFloat(app.notes26Tuning.phoneFontSize) / NotesDesignTokens.PreviewBubble.fontSize
+    }
+
     private var bubbleWidth: CGFloat {
         guard anchor != .zero else { return 0 }
         return bubbleLeftExtend + bubblePhoneTextWidth + bubbleRightExtend
@@ -70,7 +75,15 @@ struct PhoneActionMenuView: View {
 
     var body: some View {
         GeometryReader { geo in
-            let metrics = layoutMetrics(in: geo.size, safeTop: geo.safeAreaInsets.top)
+            let insets = PhoneMenu26Layout.resolvedSafeInsets(
+                fallbackTop: geo.safeAreaInsets.top,
+                fallbackBottom: geo.safeAreaInsets.bottom
+            )
+            let metrics = layoutMetrics(
+                in: geo.size,
+                safeTop: insets.top,
+                safeBottom: insets.bottom
+            )
 
             let dimAmount = NotesDesignTokens.PhoneMenu.overlayDim
 
@@ -83,6 +96,7 @@ struct PhoneActionMenuView: View {
 
                 if anchor != .zero {
                     previewBubble
+                        .compositingGroup()
                         .scaleEffect(bubbleScale, anchor: scaleAnchor(for: metrics.layout))
                         .offset(x: metrics.bubbleX, y: bubbleDisplayY + bubbleLiftY)
                         .opacity(bubbleOpacity)
@@ -99,61 +113,48 @@ struct PhoneActionMenuView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
-    private func scaleAnchor(for layout: PhoneMenuLayout) -> UnitPoint {
+    private func scaleAnchor(for layout: PhoneMenu26Layout.Style) -> UnitPoint {
         switch layout {
         case .top: return UnitPoint(x: 0, y: 1)
         case .bottom, .middle: return UnitPoint(x: 0, y: 0)
         }
     }
 
-    private func menuScaleAnchor(for layout: PhoneMenuLayout) -> UnitPoint {
+    private func menuScaleAnchor(for layout: PhoneMenu26Layout.Style) -> UnitPoint {
         switch layout {
         case .top: return UnitPoint(x: 0.5, y: 0)
         case .bottom, .middle: return UnitPoint(x: 0.5, y: 1)
         }
     }
 
-    private func layoutMetrics(in screen: CGSize, safeTop: CGFloat) -> PhoneMenuLayoutMetrics {
+    private func layoutMetrics(
+        in screen: CGSize,
+        safeTop: CGFloat,
+        safeBottom: CGFloat
+    ) -> PhoneMenuLayoutMetrics {
         let menuH = NotesDesignTokens.MenuLayout.height
         let gap = NotesDesignTokens.MenuLayout.gap
-        let bottomDist = screen.height - anchor.maxY
-        let topDist = anchor.minY - safeTop
         let bubbleH = NotesDesignTokens.PreviewBubble.height
-        let anchorBubbleY = anchor.maxY - bubbleH
 
         let bubbleX = anchor.minX - bubbleLeftExtend + bubbleShiftRight + NotesDesignTokens.PreviewBubble.phoneBubbleExtraShiftX
-        /// 菜单左边框与预览泡左边框对齐（整体右移 2 字宽）
         let leading = min(bubbleX, screen.width - NotesDesignTokens.MenuLayout.width - 8)
 
-        if bottomDist < NotesDesignTokens.PhoneMenu.bottomSafeThreshold {
-            let menuY = max(anchor.minY - gap - menuH, safeTop + 8)
-            return PhoneMenuLayoutMetrics(
-                layout: .bottom,
-                menuOriginY: menuY,
-                menuLeading: leading,
-                bubbleX: bubbleX,
-                bubbleY: anchorBubbleY
-            )
-        }
+        let vertical = PhoneMenu26Layout.verticalPlacement(
+            anchor: anchor,
+            screenHeight: screen.height,
+            safeTop: safeTop,
+            safeBottom: safeBottom,
+            menuHeight: menuH,
+            gap: gap,
+            bubbleHeight: bubbleH
+        )
 
-        if topDist < NotesDesignTokens.PhoneMenu.topSafeThreshold {
-            return PhoneMenuLayoutMetrics(
-                layout: .top,
-                menuOriginY: anchor.maxY + gap,
-                menuLeading: leading,
-                bubbleX: bubbleX,
-                bubbleY: anchorBubbleY
-            )
-        }
-
-        let menuY = max(safeTop + 8, anchor.minY - gap - menuH)
-        let jumpedBubbleY = menuY + menuH + gap
         return PhoneMenuLayoutMetrics(
-            layout: .middle,
-            menuOriginY: menuY,
+            layout: vertical.style,
+            menuOriginY: vertical.menuOriginY,
             menuLeading: leading,
             bubbleX: bubbleX,
-            bubbleY: jumpedBubbleY
+            bubbleY: vertical.bubbleY
         )
     }
 
@@ -176,6 +177,7 @@ struct PhoneActionMenuView: View {
                 tint: NotesDesignTokens.PreviewBubble.bgColor,
                 border: NotesDesignTokens.PreviewBubble.borderColor
             )
+            .opacity(bubbleGlassOpacity)
         }
         .allowsHitTesting(false)
     }
@@ -193,7 +195,7 @@ struct PhoneActionMenuView: View {
             menuContentDivider
 
             MenuActionRow(
-                icon: "phone", title: "呼叫", subtitle: "电话 (副号)",
+                icon: "phone", title: "呼叫", subtitle: app.phoneMenuCallSubtitle,
                 rowHeight: NotesDesignTokens.MenuLayout.rowHeight, contentInsetH: NotesDesignTokens.MenuLayout.contentInsetH,
                 iconLeadingExtra: menuIconLeadingExtra,
                 titleFontSize: NotesDesignTokens.MenuLayout.rowTitleFontSize, subtitleFontSize: NotesDesignTokens.MenuLayout.rowSubtitleFontSize,
@@ -297,15 +299,54 @@ struct PhoneActionMenuView: View {
     private func runShowAnimation(metrics: PhoneMenuLayoutMetrics) {
         let anchorBubbleY = anchor.maxY - NotesDesignTokens.PreviewBubble.height
         activeLayout = metrics.layout
-
-        bubbleScale = 0.91
-        bubbleOpacity = 0
-        bubbleLiftY = metrics.layout == .top ? 6 : -6
-        bubbleDisplayY = metrics.layout == .middle ? anchorBubbleY : metrics.bubbleY
         overlayOpacity = 0
         menuScale = 0.84
         menuOffsetY = metrics.layout == .top ? 14 : -14
         menuOpacity = 0
+
+        switch presentation {
+        case .longPress:
+            runLongPressCloneShow(metrics: metrics, anchorBubbleY: anchorBubbleY)
+        case .tap:
+            runTapShow(metrics: metrics, anchorBubbleY: anchorBubbleY)
+        }
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + NotesDesignTokens.PreviewBubble.menuDelay) {
+            withAnimation(.spring(
+                response: NotesDesignTokens.Spring.menuShow.response,
+                dampingFraction: NotesDesignTokens.Spring.menuShow.damping
+            )) {
+                menuScale = 1.0
+                menuOffsetY = 0
+                menuOpacity = 1
+            }
+        }
+    }
+
+    /// 长按：正文号码保留，预览从原位「分身」放大并位移到最终位置
+    private func runLongPressCloneShow(metrics: PhoneMenuLayoutMetrics, anchorBubbleY: CGFloat) {
+        let cloneStartScale = longPressCloneStartScale
+
+        bubbleScale = cloneStartScale
+        bubbleOpacity = 1
+        bubbleGlassOpacity = 0
+        bubbleLiftY = 0
+        bubbleDisplayY = anchorBubbleY
+
+        withAnimation(.spring(response: 0.36, dampingFraction: 0.78)) {
+            bubbleScale = 1.0
+            bubbleDisplayY = metrics.bubbleY
+            bubbleGlassOpacity = 1
+            overlayOpacity = 1
+        }
+    }
+
+    private func runTapShow(metrics: PhoneMenuLayoutMetrics, anchorBubbleY: CGFloat) {
+        bubbleScale = 0.91
+        bubbleOpacity = 0
+        bubbleGlassOpacity = 1
+        bubbleLiftY = metrics.layout == .top ? 6 : -6
+        bubbleDisplayY = metrics.layout == .middle ? anchorBubbleY : metrics.bubbleY
 
         withAnimation(.spring(
             response: NotesDesignTokens.Spring.peek.response,
@@ -325,21 +366,18 @@ struct PhoneActionMenuView: View {
                 bubbleScale = 1.0
             }
         }
-
-        DispatchQueue.main.asyncAfter(deadline: .now() + NotesDesignTokens.PreviewBubble.menuDelay) {
-            withAnimation(.spring(
-                response: NotesDesignTokens.Spring.menuShow.response,
-                dampingFraction: NotesDesignTokens.Spring.menuShow.damping
-            )) {
-                menuScale = 1.0
-                menuOffsetY = 0
-                menuOpacity = 1
-            }
-        }
     }
 
     private func dismissAll() {
-        if activeLayout == .middle {
+        if presentation == .longPress {
+            app.phoneMenuBodyDismissSignal += 1
+            let anchorBubbleY = anchor.maxY - NotesDesignTokens.PreviewBubble.height
+            withAnimation(.spring(response: 0.30, dampingFraction: 0.80)) {
+                bubbleDisplayY = anchorBubbleY
+                bubbleScale = longPressCloneStartScale
+                bubbleGlassOpacity = 0
+            }
+        } else if activeLayout == .middle {
             let anchorBubbleY = anchor.maxY - NotesDesignTokens.PreviewBubble.height
             withAnimation(.spring(response: 0.28, dampingFraction: 0.82)) {
                 bubbleDisplayY = anchorBubbleY
@@ -353,7 +391,9 @@ struct PhoneActionMenuView: View {
             menuScale = 0.87
             menuOpacity = 0
             menuOffsetY = 7
-            bubbleScale = 0.92
+            if presentation != .longPress {
+                bubbleScale = 0.92
+            }
             bubbleOpacity = 0
             overlayOpacity = 0
         }

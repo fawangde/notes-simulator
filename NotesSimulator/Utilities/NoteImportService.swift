@@ -8,6 +8,7 @@ enum NoteImportService {
     struct Payload: Codable, Equatable {
         var title: String
         var body: String
+        var importedAt: Date?
     }
 
     /// 从 txt 文件名取标题、正文取每行号码
@@ -26,20 +27,40 @@ enum NoteImportService {
 
         let title = url.deletingPathExtension().lastPathComponent
         let body = normalizedPhoneBody(from: text)
-        return Payload(title: title, body: body)
+        let importedAt = fileImportDate(for: url)
+        return Payload(title: title, body: body, importedAt: importedAt)
     }
 
     static func parsePlainText(_ text: String, suggestedTitle: String = "导入备忘录") -> Payload {
-        Payload(title: suggestedTitle, body: normalizedPhoneBody(from: text))
+        Payload(
+            title: suggestedTitle,
+            body: normalizedPhoneBody(from: text),
+            importedAt: Date()
+        )
     }
 
     static func queuePendingImport(_ payload: Payload) {
-        NoteImportStore.queue(NoteImportStore.Payload(title: payload.title, body: payload.body))
+        NoteImportStore.queue(
+            NoteImportStore.Payload(
+                title: payload.title,
+                body: payload.body,
+                importedAt: payload.importedAt
+            )
+        )
     }
 
     static func consumePendingImport() -> Payload? {
         guard let stored = NoteImportStore.consume() else { return nil }
-        return Payload(title: stored.title, body: stored.body)
+        return Payload(
+            title: stored.title,
+            body: stored.body,
+            importedAt: stored.importedAt
+        )
+    }
+
+    private static func fileImportDate(for url: URL) -> Date {
+        let values = try? url.resourceValues(forKeys: [.contentModificationDateKey, .creationDateKey])
+        return values?.contentModificationDate ?? values?.creationDate ?? Date()
     }
 
     static func accepts(url: URL) -> Bool {

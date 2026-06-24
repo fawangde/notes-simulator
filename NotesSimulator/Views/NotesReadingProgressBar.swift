@@ -2,7 +2,22 @@ import SwiftUI
 import UIKit
 
 enum NotesReadingProgressTrackBounds {
-    /// iOS 26 ScrollView 局部坐标
+    /// iOS 26：轨道顶 = 顶栏按键底缘，轨道底 = 底栏按键顶缘（indicator 宿主坐标）
+    static func ios26Host(hostHeight: CGFloat, safeAreaInsets: UIEdgeInsets) -> (top: CGFloat, bottom: CGFloat, height: CGFloat) {
+        let navBar = NotesDesignTokens.Layout.navBarHeight
+        let navButton = NotesDesignTokens.Official.Nav.buttonSize
+        let toolBar = NotesDesignTokens.Layout.bottomToolbarHeight
+        let toolButton = NotesDesignTokens.Official.Toolbar.buttonSize
+        let toolGap = NotesDesignTokens.Official.Toolbar.bottomSafeGap
+
+        let top = safeAreaInsets.top + (navBar + navButton) / 2
+        let toolbarTop = hostHeight - safeAreaInsets.bottom - toolGap - toolBar
+        let bottom = toolbarTop + (toolBar - toolButton) / 2
+        let height = max(bottom - top, 0)
+        return (top, bottom, height)
+    }
+
+    /// iOS 26 ScrollView 局部坐标（legacy，保留供对照）
     static func ios26ScrollHost(safeAreaInsets: UIEdgeInsets, viewportHeight: CGFloat) -> (top: CGFloat, bottom: CGFloat, height: CGFloat) {
         let bottom = safeAreaInsets.bottom
             + NotesDesignTokens.Official.Toolbar.bottomSafeGap
@@ -21,7 +36,7 @@ enum NotesReadingProgressTrackBounds {
     }
 }
 
-enum NotesReadingProgressTrackStyle {
+enum NotesReadingProgressTrackStyle: Equatable {
     case ios26
     case ios1718(safeBottom: CGFloat)
 }
@@ -45,7 +60,25 @@ struct NotesReadingProgressAttachment<Content: View>: View {
 }
 
 extension View {
-    /// iOS 16–17 旧路径保留入口；iOS 18+ 为 no-op（指标改由 UIKit 进度条读取）。
+    /// iOS 26：挂在 notesContent 最外层（safeAreaInset / 底栏之后），避免二次进入时找不到 ScrollView。
+    func notesReadingProgressIndicator(trackStyle: NotesReadingProgressTrackStyle) -> some View {
+        overlay(alignment: .trailing) {
+            NotesReadingProgressUIKitIndicator(trackStyle: trackStyle)
+        }
+    }
+
+    @ViewBuilder
+    func notesReadingProgressIndicatorIfNeeded(
+        _ enabled: Bool,
+        trackStyle: NotesReadingProgressTrackStyle
+    ) -> some View {
+        if enabled {
+            notesReadingProgressIndicator(trackStyle: trackStyle)
+        } else {
+            self
+        }
+    }
+
     @ViewBuilder
     func trackNotesReadingScrollContent() -> some View {
         self
@@ -57,12 +90,20 @@ extension View {
 private struct NotesReadingProgressUIKitIndicator: UIViewRepresentable {
     let trackStyle: NotesReadingProgressTrackStyle
 
+    private static var keyWindow: UIWindow? {
+        UIApplication.shared.connectedScenes
+            .compactMap { $0 as? UIWindowScene }
+            .flatMap(\.windows)
+            .first { $0.isKeyWindow }
+    }
+
     func makeCoordinator() -> Coordinator {
         Coordinator(trackStyle: trackStyle)
     }
 
     func makeUIView(context: Context) -> NotesReadingProgressIndicatorView {
         let view = NotesReadingProgressIndicatorView()
+        view.coordinator = context.coordinator
         context.coordinator.indicatorView = view
         return view
     }
@@ -82,52 +123,95 @@ private struct NotesReadingProgressUIKitIndicator: UIViewRepresentable {
         weak var scrollView: UIScrollView?
         private var observations: [NSKeyValueObservation] = []
         private var hideWorkItem: DispatchWorkItem?
+        private var attachGeneration = 0
 
         init(trackStyle: NotesReadingProgressTrackStyle) {
             self.trackStyle = trackStyle
         }
 
-        func scheduleAttach(from view: UIView, attemptsRemaining: Int = 12) {
+        func scheduleAttach(from view: UIView, attemptsRemaining: Int = 24) {
+            attachGeneration += 1
+            let generation = attachGeneration
             DispatchQueue.main.async { [weak self, weak view] in
-                guard let self, let view else { return }
-                if let scrollView = view.findScrollView() {
+                guard let self, let view, generation == self.attachGeneration else { return }
+                guard view.window != nil else {
+                    self.retryAttach(from: view, generation: generation, attemptsRemaining: attemptsRemaining)
+                    return
+                }
+                if let scrollView = view.findAssociatedScrollView() {
                     self.attach(to: scrollView)
                     return
                 }
-                guard attemptsRemaining > 0 else { return }
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.03) {
-                    self.scheduleAttach(from: view, attemptsRemaining: attemptsRemaining - 1)
+                self.retryAttach(from: view, generation: generation, attemptsRemaining: attemptsRemaining)
+            }
+        }
+
+        private func retryAttach(from view: UIView, generation: Int, attemptsRemaining: Int) {
+            guard attemptsRemaining > 0 else { return }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) { [weak self, weak view] in
+                guard let self, let view, generation == self.attachGeneration else { return }
+                guard view.window != nil else {
+                    self.retryAttach(from: view, generation: generation, attemptsRemaining: attemptsRemaining - 1)
+                    return
                 }
+                if let scrollView = view.findAssociatedScrollView() {
+                    self.attach(to: scrollView)
+                    return
+                }
+                self.retryAttach(from: view, generation: generation, attemptsRemaining: attemptsRemaining - 1)
             }
         }
 
         func attach(to scrollView: UIScrollView) {
-            guard scrollView !== self.scrollView else {
+            guard scrollView.window != nil else {
+                if let indicatorView {
+                    scheduleAttach(from: indicatorView)
+                }
+                return
+            }
+            if let indicatorView, let indicatorWindow = indicatorView.window, scrollView.window !== indicatorWindow {
+                return
+            }
+
+            if scrollView === self.scrollView {
                 refresh()
                 return
             }
-            detach()
+
+            detachObservations()
             self.scrollView = scrollView
             refresh()
             observations = [
-                scrollView.observe(\.contentOffset, options: [.new]) { [weak self] _, _ in
-                    self?.scrollDidChange()
+                scrollView.observe(\.contentOffset, options: [.new]) { [weak self] observed, _ in
+                    guard let self, observed === self.scrollView else { return }
+                    self.scrollDidChange()
                 },
-                scrollView.observe(\.contentSize, options: [.new]) { [weak self] _, _ in
-                    self?.refresh()
+                scrollView.observe(\.contentSize, options: [.new]) { [weak self] observed, _ in
+                    guard let self, observed === self.scrollView else { return }
+                    self.refresh()
                 },
-                scrollView.observe(\.bounds, options: [.new]) { [weak self] _, _ in
-                    self?.refresh()
+                scrollView.observe(\.bounds, options: [.new]) { [weak self] observed, _ in
+                    guard let self, observed === self.scrollView else { return }
+                    self.refresh()
                 },
             ]
         }
 
+        func handleIndicatorLeftWindow() {
+            detachObservations()
+        }
+
         func detach() {
-            observations.removeAll()
-            scrollView = nil
+            attachGeneration += 1
+            detachObservations()
             hideWorkItem?.cancel()
             hideWorkItem = nil
             indicatorView?.setVisible(false, animated: false)
+        }
+
+        private func detachObservations() {
+            observations.removeAll()
+            scrollView = nil
         }
 
         private func scrollDidChange() {
@@ -153,8 +237,12 @@ private struct NotesReadingProgressUIKitIndicator: UIViewRepresentable {
         }
 
         func refresh() {
-            guard let scrollView, let indicatorView else { return }
-            guard let host = indicatorView.superview else { return }
+            guard let scrollView, scrollView.window != nil, let indicatorView else {
+                if let indicatorView, indicatorView.window != nil {
+                    scheduleAttach(from: indicatorView)
+                }
+                return
+            }
 
             let viewportHeight = scrollView.bounds.height
             let contentHeight = scrollView.contentSize.height
@@ -163,13 +251,20 @@ private struct NotesReadingProgressUIKitIndicator: UIViewRepresentable {
                 return
             }
 
-            let safeBottom = host.safeAreaInsets.bottom
+            let viewSafe = indicatorView.superview?.safeAreaInsets ?? indicatorView.safeAreaInsets
+            let windowSafe = NotesReadingProgressUIKitIndicator.keyWindow?.safeAreaInsets ?? .zero
+            let safeArea = UIEdgeInsets(
+                top: max(viewSafe.top, windowSafe.top),
+                left: 0,
+                bottom: max(viewSafe.bottom, windowSafe.bottom),
+                right: 0
+            )
             let bounds: (top: CGFloat, bottom: CGFloat, height: CGFloat) = {
                 switch trackStyle {
                 case .ios26:
-                    return NotesReadingProgressTrackBounds.ios26ScrollHost(
-                        safeAreaInsets: UIEdgeInsets(top: 0, left: 0, bottom: safeBottom, right: 0),
-                        viewportHeight: viewportHeight
+                    return NotesReadingProgressTrackBounds.ios26Host(
+                        hostHeight: indicatorView.bounds.height,
+                        safeAreaInsets: safeArea
                     )
                 case let .ios1718(safeBottom):
                     return NotesReadingProgressTrackBounds.ios1718ScrollHost(
@@ -200,6 +295,8 @@ private struct NotesReadingProgressUIKitIndicator: UIViewRepresentable {
 }
 
 private final class NotesReadingProgressIndicatorView: UIView {
+    weak var coordinator: NotesReadingProgressUIKitIndicator.Coordinator?
+
     private let thumbView = UIView()
 
     override init(frame: CGRect) {
@@ -218,8 +315,22 @@ private final class NotesReadingProgressIndicatorView: UIView {
         fatalError("init(coder:) has not been implemented")
     }
 
+    override func didMoveToWindow() {
+        super.didMoveToWindow()
+        if window != nil {
+            coordinator?.scheduleAttach(from: self)
+        } else {
+            coordinator?.handleIndicatorLeftWindow()
+        }
+    }
+
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        coordinator?.refresh()
+    }
+
     func updateThumb(y: CGFloat, height: CGFloat, width: CGFloat, trailingInset: CGFloat) {
-        let x = bounds.width - trailingInset - width
+        let x = max(bounds.width - trailingInset - width, 0)
         thumbView.frame = CGRect(x: x, y: y, width: width, height: height)
     }
 
@@ -240,22 +351,40 @@ private final class NotesReadingProgressIndicatorView: UIView {
 }
 
 private extension UIView {
-    func findScrollView() -> UIScrollView? {
-        if let scrollView = self as? UIScrollView { return scrollView }
+    /// 优先取包裹自身的 ScrollView；否则在同级/子树里找最近的 ScrollView（iOS 26 外层 overlay 需要）。
+    func findAssociatedScrollView() -> UIScrollView? {
+        if let enclosing = findEnclosingScrollView() {
+            return enclosing
+        }
+        var current: UIView? = superview
+        while let container = current {
+            if let match = container.findFirstScrollViewInSubtree() {
+                return match
+            }
+            current = container.superview
+        }
+        return nil
+    }
+
+    func findEnclosingScrollView() -> UIScrollView? {
         var current: UIView? = self
         while let view = current {
-            for subview in view.subviews {
-                if let found = subview.findScrollViewDeep() { return found }
+            if let scrollView = view as? UIScrollView {
+                return scrollView
             }
             current = view.superview
         }
         return nil
     }
 
-    func findScrollViewDeep() -> UIScrollView? {
-        if let scrollView = self as? UIScrollView { return scrollView }
+    func findFirstScrollViewInSubtree() -> UIScrollView? {
+        if let scrollView = self as? UIScrollView {
+            return scrollView
+        }
         for subview in subviews {
-            if let found = subview.findScrollViewDeep() { return found }
+            if let found = subview.findFirstScrollViewInSubtree() {
+                return found
+            }
         }
         return nil
     }

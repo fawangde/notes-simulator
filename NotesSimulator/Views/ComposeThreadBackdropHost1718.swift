@@ -6,11 +6,14 @@ struct ComposeThreadBackdropHost1718: UIViewRepresentable {
     let chromeBottomY: CGFloat
     let composerBottomReserve: CGFloat
     let dateLine: String
+    let isBlankThread: Bool
     let messageText: String
     let showsText: Bool
     let showsImage: Bool
     let bothContentOrder: BothContentOrder
     let image: UIImage?
+    let senderLineLabel: String
+    var showsSenderRow = true
     var bubbleTailParams: IMessage1718BubbleTailParams = .default
     var bubbleFontSize: CGFloat = 17
 
@@ -23,11 +26,14 @@ struct ComposeThreadBackdropHost1718: UIViewRepresentable {
             chromeBottomY: chromeBottomY,
             composerBottomReserve: composerBottomReserve,
             dateLine: dateLine,
+            isBlankThread: isBlankThread,
             messageText: messageText,
             showsText: showsText,
             showsImage: showsImage,
             bothContentOrder: bothContentOrder,
             image: image,
+            senderLineLabel: senderLineLabel,
+            showsSenderRow: showsSenderRow,
             bubbleTailParams: bubbleTailParams,
             bubbleFontSize: bubbleFontSize
         )
@@ -66,11 +72,17 @@ final class ComposeThreadScrollView1718: UIView {
     private struct ThreadContentSignature: Equatable {
         let chromeBottomY: CGFloat
         let dateLine: String
+        let isBlankThread: Bool
         let messageText: String
         let showsText: Bool
         let showsImage: Bool
         let bothContentOrder: BothContentOrder
         let imageKey: Int
+        let showsSenderRow: Bool
+    }
+
+    private static func imageLayoutKey(for image: UIImage?) -> Int {
+        image.map { ObjectIdentifier($0).hashValue } ?? 0
     }
 
     override init(frame: CGRect) {
@@ -213,11 +225,14 @@ final class ComposeThreadScrollView1718: UIView {
         chromeBottomY: CGFloat,
         composerBottomReserve: CGFloat,
         dateLine: String,
+        isBlankThread: Bool,
         messageText: String,
         showsText: Bool,
         showsImage: Bool,
         bothContentOrder: BothContentOrder,
         image: UIImage?,
+        senderLineLabel: String,
+        showsSenderRow: Bool,
         bubbleTailParams: IMessage1718BubbleTailParams,
         bubbleFontSize: CGFloat
     ) {
@@ -231,11 +246,13 @@ final class ComposeThreadScrollView1718: UIView {
         let signature = ThreadContentSignature(
             chromeBottomY: chromeBottomY,
             dateLine: dateLine,
+            isBlankThread: isBlankThread,
             messageText: messageText,
             showsText: showsText,
             showsImage: showsImage,
             bothContentOrder: bothContentOrder,
-            imageKey: image.map { ObjectIdentifier($0).hashValue } ?? 0
+            imageKey: Self.imageLayoutKey(for: image),
+            showsSenderRow: showsSenderRow
         )
 
         if signature == contentSignature {
@@ -245,8 +262,9 @@ final class ComposeThreadScrollView1718: UIView {
             if fontChanged {
                 updateVisibleBubbleFontSize(bubbleFontSize)
             }
-            if reserveChanged || tailParamsChanged || fontChanged {
+            if reserveChanged || tailParamsChanged || fontChanged || signature.showsImage {
                 setNeedsLayout()
+                layoutIfNeeded()
                 if fontChanged {
                     pendingTargetY = nil
                     pendingPinLineY = nil
@@ -262,6 +280,7 @@ final class ComposeThreadScrollView1718: UIView {
            previous.showsImage == signature.showsImage,
            previous.bothContentOrder == signature.bothContentOrder,
            previous.imageKey == signature.imageKey,
+           previous.showsSenderRow == signature.showsSenderRow,
            previous.messageText != signature.messageText || previous.dateLine != signature.dateLine {
             contentSignature = signature
             updateVisibleMessageText(signature.messageText, dateLine: signature.dateLine)
@@ -293,6 +312,26 @@ final class ComposeThreadScrollView1718: UIView {
         )
         stack.addArrangedSubview(topSpacer)
 
+        if isBlankThread {
+            stack.addArrangedSubview(
+                fixedSpacer(IMessageDesignTokens.threadManualScrollSlack)
+            )
+            lastContentHeight = 0
+            pendingTargetY = nil
+            pendingPinLineY = nil
+            reserveSettlePassesRemaining = 0
+            lastAnchorBottom = 0
+            scrollView.contentOffset = .zero
+            pendingInitialPinAfterBounds = true
+            setNeedsLayout()
+            if hasValidBounds() {
+                layoutIfNeeded()
+                pendingInitialPinAfterBounds = false
+                scheduleReconcileAfterLayout()
+            }
+            return
+        }
+
         stack.addArrangedSubview(
             centeredMetaRow(
                 makeThreadHeaderStack(dateLine: dateLine)
@@ -308,7 +347,9 @@ final class ComposeThreadScrollView1718: UIView {
             showsText: showsText,
             showsImage: showsImage,
             bothContentOrder: bothContentOrder,
-            image: image
+            image: image,
+            senderLineLabel: senderLineLabel,
+            showsSenderRow: showsSenderRow
         )
 
         stack.addArrangedSubview(
@@ -389,6 +430,8 @@ final class ComposeThreadScrollView1718: UIView {
         func visit(_ view: UIView) {
             if let bubble = view as? ComposeBubbleColumnView1718 {
                 bubble.applyTailParams(params)
+            } else if let column = view as? ComposeImageColumnView1718 {
+                column.applyTailParams(params)
             }
             view.subviews.forEach { visit($0) }
         }
@@ -427,7 +470,9 @@ final class ComposeThreadScrollView1718: UIView {
         showsText: Bool,
         showsImage: Bool,
         bothContentOrder: BothContentOrder,
-        image: UIImage?
+        image: UIImage?,
+        senderLineLabel: String,
+        showsSenderRow: Bool
     ) {
         let trailingInset = bubbleTailParams.threadBubbleTrailingInset
         let addText = {
@@ -435,6 +480,8 @@ final class ComposeThreadScrollView1718: UIView {
             let bubble = ComposeBubbleColumnView1718(
                 text: messageText,
                 bubbleTailParams: self.bubbleTailParams,
+                senderLineLabel: senderLineLabel,
+                showsSenderRow: showsSenderRow,
                 bubbleFontSize: self.bubbleFontSize
             )
             let bubbleRow = self.trailingRow(
@@ -446,16 +493,15 @@ final class ComposeThreadScrollView1718: UIView {
 
         let addImage = {
             guard showsImage, let image else { return }
-            let imageView = UIImageView(image: image)
-            imageView.contentMode = .scaleAspectFit
-            imageView.clipsToBounds = true
-            imageView.layer.cornerRadius = 14
-            imageView.translatesAutoresizingMaskIntoConstraints = false
-            imageView.widthAnchor.constraint(
-                lessThanOrEqualToConstant: IMessageDesignTokens.imageBubbleMaxWidth
-            ).isActive = true
+            let column = ComposeImageColumnView1718(
+                image: image,
+                bubbleTailParams: self.bubbleTailParams,
+                senderLineLabel: senderLineLabel,
+                showsSenderRow: showsSenderRow,
+                showsDelivered: !showsText
+            )
             let imageRow = self.trailingRow(
-                imageView,
+                column,
                 horizontalPadding: trailingInset
             )
             self.stack.addArrangedSubview(imageRow)
@@ -527,6 +573,7 @@ final class ComposeThreadScrollView1718: UIView {
             view.trailingAnchor.constraint(equalTo: row.trailingAnchor, constant: -horizontalPadding),
             view.topAnchor.constraint(equalTo: row.topAnchor),
             view.bottomAnchor.constraint(equalTo: row.bottomAnchor),
+            view.leadingAnchor.constraint(greaterThanOrEqualTo: row.leadingAnchor, constant: horizontalPadding),
         ])
         return row
     }
@@ -557,9 +604,9 @@ final class ComposeThreadScrollView1718: UIView {
                     column.layoutIfNeeded()
                     return column.pinAnchorBottomY(in: stack)
                 }
-                if let image = child as? UIImageView, image.image != nil {
-                    image.layoutIfNeeded()
-                    return image.convert(CGPoint(x: 0, y: image.bounds.height), to: stack).y
+                if let column = child as? ComposeImageColumnView1718 {
+                    column.layoutIfNeeded()
+                    return column.pinAnchorBottomY(in: stack)
                 }
             }
         }
@@ -833,15 +880,21 @@ private final class ComposeBubbleColumnView1718: UIView {
     private let bubbleView: IOSOutgoingChatBubbleView1718
     private let delivered = UILabel()
     private var bubbleTailParams: IMessage1718BubbleTailParams
+    private let senderLineLabel: String
+    private let showsSenderRow: Bool
     private var widthConstraint: NSLayoutConstraint?
     private var heightConstraint: NSLayoutConstraint?
 
     init(
         text: String,
         bubbleTailParams: IMessage1718BubbleTailParams,
+        senderLineLabel: String,
+        showsSenderRow: Bool,
         bubbleFontSize: CGFloat = 17
     ) {
         self.bubbleTailParams = bubbleTailParams
+        self.senderLineLabel = senderLineLabel
+        self.showsSenderRow = showsSenderRow
         bubbleView = IOSOutgoingChatBubbleView1718(tailParams: bubbleTailParams)
         super.init(frame: .zero)
         clipsToBounds = false
@@ -913,20 +966,21 @@ private final class ComposeBubbleColumnView1718: UIView {
     private func bubbleFitMaxWidth() -> CGFloat {
         let rowWidth = superview?.bounds.width ?? 0
         let tailReserve = bubbleTailParams.tailHorizontalOverflow
+        let trailingInset = bubbleTailParams.threadBubbleTrailingInset
+        let contentWidth = rowWidth > 1 ? rowWidth : UIScreen.main.bounds.width
+
+        let senderCap = IMessage1718DesignTokens.imageBubbleMaxLayoutWidth(
+            contentWidth: contentWidth,
+            senderLineLabel: senderLineLabel,
+            trailingInset: trailingInset,
+            showsSenderRow: showsSenderRow
+        )
         let screenCap = UIScreen.main.bounds.width * IMessage1718DesignTokens.bubbleMaxWidthFraction
             - IMessage1718DesignTokens.layer2ThreadPaddingH * 2
             - bubbleTailParams.threadBubbleMaxWidthReduction
             + IMessage1718DesignTokens.bubbleMaxWidthExtra
             - tailReserve
-        if rowWidth > 1 {
-            let trailingInset = bubbleTailParams.threadBubbleTrailingInset
-            let rowCap = rowWidth
-                - IMessage1718DesignTokens.layer2ThreadPaddingH
-                - trailingInset
-                - tailReserve
-            return min(rowCap, screenCap)
-        }
-        return screenCap
+        return max(1, min(senderCap, screenCap))
     }
 
     override func layoutSubviews() {
@@ -972,6 +1026,136 @@ private final class ComposeBubbleColumnView1718: UIView {
             bubbleSize.height,
             delivered.frame.maxY + bubbleTailParams.tailClipReserveBottom
         )
+    }
+
+    @available(*, unavailable)
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+}
+
+private final class ComposeImageColumnView1718: UIView {
+    private let imageBubbleView: IOSOutgoingImageBubbleView1718
+    private let delivered = UILabel()
+    private var bubbleTailParams: IMessage1718BubbleTailParams
+    private let senderLineLabel: String
+    private let showsSenderRow: Bool
+    private let showsDelivered: Bool
+    private var widthConstraint: NSLayoutConstraint?
+    private var heightConstraint: NSLayoutConstraint?
+
+    init(
+        image: UIImage,
+        bubbleTailParams: IMessage1718BubbleTailParams,
+        senderLineLabel: String,
+        showsSenderRow: Bool,
+        showsDelivered: Bool
+    ) {
+        self.bubbleTailParams = bubbleTailParams
+        self.senderLineLabel = senderLineLabel
+        self.showsSenderRow = showsSenderRow
+        self.showsDelivered = showsDelivered
+        imageBubbleView = IOSOutgoingImageBubbleView1718(
+            image: image,
+            tailParams: bubbleTailParams
+        )
+        super.init(frame: .zero)
+        clipsToBounds = false
+        setContentHuggingPriority(.required, for: .horizontal)
+        setContentHuggingPriority(.required, for: .vertical)
+        setContentCompressionResistancePriority(.required, for: .horizontal)
+        setContentCompressionResistancePriority(.required, for: .vertical)
+
+        delivered.text = "已送达"
+        delivered.font = IMessage1718DesignTokens.deliveredFontUI
+        delivered.textColor = IMessage1718DesignTokens.threadMetaTextUI
+        delivered.textAlignment = .right
+        delivered.isHidden = !showsDelivered
+
+        addSubview(imageBubbleView)
+        addSubview(delivered)
+
+        widthConstraint = widthAnchor.constraint(equalToConstant: 120)
+        heightConstraint = heightAnchor.constraint(equalToConstant: 60)
+        widthConstraint?.priority = UILayoutPriority(999)
+        heightConstraint?.priority = UILayoutPriority(999)
+        widthConstraint?.isActive = true
+        heightConstraint?.isActive = true
+    }
+
+    func applyTailParams(_ params: IMessage1718BubbleTailParams) {
+        bubbleTailParams = params
+        imageBubbleView.applyTailParams(params)
+        setNeedsLayout()
+    }
+
+    func pinAnchorBottomY(in stack: UIStackView) -> CGFloat {
+        layoutIfNeeded()
+        if showsDelivered, !delivered.isHidden {
+            return delivered.convert(CGPoint(x: 0, y: delivered.bounds.height), to: stack).y
+        }
+        return convert(CGPoint(x: 0, y: bounds.height), to: stack).y
+    }
+
+    private func imageFitMaxWidth(rowWidth: CGFloat) -> CGFloat {
+        let tailReserve = bubbleTailParams.tailHorizontalOverflow
+        let trailingInset = bubbleTailParams.threadBubbleTrailingInset
+        let contentWidth = rowWidth > 1 ? rowWidth : UIScreen.main.bounds.width
+
+        let senderCap = IMessage1718DesignTokens.imageBubbleMaxLayoutWidth(
+            contentWidth: contentWidth,
+            senderLineLabel: senderLineLabel,
+            trailingInset: trailingInset,
+            showsSenderRow: showsSenderRow
+        )
+        let screenCap = UIScreen.main.bounds.width * IMessage1718DesignTokens.bubbleMaxWidthFraction
+            - IMessage1718DesignTokens.layer2ThreadPaddingH * 2
+            - bubbleTailParams.threadBubbleMaxWidthReduction
+            + IMessage1718DesignTokens.bubbleMaxWidthExtra
+            - tailReserve
+        return max(1, min(senderCap, screenCap))
+    }
+
+    override func layoutSubviews() {
+        super.layoutSubviews()
+
+        let rowWidth = superview?.bounds.width ?? 0
+        guard rowWidth > 10 else { return }
+
+        let maxBodyWidth = imageFitMaxWidth(rowWidth: rowWidth)
+        let bubbleSize = imageBubbleView.sizeThatFits(
+            CGSize(width: maxBodyWidth, height: .greatestFiniteMagnitude)
+        )
+        guard bubbleSize.width > 1, bubbleSize.height > 1 else { return }
+
+        imageBubbleView.frame = CGRect(
+            x: bounds.width - bubbleSize.width,
+            y: 0,
+            width: bubbleSize.width,
+            height: bubbleSize.height
+        )
+        imageBubbleView.layoutIfNeeded()
+
+        var contentHeight = imageBubbleView.frame.maxY
+        if showsDelivered {
+            let deliveredSize = delivered.sizeThatFits(
+                CGSize(width: bounds.width, height: .greatestFiniteMagnitude)
+            )
+            let tailAnchorX = imageBubbleView.frame.minX + imageBubbleView.tailAnchorPointInSelf().x
+            let tailBottomY = imageBubbleView.frame.minY + imageBubbleView.tailTipPointInSelf().y
+            let deliveredY = tailBottomY - deliveredSize.height
+                + IMessage1718DesignTokens.deliveredOffsetBelowTailBottom
+            delivered.frame = CGRect(
+                x: tailAnchorX - deliveredSize.width,
+                y: deliveredY,
+                width: deliveredSize.width,
+                height: deliveredSize.height
+            )
+            contentHeight = max(contentHeight, delivered.frame.maxY + bubbleTailParams.tailClipReserveBottom)
+        }
+
+        widthConstraint?.constant = bubbleSize.width
+        heightConstraint?.constant = contentHeight
     }
 
     @available(*, unavailable)
@@ -1045,7 +1229,7 @@ enum ComposeThread1718PinWarmup {
 
     @MainActor
     static func refresh(app: AppState, keyboardTopInset: CGFloat = 0) {
-        guard app.notesStyleIOS1718, app.showsMessageText else {
+        guard app.usesLegacyNotesShell, app.showsMessageText else {
             current = nil
             return
         }
@@ -1071,9 +1255,10 @@ enum ComposeThread1718PinWarmup {
         let insetBottom = IMessage1718DesignTokens.composerToolbarReserveBlock
             + composerPadding
             + IMessage1718DesignTokens.threadDeliveredAboveInput
+        let bridgedTuning = app.bridgedLegacyTuningForCompose()
         let tailParams = IMessage1718BubbleTailPreset.resolvedParams(
-            presetID: app.notes1718Tuning.bubbleTailPresetID,
-            tuning: app.notes1718Tuning
+            presetID: bridgedTuning.bubbleTailPresetID,
+            tuning: bridgedTuning
         )
         let cacheKey = cacheKey(
             messageText: app.messagePreviewText,
@@ -1090,6 +1275,8 @@ enum ComposeThread1718PinWarmup {
             dateLine: app.threadDateLine,
             chromeBottomY: chromeBottomY,
             bubbleTailParams: tailParams,
+            senderLineLabel: app.senderLineLabel,
+            showsSenderRow: app.simCardMode == .dual,
             bubbleFontSize: CGFloat(app.composeBubbleTuning.fontSize),
             viewport: viewport,
             insetBottom: insetBottom,
@@ -1123,6 +1310,8 @@ private enum ComposeThread1718MeasureHarness {
         dateLine: String,
         chromeBottomY: CGFloat,
         bubbleTailParams: IMessage1718BubbleTailParams,
+        senderLineLabel: String,
+        showsSenderRow: Bool,
         bubbleFontSize: CGFloat,
         viewport: CGFloat,
         insetBottom: CGFloat,
@@ -1185,6 +1374,8 @@ private enum ComposeThread1718MeasureHarness {
         let bubble = ComposeBubbleColumnView1718(
             text: messageText,
             bubbleTailParams: bubbleTailParams,
+            senderLineLabel: senderLineLabel,
+            showsSenderRow: showsSenderRow,
             bubbleFontSize: bubbleFontSize
         )
         let bubbleRow = UIView()

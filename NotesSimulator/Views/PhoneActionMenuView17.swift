@@ -1,11 +1,11 @@
 import SwiftUI
 
 /// iOS 17–18 号码长按 / 点击菜单（iPhone X iOS 16.7.2 定稿参数）
-struct PhoneActionMenuView1718: View {
+struct PhoneActionMenuView17: View {
     let phone: String
     let windowAnchor: CGRect
     let presentation: PhoneMenuPresentation
-    let tuning: Notes1718TuningSettings
+    let tuning: Notes17TuningSettings
     let onMessage: () -> Void
     let onCopy: () -> Void
     let onDismiss: () -> Void
@@ -44,15 +44,17 @@ struct PhoneActionMenuView1718: View {
         count: PhoneMenu1718Layout.Design.menuActionRowCount
     )
 
+    private var menuLayoutTuning: Notes1718TuningSettings { tuning.bridgedTo1718() }
+
     @State private var metrics = PhoneMenu1718Layout.metrics(
         in: UIScreen.main.bounds.size,
         safeTop: 0,
         safeBottom: 0,
-        tuning: Notes1718TuningSettings.default
+        tuning: Notes17TuningSettings.default.bridgedTo1718()
     )
     @State private var resolvedAnchor: CGRect = .zero
 
-    private var tokens: NotesStyle1718Tokens.PhoneMenu.Type { NotesStyle1718Tokens.PhoneMenu.self }
+    private var tokens: NotesStyle17Tokens.PhoneMenu.Type { NotesStyle17Tokens.PhoneMenu.self }
     private var anim: PhoneMenu1718Layout.Animation.Type { PhoneMenu1718Layout.Animation.self }
 
     private var previewPhoneFont: Font {
@@ -175,7 +177,7 @@ struct PhoneActionMenuView1718: View {
     var body: some View {
         GeometryReader { geo in
             ZStack(alignment: .topLeading) {
-                LongPressBackdrop1718(
+                LongPressBackdrop17(
                     overlayOpacity: app.phoneMenuBackdropStrength,
                     dimOpacity: tuning.longPressOverlayDim
                 )
@@ -205,7 +207,7 @@ struct PhoneActionMenuView1718: View {
                     in: geo.size,
                     safeTop: geo.safeAreaInsets.top,
                     safeBottom: geo.safeAreaInsets.bottom,
-                    tuning: tuning
+                    tuning: menuLayoutTuning
                 )
                 resetRowStates()
                 didCompleteDismiss = false
@@ -214,12 +216,12 @@ struct PhoneActionMenuView1718: View {
             .onChange(of: shellScale) { _ in
                 syncDismissBackdropOnly()
             }
-            .onChange(of: tuning) { newTuning in
+            .onChange(of: tuning) { _ in
                 metrics = PhoneMenu1718Layout.metrics(
                     in: geo.size,
                     safeTop: geo.safeAreaInsets.top,
                     safeBottom: geo.safeAreaInsets.bottom,
-                    tuning: newTuning
+                    tuning: menuLayoutTuning
                 )
             }
         }
@@ -263,7 +265,7 @@ struct PhoneActionMenuView1718: View {
     /// 预览泡：头像+号码紧挨（5pt），整体靠左且上下居中
     private var previewRowContent: some View {
         HStack(spacing: anim.previewAvatarPhoneSpacing) {
-            ContactPlaceholderAvatar1718(size: metrics.avatarSize, tuning: tuning)
+            ContactPlaceholderAvatar1718(size: metrics.avatarSize, tuning: menuLayoutTuning)
                 .frame(width: metrics.avatarSize, height: metrics.avatarSize)
 
             Text(formattedDialString)
@@ -305,7 +307,7 @@ struct PhoneActionMenuView1718: View {
     }
 
     private var menuRowIconColor: Color {
-        NotesStyle1718Tokens.PhoneMenu.menuLabelColor
+        NotesStyle17Tokens.PhoneMenu.menuLabelColor
     }
 
     private var menuCard: some View {
@@ -329,7 +331,7 @@ struct PhoneActionMenuView1718: View {
             animatedMenuRow(index: 4, icon: "doc.on.doc", title: "拷贝", action: onCopy)
         }
         .background {
-            MenuPanelSolidBackground1718(
+            MenuPanelSolidBackground17(
                 cornerRadius: metrics.menuCornerRadius,
                 fill: tuning.menuPanelTintColor(),
                 shadowOpacity: metrics.menuShadowOpacity,
@@ -395,7 +397,7 @@ struct PhoneActionMenuView1718: View {
             .frame(height: metrics.rowHeight)
             .contentShape(Rectangle())
         }
-        .buttonStyle(MenuRowButtonStyle1718(cornerRadius: metrics.menuRowHighlightCornerRadius))
+        .buttonStyle(MenuRowButtonStyle17(cornerRadius: metrics.menuRowHighlightCornerRadius))
     }
 
     // MARK: - Animation
@@ -530,7 +532,7 @@ struct PhoneActionMenuView1718: View {
     }
 }
 
-private struct LongPressBackdrop1718: View {
+private struct LongPressBackdrop17: View {
     var overlayOpacity: Double
     var dimOpacity: Double
 
@@ -542,7 +544,7 @@ private struct LongPressBackdrop1718: View {
     }
 }
 
-private struct MenuRowButtonStyle1718: ButtonStyle {
+private struct MenuRowButtonStyle17: ButtonStyle {
     var cornerRadius: CGFloat
 
     func makeBody(configuration: Configuration) -> some View {
@@ -551,7 +553,7 @@ private struct MenuRowButtonStyle1718: ButtonStyle {
                 RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
                     .fill(
                         configuration.isPressed
-                            ? NotesStyle1718Tokens.PhoneMenu.rowHighlightFill
+                            ? NotesStyle17Tokens.PhoneMenu.rowHighlightFill
                             : Color.clear
                     )
                     .padding(.horizontal, 8)
@@ -559,7 +561,7 @@ private struct MenuRowButtonStyle1718: ButtonStyle {
     }
 }
 
-private struct MenuPanelSolidBackground1718: View {
+private struct MenuPanelSolidBackground17: View {
     var cornerRadius: CGFloat
     var fill: Color
     var shadowOpacity: Double

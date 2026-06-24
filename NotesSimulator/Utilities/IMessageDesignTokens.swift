@@ -99,6 +99,74 @@ enum IMessageDesignTokens {
     static let recipientPhoneTint = Color(red: 0.15, green: 0.58, blue: 1.0)
     static let recipientPhoneTintUI = UIColor(red: 0.15, green: 0.58, blue: 1, alpha: 1)
 
+    /// 绿色 SMS 空白会话：收件人 / 发件人 / 输入框占位
+    static let smsGreenTint = Color(red: 52 / 255, green: 199 / 255, blue: 89 / 255)
+    static let smsGreenTintUI = UIColor(red: 52 / 255, green: 199 / 255, blue: 89 / 255, alpha: 1)
+    static let smsRecipientCapsuleFill = Color(uiColor: UIColor.systemGray3).opacity(0.28)
+    static let smsSenderBadgeTextColor = Color.white
+    static let smsSenderBadgeBackground = smsGreenTint
+
+    static let inputPlaceholderText = "iMessage 信息"
+
+    static func makeIMessageInputPlaceholderAttributed() -> NSAttributedString {
+        NSAttributedString(
+            string: inputPlaceholderText,
+            attributes: [
+                .font: UIFont.systemFont(ofSize: inputFontSize),
+                .foregroundColor: inputPlaceholderColorUI,
+            ]
+        )
+    }
+
+    /// 绿色 SMS「信息·短信」：中间点更大，间隔一字宽（含点）
+    static func makeSMSDotLabelAttributed(
+        font: UIFont,
+        color: UIColor,
+        dotScale: CGFloat = 1.55
+    ) -> NSAttributedString {
+        let bodyAttrs: [NSAttributedString.Key: Any] = [
+            .font: font,
+            .foregroundColor: color,
+        ]
+
+        let emWidth = ("信" as NSString).size(withAttributes: bodyAttrs).width
+        let dotFont = UIFont(descriptor: font.fontDescriptor, size: font.pointSize * dotScale)
+        let dotChar = "·"
+        let dotWidth = (dotChar as NSString).size(withAttributes: [
+            .font: dotFont,
+            .foregroundColor: color,
+        ]).width
+        let sidePad = max(0, (emWidth - dotWidth) / 2)
+        let baselineOffset = (font.capHeight - dotFont.capHeight) / 2
+
+        let result = NSMutableAttributedString(string: "信息", attributes: bodyAttrs)
+        result.addAttribute(.kern, value: sidePad, range: NSRange(location: result.length - 1, length: 1))
+        result.append(NSAttributedString(
+            string: dotChar,
+            attributes: [
+                .font: dotFont,
+                .foregroundColor: color,
+                .baselineOffset: baselineOffset,
+            ]
+        ))
+        result.addAttribute(.kern, value: sidePad, range: NSRange(location: result.length - 1, length: 1))
+        result.append(NSAttributedString(string: "短信", attributes: bodyAttrs))
+        return result
+    }
+
+    /// 绿色 SMS 输入框占位：「信息 · 短信」，灰色同 iMessage，中间点更大，间隔一字宽（含点）
+    static func makeSMSInputPlaceholderAttributed() -> NSAttributedString {
+        makeSMSDotLabelAttributed(
+            font: .systemFont(ofSize: inputFontSize),
+            color: inputPlaceholderColorUI
+        )
+    }
+
+    /// 绿色 SMS 线程头小字：「信息 · 短信」（与时间小字 iMessage 信息同位置）
+    static func makeSMSThreadMetaLabelAttributed() -> NSAttributedString {
+        makeSMSDotLabelAttributed(font: threadMetaFontUI, color: threadMetaTextUI)
+    }
+
     // MARK: - 六、收发件人（CNCompose 卡片，浮在根材质之上）
 
     static let addressCardFill = Color(uiColor: .systemBackground)
@@ -239,10 +307,14 @@ enum IMessageDesignTokens {
     static let bubbleShadowOffset = CGSize.zero
     static let bubbleShadowRadius: CGFloat = 0
     static let imageBubbleMaxWidth: CGFloat = 220
-    /// 真机对照比例基准（仅用于同比缩放，非实际 pt 值）
+    /// 真机发送端对照：宽 280 / 高 375 / 极小图宽保底 120（pt，高度上限不随屏宽缩放）
     static let imageBubbleReferenceMaxWidth: CGFloat = 280
-    static let imageBubbleReferenceMaxHeight: CGFloat = 320
+    static let imageBubbleReferenceMaxHeight: CGFloat = 375
     static let imageBubbleReferenceMinWidth: CGFloat = 120
+    /// 极小缩略图：原图短边低于此像素时触发 120pt 宽保底（高度不受限高约束）
+    static let imageBubbleTinyImageShortSidePx: CGFloat = 300
+    /// GIF 动图高度上限（当前仅静态图；预留）
+    static let imageBubbleGIFMaxHeight: CGFloat = 260
     /// 单图圆角与撰写页发送气泡一致
     static var imageBubbleCornerRadius: CGFloat { bubbleCornerTLCompose }
 
@@ -269,57 +341,50 @@ enum IMessageDesignTokens {
             + firstCharWidth * 0.5
     }
 
-    /// 单图满宽：发件人标签首字中心 → 气泡右缘（20pt）
+    /// 单图满宽：发件人标签首字中心 → 气泡右缘（20pt）；对应真机 280pt 上限的屏宽自适应版
     static func imageBubbleMaxLayoutWidth(contentWidth: CGFloat, senderLineLabel: String) -> CGFloat {
         guard contentWidth > 0 else { return 0 }
         let leadingX = threadImageLeadingCenterX(senderLineLabel: senderLineLabel)
         return max(0, contentWidth - threadBubbleTrailingInset - leadingX)
     }
 
-    /// 按真机 280:320:120 比例，同比映射到首字满宽
-    static func imageBubbleScaledLimits(forMaxLayoutWidth maxLayoutWidth: CGFloat) -> (
-        maxHeight: CGFloat,
-        minWidth: CGFloat
-    ) {
-        guard imageBubbleReferenceMaxWidth > 0 else {
-            return (imageBubbleReferenceMaxHeight, imageBubbleReferenceMinWidth)
-        }
-        let widthScale = maxLayoutWidth / imageBubbleReferenceMaxWidth
-        return (
-            imageBubbleReferenceMaxHeight * widthScale,
-            imageBubbleReferenceMinWidth * widthScale
-        )
-    }
-
-    /// 单条静态图：满宽 = 首字中心→右缘；高/宽下限按 320:120 同比缩放
+    /// 发送端单张静态图 body 尺寸：满宽用 layout 算出的 maxLayoutWidth；限高固定 375pt
     static func imageBubbleBodySize(
         imagePixelSize: CGSize,
-        maxLayoutWidth: CGFloat
+        maxLayoutWidth: CGFloat,
+        isGIF: Bool = false
     ) -> CGSize {
         let pixelW = imagePixelSize.width
         let pixelH = imagePixelSize.height
         guard pixelW > 0, pixelH > 0, maxLayoutWidth > 0 else { return .zero }
 
-        let limits = imageBubbleScaledLimits(forMaxLayoutWidth: maxLayoutWidth)
-        let maxHeight = limits.maxHeight
-        let minWidth = limits.minWidth
+        let maxHeight = isGIF ? imageBubbleGIFMaxHeight : imageBubbleReferenceMaxHeight
+        let minWidth = imageBubbleReferenceMinWidth
+        let isTinyThumbnail = min(pixelW, pixelH) < imageBubbleTinyImageShortSidePx
 
+        // 先铺满满宽，算渲染高度
         let heightAtMaxWidth = maxLayoutWidth * (pixelH / pixelW)
         let candidate: CGSize
         if heightAtMaxWidth <= maxHeight {
+            // 情况 A：横图/方图，不触发高度限制
             candidate = CGSize(width: maxLayoutWidth, height: heightAtMaxWidth)
         } else {
-            let widthAtMaxHeight = maxHeight * (pixelW / pixelH)
-            candidate = CGSize(width: widthAtMaxHeight, height: maxHeight)
+            // 情况 B：竖长图，锁高 375，反推宽
+            candidate = CGSize(
+                width: maxHeight * (pixelW / pixelH),
+                height: maxHeight
+            )
         }
 
-        if candidate.width >= minWidth {
-            return candidate
+        // 极小缩略图：宽保底 120pt，高度可突破 375
+        if isTinyThumbnail, candidate.width < minWidth {
+            return CGSize(
+                width: minWidth,
+                height: minWidth * (pixelH / pixelW)
+            )
         }
 
-        let forcedWidth = minWidth
-        let forcedHeight = minWidth * (pixelH / pixelW)
-        return CGSize(width: forcedWidth, height: forcedHeight)
+        return candidate
     }
 
     // MARK: - 五、时间戳 / 状态
@@ -355,6 +420,7 @@ enum IMessageDesignTokens {
     static let inputCornerRadius: CGFloat = 22
     static let inputMinHeight: CGFloat = layer3InputHeight
     static let inputFontSize: CGFloat = 17
+    static let inputPlaceholderColorUI = UIColor.placeholderText
     /// 输入框内左右留白（对称）
     static let inputFieldHorizontalInset: CGFloat = 12
     static let inputBackgroundLight = UIColor.white.withAlphaComponent(0.9)

@@ -1112,3 +1112,278 @@ final class IOSOutgoingChatBubbleView1718: UIView {
         sizeThatFits(.zero)
     }
 }
+
+/// iOS 16–18 单图气泡：1718 尾巴几何 + 图片底部同色尾巴（与 26 单图衔接方式一致）
+final class IOSOutgoingImageBubbleView1718: UIView {
+    private let imageView = UIImageView()
+    private let tailFillView = ImageBubbleTailFillView1718()
+    private let tailImageView = UIImageView()
+    private var laidOutBodyWidth: CGFloat = 0
+    private var laidOutBodyHeight: CGFloat = 0
+    private var sizingMaxLayoutWidth: CGFloat = 0
+    private var tailFillColor: UIColor = .systemGray3
+    private(set) var currentTailParams = IMessage1718BubbleTailParams.default
+
+    var image: UIImage? {
+        get { imageView.image }
+        set {
+            imageView.image = newValue
+            tailFillColor = Self.tailAdjacentColor(from: newValue)
+            setNeedsLayout()
+            invalidateIntrinsicContentSize()
+        }
+    }
+
+    init(image: UIImage, tailParams: IMessage1718BubbleTailParams) {
+        super.init(frame: .zero)
+        backgroundColor = .clear
+        clipsToBounds = false
+        isUserInteractionEnabled = false
+        currentTailParams = tailParams
+
+        imageView.contentMode = .scaleAspectFill
+        imageView.clipsToBounds = true
+        imageView.isUserInteractionEnabled = false
+
+        tailImageView.contentMode = .scaleToFill
+        tailImageView.isUserInteractionEnabled = false
+        tailImageView.isHidden = true
+
+        addSubview(tailFillView)
+        addSubview(tailImageView)
+        addSubview(imageView)
+
+        self.image = image
+    }
+
+    @available(*, unavailable)
+    required init?(coder: NSCoder) { nil }
+
+    func applyTailParams(_ params: IMessage1718BubbleTailParams) {
+        guard currentTailParams != params else { return }
+        currentTailParams = params
+        setNeedsLayout()
+        invalidateIntrinsicContentSize()
+    }
+
+    static func orientedPixelSize(for image: UIImage) -> CGSize {
+        guard let cgImage = image.cgImage else { return image.size }
+        let pixelW = CGFloat(cgImage.width)
+        let pixelH = CGFloat(cgImage.height)
+        switch image.imageOrientation {
+        case .left, .leftMirrored, .right, .rightMirrored:
+            return CGSize(width: pixelH, height: pixelW)
+        default:
+            return CGSize(width: pixelW, height: pixelH)
+        }
+    }
+
+    private func layoutMetrics(maxBodyLayoutWidth: CGFloat) -> (
+        bodySize: CGSize,
+        layoutSize: CGSize
+    ) {
+        guard let image = imageView.image,
+              image.size.width > 0,
+              image.size.height > 0,
+              maxBodyLayoutWidth > 0 else {
+            return (.zero, .zero)
+        }
+
+        let bodySize = IMessageDesignTokens.imageBubbleBodySize(
+            imagePixelSize: Self.orientedPixelSize(for: image),
+            maxLayoutWidth: maxBodyLayoutWidth
+        )
+        let layoutSize = IOSOutgoingBubblePath1718.layoutSize(
+            bodySize: bodySize,
+            params: currentTailParams
+        )
+        return (bodySize, layoutSize)
+    }
+
+    override func layoutSubviews() {
+        super.layoutSubviews()
+
+        let tailReserve = currentTailParams.tailHorizontalOverflow
+        let proposed = bounds.width > 1
+            ? bounds.width
+            : sizingMaxLayoutWidth + tailReserve
+        let maxBodyWidth = max(1, proposed - tailReserve)
+        let metrics = layoutMetrics(maxBodyLayoutWidth: maxBodyWidth)
+        guard metrics.bodySize.width > 1, metrics.bodySize.height > 1 else { return }
+
+        laidOutBodyWidth = metrics.bodySize.width
+        laidOutBodyHeight = metrics.bodySize.height
+
+        let bubblePath = IOSOutgoingBubblePath1718.sentBubblePath(
+            bodyWidth: metrics.bodySize.width,
+            bodyHeight: metrics.bodySize.height,
+            params: currentTailParams
+        )
+
+        tailFillView.frame = CGRect(origin: .zero, size: metrics.layoutSize)
+        tailFillView.fillColor = tailFillColor
+        tailFillView.applyPath(bubblePath)
+
+        if currentTailParams.pathKind == .referenceImageTail {
+            tailImageView.isHidden = false
+            tailImageView.tintColor = nil
+            tailImageView.image = IOSOutgoingBubblePath1718.referenceTailImage(
+                named: currentTailParams.referenceTailImageName,
+                fill: tailFillColor
+            )
+            tailImageView.frame = IOSOutgoingBubblePath1718.referenceTailImageFrame(
+                bodyWidth: metrics.bodySize.width,
+                bodyHeight: metrics.bodySize.height,
+                params: currentTailParams
+            )
+        } else {
+            tailImageView.isHidden = true
+            tailImageView.image = nil
+        }
+
+        let bodyW = metrics.bodySize.width
+        let bodyH = metrics.bodySize.height
+        imageView.frame = CGRect(x: 0, y: 0, width: bodyW, height: bodyH)
+        let radius = min(currentTailParams.cornerRadius, bodyW * 0.5, bodyH * 0.5)
+        imageView.layer.cornerRadius = radius
+        imageView.layer.cornerCurve = .continuous
+
+        bringSubviewToFront(imageView)
+        if currentTailParams.pathKind == .referenceImageTail {
+            bringSubviewToFront(tailImageView)
+        }
+    }
+
+    func tailTipPointInSelf() -> CGPoint {
+        IOSOutgoingBubblePath1718.tailTip(
+            bodyWidth: laidOutBodyWidth,
+            bodyHeight: laidOutBodyHeight,
+            params: currentTailParams
+        )
+    }
+
+    func tailAnchorPointInSelf() -> CGPoint {
+        IOSOutgoingBubblePath1718.tailAnchor(
+            bodyWidth: laidOutBodyWidth,
+            bodyHeight: laidOutBodyHeight
+        )
+    }
+
+    override func sizeThatFits(_ size: CGSize) -> CGSize {
+        guard size.width.isFinite, size.width > 1 else { return .zero }
+        sizingMaxLayoutWidth = size.width
+        return layoutMetrics(maxBodyLayoutWidth: size.width).layoutSize
+    }
+
+    override var intrinsicContentSize: CGSize {
+        .zero
+    }
+
+    /// 取图片右下区域平均色，供 1718 尾巴与图片衔接
+    private static func tailAdjacentColor(from image: UIImage?) -> UIColor {
+        guard let image,
+              let cgImage = image.cgImage else {
+            return UIColor.systemGray3
+        }
+
+        let width = cgImage.width
+        let height = cgImage.height
+        guard width > 0, height > 0 else { return UIColor.systemGray3 }
+
+        let sampleW = max(1, width / 15)
+        let sampleH = max(1, height / 15)
+        let cropRect = CGRect(
+            x: width - sampleW,
+            y: height - sampleH,
+            width: sampleW,
+            height: sampleH
+        )
+        guard let cropped = cgImage.cropping(to: cropRect) else { return UIColor.systemGray3 }
+        return averageColor(of: cropped) ?? UIColor.systemGray3
+    }
+
+    private static func averageColor(of cgImage: CGImage) -> UIColor? {
+        let width = cgImage.width
+        let height = cgImage.height
+        guard width > 0, height > 0 else { return nil }
+
+        let bytesPerPixel = 4
+        let bytesPerRow = bytesPerPixel * width
+        var raw = [UInt8](repeating: 0, count: height * bytesPerRow)
+        guard let context = CGContext(
+            data: &raw,
+            width: width,
+            height: height,
+            bitsPerComponent: 8,
+            bytesPerRow: bytesPerRow,
+            space: CGColorSpaceCreateDeviceRGB(),
+            bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+        ) else {
+            return nil
+        }
+
+        context.draw(cgImage, in: CGRect(x: 0, y: 0, width: width, height: height))
+
+        var totalR: CGFloat = 0
+        var totalG: CGFloat = 0
+        var totalB: CGFloat = 0
+        var totalA: CGFloat = 0
+        let pixelCount = width * height
+
+        for index in 0..<pixelCount {
+            let offset = index * bytesPerPixel
+            let alpha = CGFloat(raw[offset + 3]) / 255
+            guard alpha > 0.01 else { continue }
+            totalR += CGFloat(raw[offset]) / 255
+            totalG += CGFloat(raw[offset + 1]) / 255
+            totalB += CGFloat(raw[offset + 2]) / 255
+            totalA += 1
+        }
+
+        guard totalA > 0 else { return nil }
+        return UIColor(
+            red: totalR / totalA,
+            green: totalG / totalA,
+            blue: totalB / totalA,
+            alpha: 1
+        )
+    }
+}
+
+private final class ImageBubbleTailFillView1718: UIView {
+    private let shapeLayer = CAShapeLayer()
+
+    var fillColor: UIColor = .clear {
+        didSet {
+            shapeLayer.fillColor = fillColor.cgColor
+            shapeLayer.strokeColor = fillColor.cgColor
+        }
+    }
+
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        isUserInteractionEnabled = false
+        backgroundColor = .clear
+        clipsToBounds = false
+        layer.addSublayer(shapeLayer)
+        shapeLayer.fillColor = fillColor.cgColor
+        shapeLayer.strokeColor = fillColor.cgColor
+        shapeLayer.lineWidth = 1 / UIScreen.main.scale
+        shapeLayer.lineJoin = .round
+        shapeLayer.lineCap = .round
+        shapeLayer.contentsScale = UIScreen.main.scale
+    }
+
+    @available(*, unavailable)
+    required init?(coder: NSCoder) { nil }
+
+    func applyPath(_ path: UIBezierPath) {
+        shapeLayer.frame = bounds
+        shapeLayer.path = path.cgPath
+    }
+
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        shapeLayer.frame = bounds
+    }
+}

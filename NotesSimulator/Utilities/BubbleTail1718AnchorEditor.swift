@@ -370,3 +370,153 @@ extension Notes1718TuningSettings {
         tailAnchorSelectedIndex = 0
     }
 }
+
+extension Notes17TuningSettings {
+    var tailAnchorReferenceSize: CGSize {
+        CGSize(width: tailAnchorRefBodyWidth, height: tailAnchorRefBodyHeight)
+    }
+
+    func resolvedTailAnchorModel(forBodyWidth bodyWidth: CGFloat, bodyHeight: CGFloat) -> BubbleTail1718AnchorModel {
+        tailAnchorModel.resolved(
+            forBodyWidth: bodyWidth,
+            bodyHeight: bodyHeight,
+            referenceSize: tailAnchorReferenceSize
+        )
+    }
+
+    mutating func setTailAnchorModel(
+        _ resolved: BubbleTail1718AnchorModel,
+        editedOnBodyWidth bodyWidth: CGFloat,
+        editedOnBodyHeight bodyHeight: CGFloat
+    ) {
+        tailAnchorModel = resolved.stored(
+            forBodyWidth: bodyWidth,
+            bodyHeight: bodyHeight,
+            referenceSize: tailAnchorReferenceSize
+        )
+    }
+
+    var tailAnchorModel: BubbleTail1718AnchorModel {
+        get {
+            BubbleTail1718AnchorModel(
+                points: [
+                    CGPoint(x: tailAnchor0X, y: tailAnchor0Y),
+                    CGPoint(x: tailAnchor1X, y: tailAnchor1Y),
+                    CGPoint(x: tailAnchor2X, y: tailAnchor2Y),
+                    CGPoint(x: tailAnchor3X, y: tailAnchor3Y),
+                ],
+                segmentKinds: [
+                    BubbleTail1718SegmentKind(rawValue: tailAnchorSegment0Kind) ?? .upperStraight,
+                    BubbleTail1718SegmentKind(rawValue: tailAnchorSegment1Kind) ?? .upperArc,
+                    BubbleTail1718SegmentKind(rawValue: tailAnchorSegment2Kind) ?? .lowerArc,
+                ],
+                segmentCurvatures: [
+                    CGFloat(tailAnchorSegment0Curvature),
+                    CGFloat(tailAnchorSegment1Curvature),
+                    CGFloat(tailAnchorSegment2Curvature),
+                ]
+            )
+        }
+        set {
+            guard newValue.points.count >= 4,
+                  newValue.segmentKinds.count >= 3,
+                  newValue.segmentCurvatures.count >= 3 else { return }
+            tailAnchor0X = Double(newValue.points[0].x)
+            tailAnchor0Y = Double(newValue.points[0].y)
+            tailAnchor1X = Double(newValue.points[1].x)
+            tailAnchor1Y = Double(newValue.points[1].y)
+            tailAnchor2X = Double(newValue.points[2].x)
+            tailAnchor2Y = Double(newValue.points[2].y)
+            tailAnchor3X = Double(newValue.points[3].x)
+            tailAnchor3Y = Double(newValue.points[3].y)
+            tailAnchorSegment0Kind = newValue.segmentKinds[0].rawValue
+            tailAnchorSegment1Kind = newValue.segmentKinds[1].rawValue
+            tailAnchorSegment2Kind = newValue.segmentKinds[2].rawValue
+            tailAnchorSegment0Curvature = Double(newValue.segmentCurvatures[0])
+            tailAnchorSegment1Curvature = Double(newValue.segmentCurvatures[1])
+            tailAnchorSegment2Curvature = Double(newValue.segmentCurvatures[2])
+        }
+    }
+
+    mutating func resetTailAnchorDefaults() {
+        tailAnchorRefBodyWidth = Double(BubbleTail1718AnchorModel.defaultReferenceBodySize.width)
+        tailAnchorRefBodyHeight = Double(BubbleTail1718AnchorModel.defaultReferenceBodySize.height)
+        tailAnchorModel = .tracedScreenshotDefault
+        tailAnchorSelectedIndex = 0
+    }
+}
+
+extension Notes18TuningSettings {
+    var tailAnchorReferenceSize: CGSize {
+        CGSize(width: tailAnchorRefBodyWidth, height: tailAnchorRefBodyHeight)
+    }
+
+    func resolvedTailAnchorModel(forBodyWidth bodyWidth: CGFloat, bodyHeight: CGFloat) -> BubbleTail1718AnchorModel {
+        tailAnchorModel.resolved(
+            forBodyWidth: bodyWidth,
+            bodyHeight: bodyHeight,
+            referenceSize: tailAnchorReferenceSize
+        )
+    }
+
+    mutating func setTailAnchorModel(
+        _ resolved: BubbleTail1718AnchorModel,
+        editedOnBodyWidth bodyWidth: CGFloat,
+        editedOnBodyHeight bodyHeight: CGFloat
+    ) {
+        tailAnchorModel = resolved.stored(
+            forBodyWidth: bodyWidth,
+            bodyHeight: bodyHeight,
+            referenceSize: tailAnchorReferenceSize
+        )
+    }
+
+    var tailAnchorModel: BubbleTail1718AnchorModel {
+        get {
+            BubbleTail1718AnchorModel(
+                points: [
+                    CGPoint(x: tailAnchor0X, y: tailAnchor0Y),
+                    CGPoint(x: tailAnchor1X, y: tailAnchor1Y),
+                    CGPoint(x: tailAnchor2X, y: tailAnchor2Y),
+                    CGPoint(x: tailAnchor3X, y: tailAnchor3Y),
+                ],
+                segmentKinds: [
+                    BubbleTail1718SegmentKind(rawValue: tailAnchorSegment0Kind) ?? .upperStraight,
+                    BubbleTail1718SegmentKind(rawValue: tailAnchorSegment1Kind) ?? .upperArc,
+                    BubbleTail1718SegmentKind(rawValue: tailAnchorSegment2Kind) ?? .lowerArc,
+                ],
+                segmentCurvatures: [
+                    CGFloat(tailAnchorSegment0Curvature),
+                    CGFloat(tailAnchorSegment1Curvature),
+                    CGFloat(tailAnchorSegment2Curvature),
+                ]
+            )
+        }
+        set {
+            guard newValue.points.count >= 4,
+                  newValue.segmentKinds.count >= 3,
+                  newValue.segmentCurvatures.count >= 3 else { return }
+            tailAnchor0X = Double(newValue.points[0].x)
+            tailAnchor0Y = Double(newValue.points[0].y)
+            tailAnchor1X = Double(newValue.points[1].x)
+            tailAnchor1Y = Double(newValue.points[1].y)
+            tailAnchor2X = Double(newValue.points[2].x)
+            tailAnchor2Y = Double(newValue.points[2].y)
+            tailAnchor3X = Double(newValue.points[3].x)
+            tailAnchor3Y = Double(newValue.points[3].y)
+            tailAnchorSegment0Kind = newValue.segmentKinds[0].rawValue
+            tailAnchorSegment1Kind = newValue.segmentKinds[1].rawValue
+            tailAnchorSegment2Kind = newValue.segmentKinds[2].rawValue
+            tailAnchorSegment0Curvature = Double(newValue.segmentCurvatures[0])
+            tailAnchorSegment1Curvature = Double(newValue.segmentCurvatures[1])
+            tailAnchorSegment2Curvature = Double(newValue.segmentCurvatures[2])
+        }
+    }
+
+    mutating func resetTailAnchorDefaults() {
+        tailAnchorRefBodyWidth = Double(BubbleTail1718AnchorModel.defaultReferenceBodySize.width)
+        tailAnchorRefBodyHeight = Double(BubbleTail1718AnchorModel.defaultReferenceBodySize.height)
+        tailAnchorModel = .tracedScreenshotDefault
+        tailAnchorSelectedIndex = 0
+    }
+}

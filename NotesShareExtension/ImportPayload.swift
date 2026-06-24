@@ -9,6 +9,7 @@ enum ImportPayload {
     struct Payload: Codable, Equatable {
         var title: String
         var body: String
+        var importedAt: Date?
     }
 
     static func queue(_ payload: Payload) {
@@ -20,13 +21,23 @@ enum ImportPayload {
         }
     }
 
-    static func parseText(_ text: String, title: String) -> Payload {
+    static func parseText(_ text: String, title: String, importedAt: Date = Date()) -> Payload {
         let lines = text
             .components(separatedBy: .newlines)
             .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
             .filter { !$0.isEmpty }
         let body = lines.joined(separator: "\n")
-        return Payload(title: title, body: body)
+        return Payload(title: title, body: body, importedAt: importedAt)
+    }
+
+    static func parseFile(url: URL, text: String) -> Payload {
+        let title = url.deletingPathExtension().lastPathComponent
+        return parseText(text, title: title, importedAt: fileImportDate(for: url))
+    }
+
+    private static func fileImportDate(for url: URL) -> Date {
+        let values = try? url.resourceValues(forKeys: [.contentModificationDateKey, .creationDateKey])
+        return values?.contentModificationDate ?? values?.creationDate ?? Date()
     }
 
     private static func pendingFileURL() -> URL? {

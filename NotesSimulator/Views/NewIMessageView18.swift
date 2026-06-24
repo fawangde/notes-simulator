@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// iOS 17–18 撰写页：扁平导航/收发件人/底栏 + 系统键盘 + 金色光标
-struct NewIMessageView1718: View {
+struct NewIMessageView18: View {
     @EnvironmentObject private var app: AppState
     let onClose: () -> Void
 
@@ -15,10 +15,48 @@ struct NewIMessageView1718: View {
         return PhoneUtilities.formatIMessage(phone)
     }
 
+    private var composeChrome: IOS18ComposeChromeStyle {
+        app.ios18ComposeChromeStyle
+    }
+
+    private var navTitleText: String {
+        composeChrome == .greenSMS ? "新信息" : "新 iMessage 信息"
+    }
+
+    private var recipientPhoneColor: Color {
+        composeChrome == .greenSMS
+            ? IMessage18DesignTokens.smsGreenTint
+            : IMessage18DesignTokens.recipientPhoneTint
+    }
+
+    private var recipientCapsuleBackground: Color {
+        composeChrome == .greenSMS
+            ? IMessage18DesignTokens.smsRecipientCapsuleFill
+            : IMessage18DesignTokens.recipientCapsuleFill
+    }
+
+    private var senderLabelColor: Color {
+        composeChrome == .greenSMS
+            ? IMessage18DesignTokens.smsGreenTint
+            : IMessage18DesignTokens.senderLineTint
+    }
+
+    private var senderBadgeForeground: Color {
+        composeChrome == .greenSMS
+            ? IMessage18DesignTokens.smsSenderBadgeTextColor
+            : IMessage18DesignTokens.senderBadgeTextColor
+    }
+
+    private var senderBadgeBackgroundColor: Color {
+        composeChrome == .greenSMS
+            ? IMessage18DesignTokens.smsSenderBadgeBackground
+            : IMessage18DesignTokens.senderBadgeBackground
+    }
+
     var body: some View {
         GeometryReader { geo in
             let topGap = resolvedTopGap(fallback: geo.safeAreaInsets.top)
-            let cornerRadius = IMessage1718DesignTokens.layer1CornerRadius
+            let cornerRadius = IMessage18DesignTokens.layer1CornerRadius
 
             ZStack(alignment: .top) {
                 VStack(spacing: 0) {
@@ -27,7 +65,7 @@ struct NewIMessageView1718: View {
                         .contentShape(Rectangle())
                         .gesture(dismissGesture)
 
-                    IMessage1718DesignTokens.layer1Background
+                    IMessage18DesignTokens.layer1Background
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                         .clipShape(TopRoundedRectangle(radius: cornerRadius))
                 }
@@ -68,7 +106,7 @@ struct NewIMessageView1718: View {
         }
         .onChange(of: keyboardTopInset) { inset in
             guard inset > 0 else { return }
-            ComposeThread1718PinWarmup.refresh(app: app, keyboardTopInset: inset)
+            ComposeThread18PinWarmup.refresh(app: app, keyboardTopInset: inset)
         }
         .onDisappear {
             composerFocused = false
@@ -84,7 +122,7 @@ struct NewIMessageView1718: View {
     private func resolvedTopGap(fallback: CGFloat) -> CGFloat {
         let windowTop = keyWindow?.safeAreaInsets.top ?? 0
         let safeTop = max(fallback, windowTop)
-        return IMessage1718DesignTokens.composeSheetTopInset(safeAreaTop: safeTop)
+        return IMessage18DesignTokens.composeSheetTopInset(safeAreaTop: safeTop)
     }
 
     private var composerBar: some View {
@@ -94,13 +132,14 @@ struct NewIMessageView1718: View {
             MessagesComposerHost1718(
                 text: $composerText,
                 wantsFocus: composerFocused,
+                chromeStyle: composeChrome,
                 onPlusTap: { showBubbleTuningPanel = true }
             )
-                .frame(height: IMessage1718DesignTokens.layer3ToolbarHeight)
+                .frame(height: IMessage18DesignTokens.layer3ToolbarHeight)
                 .padding(.horizontal, 6)
                 .offset(
                     x: 0,
-                    y: IMessage1718DesignTokens.layer3ToolbarOffsetY + IMessage1718DesignTokens.layer3KeyboardOffsetY
+                    y: IMessage18DesignTokens.layer3ToolbarOffsetY + IMessage18DesignTokens.layer3KeyboardOffsetY
                 )
                 .padding(.bottom, composerBottomPadding)
         }
@@ -110,30 +149,31 @@ struct NewIMessageView1718: View {
     private var composeLayers: some View {
         ZStack(alignment: .top) {
             ComposeThreadBackdropHost1718(
-                chromeBottomY: IMessage1718DesignTokens.addressChromeBottom(
+                chromeBottomY: IMessage18DesignTokens.addressChromeBottom(
                     showsSenderRow: app.simCardMode == .dual
                 ),
                 composerBottomReserve: composerBottomReserve,
                 dateLine: app.threadDateLine,
-                isBlankThread: false,
+                isBlankThread: app.isIOS18BlankThreadForSelectedPhone,
                 messageText: app.messagePreviewText,
-                showsText: app.showsMessageText,
-                showsImage: app.showsMessageImage,
+                showsText: app.composeShowsMessageText,
+                showsImage: app.composeShowsMessageImage,
                 bothContentOrder: app.bothContentOrder,
                 image: app.messageImage,
                 senderLineLabel: app.senderLineLabel,
                 showsSenderRow: app.simCardMode == .dual,
-                bubbleTailParams: IMessage1718BubbleTailPreset.resolvedParams(
-                    presetID: app.notes1718Tuning.bubbleTailPresetID,
-                    tuning: app.notes1718Tuning
+                bubbleTailParams: IMessage18BubbleTailPreset.resolvedParams(
+                    presetID: app.notes18Tuning.bubbleTailPresetID,
+                    tuning: app.notes18Tuning
                 ),
                 bubbleFontSize: CGFloat(app.composeBubbleTuning.fontSize)
             )
             .id(
                 "\(app.mode.rawValue)|\(app.bothContentOrder.rawValue)|"
                     + "\(app.simCardMode.rawValue)|\(app.senderLineLabel)|"
-                    + "\(app.showsMessageText)|\(app.showsMessageImage)|"
-                    + "\(app.notes1718Tuning.bubbleTailPresetID)|1718"
+                    + "\(app.composeShowsMessageText)|\(app.composeShowsMessageImage)|"
+                    + "\(app.notes18Tuning.bubbleTailPresetID)|18|"
+                    + "\(app.isIOS18BlankThreadForSelectedPhone)|\(app.ios18ComposeChromeStyle)"
             )
             .frame(maxWidth: .infinity, maxHeight: .infinity)
 
@@ -152,28 +192,28 @@ struct NewIMessageView1718: View {
 
     private var navRecipientDivider: some View {
         Rectangle()
-            .fill(IMessage1718DesignTokens.navRecipientDividerColor)
-            .frame(height: IMessage1718DesignTokens.addressSeparatorHeight)
+            .fill(IMessage18DesignTokens.navRecipientDividerColor)
+            .frame(height: IMessage18DesignTokens.addressSeparatorHeight)
             .frame(maxWidth: .infinity)
     }
 
     private var navigationBar: some View {
         ZStack(alignment: .top) {
-            IMessage1718DesignTokens.navBarBackground
+            IMessage18DesignTokens.navBarBackground
                 .frame(maxWidth: .infinity)
-                .frame(height: IMessage1718DesignTokens.navBarHeight)
+                .frame(height: IMessage18DesignTokens.navBarHeight)
 
             ZStack {
-                Text("新 iMessage 信息")
-                    .font(IMessage1718DesignTokens.navTitleFont)
-                    .tracking(IMessage1718DesignTokens.navTitleTracking)
+                Text(navTitleText)
+                    .font(IMessage18DesignTokens.navTitleFont)
+                    .tracking(IMessage18DesignTokens.navTitleTracking)
                     .foregroundStyle(Color.primary)
                 HStack {
                     Spacer(minLength: 0)
                     Button(action: close) {
                         Text("取消")
-                            .font(IMessage1718DesignTokens.navCancelFont)
-                            .foregroundStyle(IMessage1718DesignTokens.navCancelColor)
+                            .font(IMessage18DesignTokens.navCancelFont)
+                            .foregroundStyle(IMessage18DesignTokens.navCancelColor)
                     }
                     .buttonStyle(.plain)
                     .simultaneousGesture(
@@ -181,27 +221,27 @@ struct NewIMessageView1718: View {
                             ComposeThreadPinDebug1718.shared.isEnabled.toggle()
                         }
                     )
-                    .padding(.trailing, IMessage1718DesignTokens.navCancelTrailingPadding)
+                    .padding(.trailing, IMessage18DesignTokens.navCancelTrailingPadding)
                 }
             }
-            .frame(height: IMessage1718DesignTokens.navBarBaseHeight)
-            .offset(y: IMessage1718DesignTokens.navBarContentOffsetY)
+            .frame(height: IMessage18DesignTokens.navBarBaseHeight)
+            .offset(y: IMessage18DesignTokens.navBarContentOffsetY)
         }
-        .frame(height: IMessage1718DesignTokens.navBarHeight)
+        .frame(height: IMessage18DesignTokens.navBarHeight)
     }
 
     private var addressSection: some View {
         VStack(spacing: 0) {
             addressRow {
                 Text("收件人：")
-                    .font(IMessage1718DesignTokens.addressLabelFont)
-                    .foregroundStyle(IMessage1718DesignTokens.addressLabelColor)
+                    .font(IMessage18DesignTokens.addressLabelFont)
+                    .foregroundStyle(IMessage18DesignTokens.addressLabelColor)
                 Text(recipient)
-                    .font(IMessage1718DesignTokens.addressLabelFont)
-                    .foregroundStyle(IMessage1718DesignTokens.recipientPhoneTint)
-                    .padding(.horizontal, IMessage1718DesignTokens.recipientCapsuleHPadding)
-                    .padding(.vertical, IMessage1718DesignTokens.recipientCapsuleVPadding)
-                    .background(IMessage1718DesignTokens.recipientCapsuleFill)
+                    .font(IMessage18DesignTokens.addressLabelFont)
+                    .foregroundStyle(recipientPhoneColor)
+                    .padding(.horizontal, IMessage18DesignTokens.recipientCapsuleHPadding)
+                    .padding(.vertical, IMessage18DesignTokens.recipientCapsuleVPadding)
+                    .background(recipientCapsuleBackground)
                     .clipShape(Capsule())
                 Spacer(minLength: 0)
             }
@@ -214,24 +254,24 @@ struct NewIMessageView1718: View {
                 fullWidthDivider
             }
         }
-        .background(IMessage1718DesignTokens.addressBackground)
+        .background(IMessage18DesignTokens.addressBackground)
     }
 
     private var senderAddressRow: some View {
         HStack(alignment: .center, spacing: 4) {
             Text("发件人：")
-                .font(IMessage1718DesignTokens.addressLabelFont)
-                .foregroundStyle(IMessage1718DesignTokens.addressLabelColor)
+                .font(IMessage18DesignTokens.addressLabelFont)
+                .foregroundStyle(IMessage18DesignTokens.addressLabelColor)
             senderBadge
             Text(senderLineLabel)
-                .font(IMessage1718DesignTokens.addressLabelFont)
-                .foregroundStyle(IMessage1718DesignTokens.senderLineTint)
+                .font(IMessage18DesignTokens.addressLabelFont)
+                .foregroundStyle(senderLabelColor)
             Spacer(minLength: 0)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.leading, addressLeadingInset)
-        .padding(.trailing, IMessage1718DesignTokens.addressLeadingInset)
-        .frame(height: IMessage1718DesignTokens.addressRowHeight, alignment: .center)
+        .padding(.trailing, IMessage18DesignTokens.addressLeadingInset)
+        .frame(height: IMessage18DesignTokens.addressRowHeight, alignment: .center)
     }
 
     private var senderBadgeText: String {
@@ -242,14 +282,14 @@ struct NewIMessageView1718: View {
 
     private var senderBadge: some View {
         Text(senderBadgeText)
-            .font(.system(size: IMessage1718DesignTokens.senderBadgeFontSize, weight: .regular))
-            .foregroundStyle(IMessage1718DesignTokens.senderBadgeTextColor)
-            .padding(.horizontal, IMessage1718DesignTokens.senderBadgeHPadding)
-            .padding(.vertical, IMessage1718DesignTokens.senderBadgeVPadding)
-            .background(IMessage1718DesignTokens.senderBadgeBackground)
+            .font(.system(size: IMessage18DesignTokens.senderBadgeFontSize, weight: .regular))
+            .foregroundStyle(senderBadgeForeground)
+            .padding(.horizontal, IMessage18DesignTokens.senderBadgeHPadding)
+            .padding(.vertical, IMessage18DesignTokens.senderBadgeVPadding)
+            .background(senderBadgeBackgroundColor)
             .clipShape(
                 RoundedRectangle(
-                    cornerRadius: IMessage1718DesignTokens.senderBadgeCornerRadius,
+                    cornerRadius: IMessage18DesignTokens.senderBadgeCornerRadius,
                     style: .continuous
                 )
             )
@@ -261,33 +301,33 @@ struct NewIMessageView1718: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.leading, addressLeadingInset)
-        .padding(.trailing, IMessage1718DesignTokens.addressLeadingInset)
-        .frame(height: IMessage1718DesignTokens.addressRowHeight, alignment: .center)
+        .padding(.trailing, IMessage18DesignTokens.addressLeadingInset)
+        .frame(height: IMessage18DesignTokens.addressRowHeight, alignment: .center)
     }
 
     private var addressLeadingInset: CGFloat {
-        IMessage1718DesignTokens.addressLeadingInset + IMessage1718DesignTokens.addressContentOffsetX
+        IMessage18DesignTokens.addressLeadingInset + IMessage18DesignTokens.addressContentOffsetX
     }
 
     private var fullWidthDivider: some View {
         Rectangle()
-            .fill(IMessage1718DesignTokens.addressSeparatorColor)
-            .frame(height: IMessage1718DesignTokens.addressSeparatorHeight)
+            .fill(IMessage18DesignTokens.addressSeparatorColor)
+            .frame(height: IMessage18DesignTokens.addressSeparatorHeight)
             .frame(maxWidth: .infinity)
     }
 
     private var insetAddressDivider: some View {
         Rectangle()
-            .fill(IMessage1718DesignTokens.addressSeparatorColor)
-            .frame(height: IMessage1718DesignTokens.addressSeparatorHeight)
+            .fill(IMessage18DesignTokens.addressSeparatorColor)
+            .frame(height: IMessage18DesignTokens.addressSeparatorHeight)
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.leading, addressLeadingInset)
     }
 
     private var composerBottomReserve: CGFloat {
-        IMessage1718DesignTokens.composerToolbarReserveBlock
+        IMessage18DesignTokens.composerToolbarReserveBlock
             + composerBottomPadding
-            + IMessage1718DesignTokens.threadDeliveredAboveInput
+            + IMessage18DesignTokens.threadDeliveredAboveInput
     }
 
     private var senderLineLabel: String {
@@ -297,7 +337,7 @@ struct NewIMessageView1718: View {
 
     private var composerBottomPadding: CGFloat {
         if keyboardTopInset > 0 {
-            return keyboardTopInset + IMessage1718DesignTokens.layer3KeyboardGap
+            return keyboardTopInset + IMessage18DesignTokens.layer3KeyboardGap
         }
         return keyWindow?.safeAreaInsets.bottom ?? 0
     }

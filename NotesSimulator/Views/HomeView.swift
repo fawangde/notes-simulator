@@ -241,7 +241,9 @@ struct HomeView: View {
                         Task {
                             if let data = try? await item?.loadTransferable(type: Data.self),
                                let image = UIImage(data: data) {
-                                await MainActor.run { app.messageImage = image }
+                                await MainActor.run {
+                                    app.messageImage = image
+                                }
                             }
                         }
                     }
@@ -296,8 +298,18 @@ struct HomeView: View {
                 .padding(.leading, 4)
 
             VStack(alignment: .leading, spacing: 12) {
-                Toggle("iOS 17–18 备忘录样式", isOn: $app.notesStyleIOS1718)
+                Text("当前备忘录样式：\(activeNotesStyleLabel)")
+                    .font(.subheadline.weight(.medium))
+
+                Toggle("iOS 17 备忘录样式", isOn: legacyStyleToggleBinding(.ios17))
                 Text("扁平金黄导航/工具栏，无液态玻璃。与系统版本无关，仅切换备忘录页展示。")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+
+                Divider()
+
+                Toggle("iOS 18 备忘录样式", isOn: legacyStyleToggleBinding(.ios18))
+                Text("当前与 iOS 17 样式相同，后续可独立微调。")
                     .font(.caption)
                     .foregroundStyle(.secondary)
 
@@ -335,14 +347,44 @@ struct HomeView: View {
             .buttonStyle(.borderedProminent)
 
             Button(role: .destructive) {
-                app.clearNotesAndTitle()
+                photoItem = nil
+                app.clearMessageTextAndImage()
             } label: {
-                Label("清除备忘录和标题", systemImage: "trash")
+                Label("清理文案和图片", systemImage: "trash")
                     .font(.headline)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 14)
             }
             .buttonStyle(.bordered)
         }
+    }
+
+    private var activeNotesStyleLabel: String {
+        switch app.legacyNotesShell {
+        case .ios17: return "iOS 17"
+        case .ios18: return "iOS 18"
+        case nil: return "iOS 26（默认）"
+        }
+    }
+
+    private func legacyStyleToggleBinding(_ shell: LegacyNotesShell) -> Binding<Bool> {
+        Binding(
+            get: {
+                switch shell {
+                case .ios17: app.notesStyleIOS17
+                case .ios18: app.notesStyleIOS18
+                }
+            },
+            set: { enabled in
+                if enabled {
+                    app.activateLegacyNotesShell(shell)
+                } else {
+                    switch shell {
+                    case .ios17: app.notesStyleIOS17 = false
+                    case .ios18: app.notesStyleIOS18 = false
+                    }
+                }
+            }
+        )
     }
 }

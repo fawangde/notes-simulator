@@ -99,7 +99,7 @@ final class ShareViewController: UIViewController {
             return
         }
         let title = url.deletingPathExtension().lastPathComponent
-        let payload = ImportPayload.parseText(text, title: title)
+        let payload = ImportPayload.parseFile(url: url, text: text)
         ImportPayload.queue(payload)
         openHostApp()
     }

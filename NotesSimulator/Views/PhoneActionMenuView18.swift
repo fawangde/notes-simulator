@@ -1,11 +1,11 @@
 import SwiftUI
 
-/// iOS 17–18 号码长按 / 点击菜单（iPhone X iOS 16.7.2 定稿参数）
-struct PhoneActionMenuView1718: View {
+/// iOS 18 号码长按 / 点击菜单（参考真机截图：预览泡 + 分组操作菜单）
+struct PhoneActionMenuView18: View {
     let phone: String
     let windowAnchor: CGRect
     let presentation: PhoneMenuPresentation
-    let tuning: Notes1718TuningSettings
+    let tuning: Notes18TuningSettings
     let onMessage: () -> Void
     let onCopy: () -> Void
     let onDismiss: () -> Void
@@ -41,22 +41,27 @@ struct PhoneActionMenuView1718: View {
     @State private var menuScale: CGFloat = PhoneMenu1718Layout.Animation.previewEnterScaleFrom
     @State private var menuRowStates: [MenuRowAnimState] = Array(
         repeating: MenuRowAnimState(),
-        count: PhoneMenu1718Layout.Design.menuActionRowCount
+        count: PhoneMenu18Layout.Design.menuActionRowCount
     )
 
-    @State private var metrics = PhoneMenu1718Layout.metrics(
+    private var menuLayoutTuning: Notes1718TuningSettings { tuning.bridgedTo1718() }
+
+    @State private var metrics = PhoneMenu18Layout.metrics(
         in: UIScreen.main.bounds.size,
         safeTop: 0,
         safeBottom: 0,
-        tuning: Notes1718TuningSettings.default
+        tuning: Notes18TuningSettings.default.bridgedTo1718()
     )
+    @State private var overlayScreenHeight: CGFloat = UIScreen.main.bounds.height
+    @State private var overlaySafeTop: CGFloat = 0
+    @State private var overlaySafeBottom: CGFloat = 0
     @State private var resolvedAnchor: CGRect = .zero
 
-    private var tokens: NotesStyle1718Tokens.PhoneMenu.Type { NotesStyle1718Tokens.PhoneMenu.self }
+    private var tokens: NotesStyle18Tokens.PhoneMenu.Type { NotesStyle18Tokens.PhoneMenu.self }
     private var anim: PhoneMenu1718Layout.Animation.Type { PhoneMenu1718Layout.Animation.self }
 
     private var previewPhoneFont: Font {
-        .system(size: CGFloat(tuning.previewPhoneFontSize), weight: .medium)
+        .system(size: CGFloat(tuning.previewPhoneFontSize), weight: .semibold)
     }
 
     private var morphPhoneFont: Font {
@@ -175,7 +180,7 @@ struct PhoneActionMenuView1718: View {
     var body: some View {
         GeometryReader { geo in
             ZStack(alignment: .topLeading) {
-                LongPressBackdrop1718(
+                LongPressBackdrop18(
                     overlayOpacity: app.phoneMenuBackdropStrength,
                     dimOpacity: tuning.longPressOverlayDim
                 )
@@ -201,26 +206,44 @@ struct PhoneActionMenuView1718: View {
                     windowAnchor,
                     overlayGlobalFrame: geo.frame(in: .global)
                 )
-                metrics = PhoneMenu1718Layout.metrics(
-                    in: geo.size,
-                    safeTop: geo.safeAreaInsets.top,
-                    safeBottom: geo.safeAreaInsets.bottom,
-                    tuning: tuning
+                let insets = PhoneMenu18Layout.resolvedSafeInsets(
+                    fallbackTop: geo.safeAreaInsets.top,
+                    fallbackBottom: geo.safeAreaInsets.bottom
                 )
+                metrics = PhoneMenu18Layout.metrics(
+                    in: geo.size,
+                    safeTop: insets.top,
+                    safeBottom: insets.bottom,
+                    tuning: menuLayoutTuning
+                )
+                let screenH = geo.size.height
+                let safeTop = insets.top
+                let safeBottom = insets.bottom
+                overlayScreenHeight = screenH
+                overlaySafeTop = safeTop
+                overlaySafeBottom = safeBottom
                 resetRowStates()
                 didCompleteDismiss = false
-                runShowAnimation()
+                // 同帧内 @State 尚未提交，placement 须直接用 geo 的 safe area
+                runShowAnimation(screenHeight: screenH, safeTop: safeTop, safeBottom: safeBottom)
             }
             .onChange(of: shellScale) { _ in
                 syncDismissBackdropOnly()
             }
-            .onChange(of: tuning) { newTuning in
-                metrics = PhoneMenu1718Layout.metrics(
-                    in: geo.size,
-                    safeTop: geo.safeAreaInsets.top,
-                    safeBottom: geo.safeAreaInsets.bottom,
-                    tuning: newTuning
+            .onChange(of: tuning) { _ in
+                let insets = PhoneMenu18Layout.resolvedSafeInsets(
+                    fallbackTop: geo.safeAreaInsets.top,
+                    fallbackBottom: geo.safeAreaInsets.bottom
                 )
+                metrics = PhoneMenu18Layout.metrics(
+                    in: geo.size,
+                    safeTop: insets.top,
+                    safeBottom: insets.bottom,
+                    tuning: menuLayoutTuning
+                )
+                overlayScreenHeight = geo.size.height
+                overlaySafeTop = insets.top
+                overlaySafeBottom = insets.bottom
             }
         }
         .ignoresSafeArea()
@@ -263,7 +286,7 @@ struct PhoneActionMenuView1718: View {
     /// 预览泡：头像+号码紧挨（5pt），整体靠左且上下居中
     private var previewRowContent: some View {
         HStack(spacing: anim.previewAvatarPhoneSpacing) {
-            ContactPlaceholderAvatar1718(size: metrics.avatarSize, tuning: tuning)
+            ContactPlaceholderAvatar1718(size: metrics.avatarSize, tuning: menuLayoutTuning)
                 .frame(width: metrics.avatarSize, height: metrics.avatarSize)
 
             Text(formattedDialString)
@@ -301,37 +324,98 @@ struct PhoneActionMenuView1718: View {
     }
 
     private var menuRowLabelColor: Color {
-        Color(uiColor: tuning.menuLabelUIColor())
+        NotesStyle18Tokens.PhoneMenu.menuEmphasisColor
     }
 
     private var menuRowIconColor: Color {
-        NotesStyle1718Tokens.PhoneMenu.menuLabelColor
+        NotesStyle18Tokens.PhoneMenu.menuEmphasisColor
+    }
+
+    private func menuTitleText(_ title: String) -> some View {
+        Text(title)
+            .font(.system(size: PhoneMenu18Layout.Design.menuTitleFontSize, weight: .regular))
+            .foregroundStyle(menuRowLabelColor)
+    }
+
+    private func menuTitleColumn(title: String, subtitle: String? = nil) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            menuTitleText(title)
+            if let subtitle {
+                Text(subtitle)
+                    .font(.system(size: PhoneMenu18Layout.Design.menuSubtitleFontSize, weight: .regular))
+                    .foregroundStyle(Color(uiColor: .secondaryLabel))
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.leading, PhoneMenu18Layout.Design.textContentLeadingExtra)
+    }
+
+    private func menuChevronGlyph() -> some View {
+        Image(systemName: "chevron.right")
+            .font(.system(size: 13, weight: .bold))
+            .foregroundStyle(menuRowLabelColor)
+            .offset(x: -PhoneMenu18Layout.Design.chevronLeadingOffset)
+    }
+
+    private func menuChevronTitleBlock(title: String) -> some View {
+        ZStack(alignment: .leading) {
+            menuTitleText(title)
+            menuChevronGlyph()
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.leading, PhoneMenu18Layout.Design.textContentLeadingExtra)
+    }
+
+    private func menuTrailingIcon(_ icon: String) -> some View {
+        Image(systemName: icon)
+            .font(.system(size: metrics.menuIconSize, weight: .regular))
+            .symbolRenderingMode(.monochrome)
+            .foregroundStyle(menuRowIconColor)
     }
 
     private var menuCard: some View {
         VStack(spacing: 0) {
-            menuPhoneHeader
-            menuSeparator
-            animatedMenuRow(
+            animatedTwoLineMenuRow(
                 index: 0,
                 icon: "phone",
                 title: "呼叫",
-                detail: formattedDialString,
+                subtitle: app.phoneMenuCallSubtitle,
                 action: onDismiss
             )
             menuSeparator
-            animatedMenuRow(index: 1, icon: "video", title: "FaceTime", action: onDismiss)
+            animatedTwoLineMenuRow(
+                index: 1,
+                icon: "video",
+                title: "视频",
+                subtitle: "微信",
+                action: onDismiss
+            )
             menuSeparator
-            animatedMenuRow(index: 2, icon: "message", title: "信息", action: onMessage)
+            animatedTwoLineMenuRow(
+                index: 2,
+                icon: "message",
+                title: "信息",
+                subtitle: "信息",
+                action: onMessage
+            )
+            menuSectionSeparator
+            animatedChevronMenuRow(index: 3, icon: "phone", title: "呼叫", action: onDismiss)
             menuSeparator
-            animatedMenuRow(index: 3, icon: "person.crop.circle.badge.plus", title: "添加到通讯录", action: onDismiss)
+            animatedChevronMenuRow(index: 4, icon: "video", title: "视频", action: onDismiss)
+            menuSectionSeparator
+            animatedMenuRow(index: 5, icon: "person.crop.circle.badge.plus", title: "添加到通讯录", action: onDismiss)
             menuSeparator
-            animatedMenuRow(index: 4, icon: "doc.on.doc", title: "拷贝", action: onCopy)
+            animatedMenuRow(index: 6, icon: "doc.on.doc", title: "拷贝", action: onCopy)
+            menuSeparator
+            animatedMenuRow(index: 7, icon: "pencil", title: "编辑链接", action: onDismiss)
+            menuSeparator
+            animatedMenuRow(index: 8, icon: "trash", title: "移除链接", action: onDismiss)
         }
         .background {
-            MenuPanelSolidBackground1718(
+            MenuPanelSolidBackground18(
                 cornerRadius: metrics.menuCornerRadius,
-                fill: tuning.menuPanelTintColor(),
+                fill: tuning.menuPanelTintColor()
+                    .opacity(NotesStyle18Tokens.PhoneMenu.menuPanelBackgroundOpacity),
                 shadowOpacity: metrics.menuShadowOpacity,
                 shadowRadius: metrics.menuShadowRadius,
                 shadowY: metrics.menuShadowY
@@ -340,62 +424,105 @@ struct PhoneActionMenuView1718: View {
         .clipShape(RoundedRectangle(cornerRadius: metrics.menuCornerRadius, style: .continuous))
     }
 
-    private var menuPhoneHeader: some View {
-        Text(phone)
-            .font(.system(size: metrics.menuHeaderPhoneFontSize, weight: .regular))
-            .foregroundStyle(Color(uiColor: .secondaryLabel))
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.horizontal, metrics.menuContentInsetH)
-            .frame(height: metrics.headerHeight)
-    }
-
     private var menuSeparator: some View {
         Rectangle()
             .fill(Color(uiColor: .separator))
             .frame(height: metrics.dividerHeight)
     }
 
+    private var menuSectionSeparator: some View {
+        Rectangle()
+            .fill(
+                Color(uiColor: .separator)
+                    .opacity(PhoneMenu18Layout.Design.sectionSeparatorOpacity)
+            )
+            .frame(height: PhoneMenu18Layout.Design.sectionSeparatorHeight)
+    }
+
+    private func animatedTwoLineMenuRow(
+        index: Int,
+        icon: String,
+        title: String,
+        subtitle: String,
+        action: @escaping () -> Void
+    ) -> some View {
+        menuTwoLineRow(icon: icon, title: title, subtitle: subtitle, action: action)
+            .opacity(menuRowStates[index].opacity)
+            .offset(y: menuRowStates[index].offsetY)
+    }
+
+    private func animatedChevronMenuRow(
+        index: Int,
+        icon: String,
+        title: String,
+        action: @escaping () -> Void
+    ) -> some View {
+        menuChevronRow(icon: icon, title: title, action: action)
+            .opacity(menuRowStates[index].opacity)
+            .offset(y: menuRowStates[index].offsetY)
+    }
+
     private func animatedMenuRow(
         index: Int,
         icon: String,
         title: String,
-        detail: String? = nil,
         action: @escaping () -> Void
     ) -> some View {
-        menuRow(icon: icon, title: title, detail: detail, action: action)
+        menuRow(icon: icon, title: title, action: action)
             .opacity(menuRowStates[index].opacity)
             .offset(y: menuRowStates[index].offsetY)
+    }
+
+    private func menuTwoLineRow(
+        icon: String,
+        title: String,
+        subtitle: String,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            HStack(spacing: 8) {
+                menuTitleColumn(title: title, subtitle: subtitle)
+                menuTrailingIcon(icon)
+            }
+            .padding(.horizontal, metrics.menuContentInsetH)
+            .frame(height: PhoneMenu18Layout.Design.twoLineRowHeight)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(MenuRowButtonStyle18(cornerRadius: metrics.menuRowHighlightCornerRadius))
+    }
+
+    private func menuChevronRow(
+        icon: String,
+        title: String,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            HStack(spacing: 8) {
+                menuChevronTitleBlock(title: title)
+                menuTrailingIcon(icon)
+            }
+            .padding(.horizontal, metrics.menuContentInsetH)
+            .frame(height: PhoneMenu18Layout.Design.singleLineRowHeight)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(MenuRowButtonStyle18(cornerRadius: metrics.menuRowHighlightCornerRadius))
     }
 
     private func menuRow(
         icon: String,
         title: String,
-        detail: String? = nil,
         action: @escaping () -> Void
     ) -> some View {
         Button(action: action) {
             HStack(spacing: 8) {
-                HStack(spacing: 6) {
-                    Text(title)
-                        .font(.system(size: metrics.menuTitleSize, weight: .regular))
-                        .foregroundStyle(menuRowLabelColor)
-                    if let detail {
-                        Text(detail)
-                            .font(.system(size: max(metrics.menuTitleSize - 1, 12), weight: .regular))
-                            .foregroundStyle(menuRowLabelColor)
-                    }
-                }
-                Spacer(minLength: 0)
-                Image(systemName: icon)
-                    .font(.system(size: metrics.menuIconSize, weight: .regular))
-                    .symbolRenderingMode(.monochrome)
-                    .foregroundStyle(menuRowIconColor)
+                menuTitleColumn(title: title)
+                menuTrailingIcon(icon)
             }
             .padding(.horizontal, metrics.menuContentInsetH)
-            .frame(height: metrics.rowHeight)
+            .frame(height: PhoneMenu18Layout.Design.singleLineRowHeight)
             .contentShape(Rectangle())
         }
-        .buttonStyle(MenuRowButtonStyle1718(cornerRadius: metrics.menuRowHighlightCornerRadius))
+        .buttonStyle(MenuRowButtonStyle18(cornerRadius: metrics.menuRowHighlightCornerRadius))
     }
 
     // MARK: - Animation
@@ -403,7 +530,7 @@ struct PhoneActionMenuView1718: View {
     private func resetRowStates() {
         menuRowStates = Array(
             repeating: MenuRowAnimState(),
-            count: PhoneMenu1718Layout.Design.menuActionRowCount
+            count: PhoneMenu18Layout.Design.menuActionRowCount
         )
     }
 
@@ -429,12 +556,30 @@ struct PhoneActionMenuView1718: View {
         return min(max(max(wRatio, hRatio), 0.08), anim.previewEnterScaleFrom)
     }
 
-    private func runShowAnimation() {
-        runLongPressShow()
+    private func runShowAnimation(
+        screenHeight: CGFloat? = nil,
+        safeTop: CGFloat? = nil,
+        safeBottom: CGFloat? = nil
+    ) {
+        runLongPressShow(
+            screenHeight: screenHeight,
+            safeTop: safeTop,
+            safeBottom: safeBottom
+        )
     }
 
-    private func runLongPressShow() {
-        let final = PhoneMenu1718Layout.placement(anchor: resolvedAnchor, metrics: metrics)
+    private func runLongPressShow(
+        screenHeight: CGFloat? = nil,
+        safeTop: CGFloat? = nil,
+        safeBottom: CGFloat? = nil
+    ) {
+        let final = PhoneMenu18Layout.placement(
+            anchor: resolvedAnchor,
+            metrics: metrics,
+            screenHeight: screenHeight ?? overlayScreenHeight,
+            safeTop: safeTop ?? overlaySafeTop,
+            safeBottom: safeBottom ?? overlaySafeBottom
+        )
         let spring = previewEnterSpring
         let basePill = computedBasePillShellScale(in: metrics)
         let pill100 = basePill * anim.morphPillTextScaleAt100
@@ -530,7 +675,7 @@ struct PhoneActionMenuView1718: View {
     }
 }
 
-private struct LongPressBackdrop1718: View {
+private struct LongPressBackdrop18: View {
     var overlayOpacity: Double
     var dimOpacity: Double
 
@@ -542,7 +687,7 @@ private struct LongPressBackdrop1718: View {
     }
 }
 
-private struct MenuRowButtonStyle1718: ButtonStyle {
+private struct MenuRowButtonStyle18: ButtonStyle {
     var cornerRadius: CGFloat
 
     func makeBody(configuration: Configuration) -> some View {
@@ -551,7 +696,7 @@ private struct MenuRowButtonStyle1718: ButtonStyle {
                 RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
                     .fill(
                         configuration.isPressed
-                            ? NotesStyle1718Tokens.PhoneMenu.rowHighlightFill
+                            ? NotesStyle18Tokens.PhoneMenu.rowHighlightFill
                             : Color.clear
                     )
                     .padding(.horizontal, 8)
@@ -559,7 +704,7 @@ private struct MenuRowButtonStyle1718: ButtonStyle {
     }
 }
 
-private struct MenuPanelSolidBackground1718: View {
+private struct MenuPanelSolidBackground18: View {
     var cornerRadius: CGFloat
     var fill: Color
     var shadowOpacity: Double

@@ -48,6 +48,10 @@ enum AppScreen {
     case notes
 }
 
+private enum AppStateLegacyMigrationKeys: String, CodingKey {
+    case notesStyleIOS1718
+}
+
 private struct AppStateSnapshot: Codable {
     var mode: ContentMode
     var bothContentOrder: BothContentOrder
@@ -57,9 +61,11 @@ private struct AppStateSnapshot: Codable {
     var messageImageJPEG: Data?
     var noteTitle: String
     var noteBody: String
+    var noteImportedAt: Double?
     var threadTimeRangeInput: String
     var threadHeaderStyleIOS264: Bool
-    var notesStyleIOS1718: Bool
+    var notesStyleIOS17: Bool
+    var notesStyleIOS18: Bool
     var activationExpiresAt: Double?
     var activationCode: String?
     var activationBoundUID: String?
@@ -68,8 +74,8 @@ private struct AppStateSnapshot: Codable {
 
     enum CodingKeys: String, CodingKey {
         case mode, bothContentOrder, simCardMode, senderLineLabel, messageText
-        case messageImageJPEG, noteTitle, noteBody, threadTimeRangeInput
-        case threadHeaderStyleIOS264, notesStyleIOS1718, activationExpiresAt, activationCode, activationBoundUID
+        case messageImageJPEG, noteTitle, noteBody, noteImportedAt, threadTimeRangeInput
+        case threadHeaderStyleIOS264, notesStyleIOS17, notesStyleIOS18, activationExpiresAt, activationCode, activationBoundUID
         case activationMode, activationRemainingClicks
     }
 
@@ -82,9 +88,11 @@ private struct AppStateSnapshot: Codable {
         messageImageJPEG: Data?,
         noteTitle: String,
         noteBody: String,
+        noteImportedAt: Double? = nil,
         threadTimeRangeInput: String,
         threadHeaderStyleIOS264: Bool = false,
-        notesStyleIOS1718: Bool = false,
+        notesStyleIOS17: Bool = false,
+        notesStyleIOS18: Bool = false,
         activationExpiresAt: Double? = nil,
         activationCode: String? = nil,
         activationBoundUID: String? = nil,
@@ -99,9 +107,11 @@ private struct AppStateSnapshot: Codable {
         self.messageImageJPEG = messageImageJPEG
         self.noteTitle = noteTitle
         self.noteBody = noteBody
+        self.noteImportedAt = noteImportedAt
         self.threadTimeRangeInput = threadTimeRangeInput
         self.threadHeaderStyleIOS264 = threadHeaderStyleIOS264
-        self.notesStyleIOS1718 = notesStyleIOS1718
+        self.notesStyleIOS17 = notesStyleIOS17
+        self.notesStyleIOS18 = notesStyleIOS18
         self.activationExpiresAt = activationExpiresAt
         self.activationCode = activationCode
         self.activationBoundUID = activationBoundUID
@@ -119,9 +129,17 @@ private struct AppStateSnapshot: Codable {
         messageImageJPEG = try c.decodeIfPresent(Data.self, forKey: .messageImageJPEG)
         noteTitle = try c.decode(String.self, forKey: .noteTitle)
         noteBody = try c.decode(String.self, forKey: .noteBody)
+        noteImportedAt = try c.decodeIfPresent(Double.self, forKey: .noteImportedAt)
         threadTimeRangeInput = try c.decode(String.self, forKey: .threadTimeRangeInput)
         threadHeaderStyleIOS264 = try c.decodeIfPresent(Bool.self, forKey: .threadHeaderStyleIOS264) ?? false
-        notesStyleIOS1718 = try c.decodeIfPresent(Bool.self, forKey: .notesStyleIOS1718) ?? false
+        notesStyleIOS17 = try c.decodeIfPresent(Bool.self, forKey: .notesStyleIOS17) ?? false
+        notesStyleIOS18 = try c.decodeIfPresent(Bool.self, forKey: .notesStyleIOS18) ?? false
+        if !notesStyleIOS17 && !notesStyleIOS18 {
+            let legacy = try decoder.container(keyedBy: AppStateLegacyMigrationKeys.self)
+            if try legacy.decodeIfPresent(Bool.self, forKey: .notesStyleIOS1718) == true {
+                notesStyleIOS18 = true
+            }
+        }
         activationExpiresAt = try c.decodeIfPresent(Double.self, forKey: .activationExpiresAt)
         activationCode = try c.decodeIfPresent(String.self, forKey: .activationCode)
         activationBoundUID = try c.decodeIfPresent(String.self, forKey: .activationBoundUID)
@@ -152,16 +170,34 @@ final class AppState: ObservableObject {
     @Published var simCardMode: SimCardMode = .dual
     /// 双卡模式下发件人标签（如「副号」「副卡」）
     @Published var senderLineLabel = "副号"
+
+    /// 长按菜单「呼叫」副标题：双卡为「电话 (标签)」，单卡为「电话」
+    var phoneMenuCallSubtitle: String {
+        switch simCardMode {
+        case .single:
+            return "电话"
+        case .dual:
+            let trimmed = senderLineLabel.trimmingCharacters(in: .whitespacesAndNewlines)
+            let label = trimmed.isEmpty ? "副号" : trimmed
+            return "电话 (\(label))"
+        }
+    }
     @Published var messageText = ""
     @Published var messageImage: UIImage?
     @Published var noteTitle = ""
     @Published var noteBody = ""
+    /// 备忘录顶栏日期：导入时写入，返回备忘录或编辑正文不再刷新
+    @Published var noteImportedAt = Date()
     /// 撰写页时间小字区间，格式「HH:mm-HH:mm」，按备忘录行数从上到下分配
     @Published var threadTimeRangeInput = ""
     /// 三行时间小字样式（对齐 iOS 26.4 Messages；与系统版本无关，仅改展示）
     @Published var threadHeaderStyleIOS264 = false
-    /// 备忘录页 iOS 17–18 扁平金黄样式（与系统版本无关，仅改展示）
-    @Published var notesStyleIOS1718 = false
+    /// 备忘录页 iOS 17 legacy 样式（与系统版本无关，仅改展示）
+    @Published var notesStyleIOS17 = false
+    /// 备忘录页 iOS 18 legacy 样式（与系统版本无关，仅改展示）
+    @Published var notesStyleIOS18 = false
+    @Published var notes17Tuning = Notes17TuningSettings.default
+    @Published var notes18Tuning = Notes18TuningSettings.default
     @Published var notes1718Tuning = Notes1718TuningSettings.default
     @Published var notes26Tuning = Notes26TuningSettings.default
     @Published var composeBubbleTuning = ComposeBubbleTuningSettings.default
@@ -171,6 +207,8 @@ final class AppState: ObservableObject {
     @Published var phoneMenuPresentation: PhoneMenuPresentation = .longPress
     /// 长按菜单压暗 + 正文模糊强度（0 正常，1 完全生效）
     @Published var phoneMenuBackdropStrength: Double = 0
+    /// iOS 26 长按：触发正文号码缩回动画（递增值，不做逐帧绑定）
+    @Published var phoneMenuBodyDismissSignal: Int = 0
     @Published var showIMessage = false
     @Published var activationExpiresAt: Date?
     @Published var activationCode: String?
@@ -190,7 +228,10 @@ final class AppState: ObservableObject {
         if let saved = AppStateStore.load() {
             applySnapshot(saved)
         }
+        notes17Tuning = Notes17TuningStore.load()
+        notes18Tuning = Notes18TuningStore.load()
         notes1718Tuning = Notes1718TuningStore.load()
+        migrateLegacy1718TuningIfNeeded()
         notes26Tuning = Notes26TuningStore.load()
         composeBubbleTuning = ComposeBubbleTuningStore.load()
         isHydrating = false
@@ -387,8 +428,71 @@ final class AppState: ObservableObject {
         (mode == .image || mode == .both) && messageImage != nil
     }
 
+    /// iOS 18：标准空白信息会话（第 2 行固定 + 随机 50）
+    var isIOS18StandardBlankThreadForSelectedPhone: Bool {
+        guard legacyNotesShell == .ios18, selectedPhone != nil else { return false }
+        let lines = noteLines
+        guard !lines.isEmpty else { return false }
+        let index = lineIndexForSelectedPhone(in: lines)
+        return BlankThread18.standardBlankLineIndices(lineCount: lines.count, noteBody: noteBody).contains(index)
+    }
+
+    /// iOS 18：绿色 SMS 空白会话（第 1 行固定 + 随机 60），撰写页 chrome 不同
+    var isIOS18GreenSMSBlankThreadForSelectedPhone: Bool {
+        guard legacyNotesShell == .ios18, selectedPhone != nil else { return false }
+        let lines = noteLines
+        guard !lines.isEmpty else { return false }
+        let index = lineIndexForSelectedPhone(in: lines)
+        return BlankThread18.greenSMSBlankLineIndices(lineCount: lines.count, noteBody: noteBody).contains(index)
+    }
+
+    var ios18ComposeChromeStyle: IOS18ComposeChromeStyle {
+        isIOS18GreenSMSBlankThreadForSelectedPhone ? .greenSMS : .standard
+    }
+
+    /// iOS 18：任一空白会话（聊天区无内容）
+    var isIOS18BlankThreadForSelectedPhone: Bool {
+        isIOS18StandardBlankThreadForSelectedPhone || isIOS18GreenSMSBlankThreadForSelectedPhone
+    }
+
+    /// iOS 26：标准空白信息会话（第 2 行固定 + 随机 50）
+    var isIOS26StandardBlankThreadForSelectedPhone: Bool {
+        guard legacyNotesShell == nil, selectedPhone != nil else { return false }
+        let lines = noteLines
+        guard !lines.isEmpty else { return false }
+        let index = lineIndexForSelectedPhone(in: lines)
+        return BlankThread26.standardBlankLineIndices(lineCount: lines.count, noteBody: noteBody).contains(index)
+    }
+
+    /// iOS 26：绿色 SMS 空白会话（第 1 行固定 + 随机 60），撰写页 chrome 不同
+    var isIOS26GreenSMSBlankThreadForSelectedPhone: Bool {
+        guard legacyNotesShell == nil, selectedPhone != nil else { return false }
+        let lines = noteLines
+        guard !lines.isEmpty else { return false }
+        let index = lineIndexForSelectedPhone(in: lines)
+        return BlankThread26.greenSMSBlankLineIndices(lineCount: lines.count, noteBody: noteBody).contains(index)
+    }
+
+    var ios26ComposeChromeStyle: IOS26ComposeChromeStyle {
+        isIOS26GreenSMSBlankThreadForSelectedPhone ? .greenSMS : .standard
+    }
+
+    /// iOS 26：任一空白会话（聊天区无内容）
+    var isIOS26BlankThreadForSelectedPhone: Bool {
+        isIOS26StandardBlankThreadForSelectedPhone || isIOS26GreenSMSBlankThreadForSelectedPhone
+    }
+
+    var composeShowsMessageText: Bool {
+        showsMessageText && !isIOS26BlankThreadForSelectedPhone && !isIOS18BlankThreadForSelectedPhone
+    }
+
+    var composeShowsMessageImage: Bool {
+        showsMessageImage && !isIOS26BlankThreadForSelectedPhone && !isIOS18BlankThreadForSelectedPhone
+    }
+
     /// 按备忘录行序与所选号码，在时间区间内分配撰写页时间小字
     var threadDateLine: String {
+        guard !isIOS26BlankThreadForSelectedPhone, !isIOS18BlankThreadForSelectedPhone else { return "" }
         let lines = noteLines
         let count = max(lines.count, 1)
         let index = lineIndexForSelectedPhone(in: lines)
@@ -399,15 +503,18 @@ final class AppState: ObservableObject {
         return NoteDateFormatting.composeThreadDateLabel(minutesFromMidnight: minutes)
     }
 
-    func clearNotesAndTitle() {
-        noteTitle = ""
-        noteBody = ""
+    func clearMessageTextAndImage() {
+        messageText = ""
+        messageImage = nil
         persist()
     }
 
-    func applyImport(title: String, body: String) {
+    func applyImport(title: String, body: String, importedAt: Date = Date()) {
         noteTitle = title
         noteBody = NoteImportService.appendTrailingBlankLines(to: body)
+        noteImportedAt = importedAt
+        BlankThread26.logAssignments(lines: noteLines, noteBody: noteBody)
+        BlankThread18.logAssignments(lines: noteLines, noteBody: noteBody)
         showIMessage = false
         showPhoneMenu = false
         if activationMode == .clicks {
@@ -434,7 +541,11 @@ final class AppState: ObservableObject {
         guard NoteImportService.accepts(url: url) else { return }
         do {
             let payload = try NoteImportService.parseTextFile(url: url)
-            applyImport(title: payload.title, body: payload.body)
+            applyImport(
+                title: payload.title,
+                body: payload.body,
+                importedAt: payload.importedAt ?? Date()
+            )
         } catch {
             return
         }
@@ -452,14 +563,22 @@ final class AppState: ObservableObject {
 
     func consumePendingImportIfNeeded() {
         if let payload = NoteImportService.consumePendingImport() {
-            applyImport(title: payload.title, body: payload.body)
+            applyImport(
+                title: payload.title,
+                body: payload.body,
+                importedAt: payload.importedAt ?? Date()
+            )
             return
         }
         // Share Extension 写入 App Group 后可能略早于主 App 被唤起
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
             guard let self,
                   let payload = NoteImportService.consumePendingImport() else { return }
-            self.applyImport(title: payload.title, body: payload.body)
+            self.applyImport(
+                title: payload.title,
+                body: payload.body,
+                importedAt: payload.importedAt ?? Date()
+            )
         }
     }
 
@@ -493,9 +612,13 @@ final class AppState: ObservableObject {
             $messageImage.map { _ in () }.eraseToAnyPublisher(),
             $noteTitle.map { _ in () }.eraseToAnyPublisher(),
             $noteBody.map { _ in () }.eraseToAnyPublisher(),
+            $noteImportedAt.map { _ in () }.eraseToAnyPublisher(),
             $threadTimeRangeInput.map { _ in () }.eraseToAnyPublisher(),
             $threadHeaderStyleIOS264.map { _ in () }.eraseToAnyPublisher(),
-            $notesStyleIOS1718.map { _ in () }.eraseToAnyPublisher(),
+            $notesStyleIOS17.map { _ in () }.eraseToAnyPublisher(),
+            $notesStyleIOS18.map { _ in () }.eraseToAnyPublisher(),
+            $notes17Tuning.map { _ in () }.eraseToAnyPublisher(),
+            $notes18Tuning.map { _ in () }.eraseToAnyPublisher(),
             $notes1718Tuning.map { _ in () }.eraseToAnyPublisher(),
             $notes26Tuning.map { _ in () }.eraseToAnyPublisher(),
             $composeBubbleTuning.map { _ in () }.eraseToAnyPublisher(),
@@ -513,14 +636,16 @@ final class AppState: ObservableObject {
             }
             .store(in: &cancellables)
 
-        Publishers.CombineLatest4(
-            $messageText,
-            $simCardMode,
-            $notes1718Tuning.map { $0.bubbleTailPresetID }.eraseToAnyPublisher(),
-            $notesStyleIOS1718
-        )
+        Publishers.MergeMany([
+            $messageText.map { _ in () }.eraseToAnyPublisher(),
+            $simCardMode.map { _ in () }.eraseToAnyPublisher(),
+            $notes17Tuning.map { _ in () }.eraseToAnyPublisher(),
+            $notes18Tuning.map { _ in () }.eraseToAnyPublisher(),
+            $notesStyleIOS17.map { _ in () }.eraseToAnyPublisher(),
+            $notesStyleIOS18.map { _ in () }.eraseToAnyPublisher(),
+        ])
         .debounce(for: .milliseconds(120), scheduler: RunLoop.main)
-        .sink { [weak self] _, _, _, _ in
+        .sink { [weak self] in
             guard let self else { return }
             ComposeThread1718PinWarmup.refresh(app: self)
         }
@@ -543,9 +668,13 @@ final class AppState: ObservableObject {
         messageText = snapshot.messageText
         noteTitle = snapshot.noteTitle
         noteBody = snapshot.noteBody
+        if let stamp = snapshot.noteImportedAt {
+            noteImportedAt = Date(timeIntervalSince1970: stamp)
+        }
         threadTimeRangeInput = snapshot.threadTimeRangeInput
         threadHeaderStyleIOS264 = snapshot.threadHeaderStyleIOS264
-        notesStyleIOS1718 = snapshot.notesStyleIOS1718
+        notesStyleIOS17 = snapshot.notesStyleIOS17
+        notesStyleIOS18 = snapshot.notesStyleIOS18
         activationCode = snapshot.activationCode
         activationBoundUID = snapshot.activationBoundUID
         if let stamp = snapshot.activationExpiresAt {
@@ -580,9 +709,11 @@ final class AppState: ObservableObject {
             messageImageJPEG: messageImage?.jpegData(compressionQuality: 0.88),
             noteTitle: noteTitle,
             noteBody: noteBody,
+            noteImportedAt: noteImportedAt.timeIntervalSince1970,
             threadTimeRangeInput: threadTimeRangeInput,
             threadHeaderStyleIOS264: threadHeaderStyleIOS264,
-            notesStyleIOS1718: notesStyleIOS1718,
+            notesStyleIOS17: notesStyleIOS17,
+            notesStyleIOS18: notesStyleIOS18,
             activationExpiresAt: activationExpiresAt?.timeIntervalSince1970,
             activationCode: activationCode,
             activationBoundUID: activationBoundUID,
@@ -594,9 +725,22 @@ final class AppState: ObservableObject {
     private func persist() {
         guard !isHydrating else { return }
         AppStateStore.save(makeSnapshot())
+        Notes17TuningStore.save(notes17Tuning)
+        Notes18TuningStore.save(notes18Tuning)
         Notes1718TuningStore.save(notes1718Tuning)
         Notes26TuningStore.save(notes26Tuning)
         ComposeBubbleTuningStore.save(composeBubbleTuning)
+    }
+
+    private func migrateLegacy1718TuningIfNeeded() {
+        let legacy = notes1718Tuning
+        guard legacy != .default else { return }
+        if notes17Tuning == .default {
+            notes17Tuning = .bridgedFrom1718(legacy)
+        }
+        if notes18Tuning == .default {
+            notes18Tuning = .bridgedFrom1718(legacy)
+        }
     }
 }
 

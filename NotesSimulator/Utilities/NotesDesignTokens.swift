@@ -278,7 +278,7 @@ enum NotesSemanticColor {
 
 /// 备忘录自动识别号码/数据链接色（真机金黄下划线；非 UIColor.link 默认蓝）
 enum NotesDetectedLinkColor {
-    /// 备忘录号码金黄（偏暖黄，真机采样向）
-    static let uiColor = UIColor(red: 245 / 255, green: 188 / 255, blue: 8 / 255, alpha: 1)
-    static let color = Color(red: 245 / 255, green: 188 / 255, blue: 8 / 255)
+    /// #EAB109 · RGB 234, 177, 9
+    static let uiColor = UIColor(red: 234 / 255, green: 177 / 255, blue: 9 / 255, alpha: 1)
+    static let color = Color(uiColor: uiColor)
 }

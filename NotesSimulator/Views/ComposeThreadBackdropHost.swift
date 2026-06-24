@@ -7,12 +7,15 @@ struct ComposeThreadBackdropHost: UIViewRepresentable {
     let composerBottomReserve: CGFloat
     let dateLine: String
     let showsIOS264ThreadHeader: Bool
+    let isBlankThread: Bool
+    let composeChromeStyle: IOS26ComposeChromeStyle
     let messageText: String
     let showsText: Bool
     let showsImage: Bool
     let bothContentOrder: BothContentOrder
     let image: UIImage?
     let senderLineLabel: String
+    var showsSenderRow = true
     var bubbleFontSize: CGFloat = 17
     func makeUIView(context: Context) -> ComposeThreadScrollView {
         ComposeThreadScrollView()
@@ -24,12 +27,15 @@ struct ComposeThreadBackdropHost: UIViewRepresentable {
             composerBottomReserve: composerBottomReserve,
             dateLine: dateLine,
             showsIOS264ThreadHeader: showsIOS264ThreadHeader,
+            isBlankThread: isBlankThread,
+            composeChromeStyle: composeChromeStyle,
             messageText: messageText,
             showsText: showsText,
             showsImage: showsImage,
             bothContentOrder: bothContentOrder,
             image: image,
             senderLineLabel: senderLineLabel,
+            showsSenderRow: showsSenderRow,
             horizontalPadding: IMessageDesignTokens.layer2ThreadPaddingH,
             bubbleFontSize: bubbleFontSize
         )
@@ -50,15 +56,42 @@ final class ComposeThreadScrollView: UIView {
     /// 长按打开信息页后首屏顶对齐（与参考图一致），文案变长后再走贴底上滚
     private var prefersInitialTopAlignment = true
 
+    private struct PendingFullApply {
+        let chromeBottomY: CGFloat
+        let composerBottomReserve: CGFloat
+        let dateLine: String
+        let showsIOS264ThreadHeader: Bool
+        let isBlankThread: Bool
+        let composeChromeStyle: IOS26ComposeChromeStyle
+        let messageText: String
+        let showsText: Bool
+        let showsImage: Bool
+        let bothContentOrder: BothContentOrder
+        let image: UIImage?
+        let senderLineLabel: String
+        let showsSenderRow: Bool
+        let horizontalPadding: CGFloat
+        let bubbleFontSize: CGFloat
+    }
+
+    private var pendingFullApply: PendingFullApply?
+
     private struct ThreadContentSignature: Equatable {
         let chromeBottomY: CGFloat
         let dateLine: String
         let showsIOS264ThreadHeader: Bool
+        let isBlankThread: Bool
+        let composeChromeStyle: IOS26ComposeChromeStyle
         let messageText: String
         let showsText: Bool
         let showsImage: Bool
         let bothContentOrder: BothContentOrder
         let imageKey: Int
+        let showsSenderRow: Bool
+    }
+
+    private static func imageLayoutKey(for image: UIImage?) -> Int {
+        image.map { ObjectIdentifier($0).hashValue } ?? 0
     }
 
     override init(frame: CGRect) {
@@ -104,6 +137,27 @@ final class ComposeThreadScrollView: UIView {
 
     override func layoutSubviews() {
         super.layoutSubviews()
+        if let pending = pendingFullApply, bounds.width > 1 {
+            let snapshot = pending
+            pendingFullApply = nil
+            apply(
+                chromeBottomY: snapshot.chromeBottomY,
+                composerBottomReserve: snapshot.composerBottomReserve,
+                dateLine: snapshot.dateLine,
+                showsIOS264ThreadHeader: snapshot.showsIOS264ThreadHeader,
+                isBlankThread: snapshot.isBlankThread,
+                composeChromeStyle: snapshot.composeChromeStyle,
+                messageText: snapshot.messageText,
+                showsText: snapshot.showsText,
+                showsImage: snapshot.showsImage,
+                bothContentOrder: snapshot.bothContentOrder,
+                image: snapshot.image,
+                senderLineLabel: snapshot.senderLineLabel,
+                showsSenderRow: snapshot.showsSenderRow,
+                horizontalPadding: snapshot.horizontalPadding,
+                bubbleFontSize: snapshot.bubbleFontSize
+            )
+        }
         scrollView.contentInset.bottom = composerBottomReserve
         let reserveChanged = abs(composerBottomReserve - lastComposerReserve) > 0.5
         lastComposerReserve = composerBottomReserve
@@ -127,12 +181,15 @@ final class ComposeThreadScrollView: UIView {
         composerBottomReserve: CGFloat,
         dateLine: String,
         showsIOS264ThreadHeader: Bool,
+        isBlankThread: Bool,
+        composeChromeStyle: IOS26ComposeChromeStyle,
         messageText: String,
         showsText: Bool,
         showsImage: Bool,
         bothContentOrder: BothContentOrder,
         image: UIImage?,
         senderLineLabel: String,
+        showsSenderRow: Bool,
         horizontalPadding: CGFloat,
         bubbleFontSize: CGFloat
     ) {
@@ -145,11 +202,14 @@ final class ComposeThreadScrollView: UIView {
             chromeBottomY: chromeBottomY,
             dateLine: dateLine,
             showsIOS264ThreadHeader: showsIOS264ThreadHeader,
+            isBlankThread: isBlankThread,
+            composeChromeStyle: composeChromeStyle,
             messageText: messageText,
             showsText: showsText,
             showsImage: showsImage,
             bothContentOrder: bothContentOrder,
-            imageKey: image.map { ObjectIdentifier($0).hashValue } ?? 0
+            imageKey: Self.imageLayoutKey(for: image),
+            showsSenderRow: showsSenderRow
         )
 
         if signature == contentSignature {
@@ -158,8 +218,9 @@ final class ComposeThreadScrollView: UIView {
                 setNeedsLayout()
                 layoutIfNeeded()
                 reconcileScrollOffset(animated: false, forcePin: !userDidScroll)
-            } else if reserveChanged {
+            } else if reserveChanged || signature.showsImage {
                 setNeedsLayout()
+                layoutIfNeeded()
             }
             return
         }
@@ -170,6 +231,7 @@ final class ComposeThreadScrollView: UIView {
            previous.showsImage == signature.showsImage,
            previous.bothContentOrder == signature.bothContentOrder,
            previous.imageKey == signature.imageKey,
+           previous.showsSenderRow == signature.showsSenderRow,
            previous.showsIOS264ThreadHeader == signature.showsIOS264ThreadHeader,
            previous.messageText != signature.messageText || previous.dateLine != signature.dateLine {
             contentSignature = signature
@@ -180,6 +242,29 @@ final class ComposeThreadScrollView: UIView {
             reconcileScrollOffset(animated: false, forcePin: !userDidScroll)
             return
         }
+
+        guard bounds.width > 1 else {
+            pendingFullApply = PendingFullApply(
+                chromeBottomY: chromeBottomY,
+                composerBottomReserve: composerBottomReserve,
+                dateLine: dateLine,
+                showsIOS264ThreadHeader: showsIOS264ThreadHeader,
+                isBlankThread: isBlankThread,
+                composeChromeStyle: composeChromeStyle,
+                messageText: messageText,
+                showsText: showsText,
+                showsImage: showsImage,
+                bothContentOrder: bothContentOrder,
+                image: image,
+                senderLineLabel: senderLineLabel,
+                showsSenderRow: showsSenderRow,
+                horizontalPadding: horizontalPadding,
+                bubbleFontSize: bubbleFontSize
+            )
+            setNeedsLayout()
+            return
+        }
+        pendingFullApply = nil
 
         contentSignature = signature
         self.chromeBottomY = chromeBottomY
@@ -198,8 +283,40 @@ final class ComposeThreadScrollView: UIView {
         )
         stack.addArrangedSubview(topSpacer)
 
+        if isBlankThread {
+            if showsIOS264ThreadHeader {
+                let headerRow = insetRow(
+                    makeThreadHeaderStack(
+                        dateLine: dateLine,
+                        showsIOS264ThreadHeader: true,
+                        isBlankThread: true,
+                        composeChromeStyle: composeChromeStyle
+                    ),
+                    horizontalPadding: horizontalPadding
+                )
+                stack.addArrangedSubview(headerRow)
+            }
+            stack.addArrangedSubview(
+                fixedSpacer(IMessageDesignTokens.threadManualScrollSlack)
+            )
+            lastContentHeight = 0
+            setNeedsLayout()
+            DispatchQueue.main.async {
+                self.layoutIfNeeded()
+                self.scrollView.setContentOffset(.zero, animated: false)
+                self.lastContentHeight = self.scrollView.contentSize.height
+                ComposeBackdropRegistry.notifyChanged()
+            }
+            return
+        }
+
         let timeRow = insetRow(
-            makeThreadHeaderStack(dateLine: dateLine, showsIOS264ThreadHeader: showsIOS264ThreadHeader),
+            makeThreadHeaderStack(
+                dateLine: dateLine,
+                showsIOS264ThreadHeader: showsIOS264ThreadHeader,
+                isBlankThread: false,
+                composeChromeStyle: composeChromeStyle
+            ),
             horizontalPadding: horizontalPadding
         )
         stack.addArrangedSubview(timeRow)
@@ -215,6 +332,7 @@ final class ComposeThreadScrollView: UIView {
             bothContentOrder: bothContentOrder,
             image: image,
             senderLineLabel: senderLineLabel,
+            showsSenderRow: showsSenderRow,
             horizontalPadding: horizontalPadding
         )
 
@@ -267,6 +385,7 @@ final class ComposeThreadScrollView: UIView {
         bothContentOrder: BothContentOrder,
         image: UIImage?,
         senderLineLabel: String,
+        showsSenderRow: Bool,
         horizontalPadding: CGFloat
     ) {
         let addText = {
@@ -303,30 +422,46 @@ final class ComposeThreadScrollView: UIView {
         }
     }
 
-    private func makeThreadHeaderStack(dateLine: String, showsIOS264ThreadHeader: Bool) -> UIStackView {
+    private func makeThreadHeaderStack(
+        dateLine: String,
+        showsIOS264ThreadHeader: Bool,
+        isBlankThread: Bool,
+        composeChromeStyle: IOS26ComposeChromeStyle
+    ) -> UIStackView {
         let headerStack = UIStackView()
         headerStack.axis = .vertical
         headerStack.alignment = .center
         headerStack.spacing = IMessageDesignTokens.timestampLineSpacing
 
-        let serviceLabel = makeThreadMetaLabel(text: "iMessage 信息")
+        let serviceLabel: UILabel
+        if isBlankThread, composeChromeStyle == .greenSMS {
+            serviceLabel = makeThreadMetaLabel(
+                attributed: IMessageDesignTokens.makeSMSThreadMetaLabelAttributed()
+            )
+        } else {
+            serviceLabel = makeThreadMetaLabel(text: "iMessage 信息")
+        }
         headerStack.addArrangedSubview(serviceLabel)
 
-        if showsIOS264ThreadHeader {
+        if showsIOS264ThreadHeader, !(isBlankThread && composeChromeStyle == .greenSMS) {
             let encryptedRow = makeEncryptedRow()
             headerStack.addArrangedSubview(encryptedRow)
             headerStack.setCustomSpacing(
                 IMessageDesignTokens.timestampLineSpacing,
                 after: serviceLabel
             )
-            headerStack.setCustomSpacing(
-                IMessageDesignTokens.thread264EncryptedToDateSpacing,
-                after: encryptedRow
-            )
+            if !isBlankThread {
+                headerStack.setCustomSpacing(
+                    IMessageDesignTokens.thread264EncryptedToDateSpacing,
+                    after: encryptedRow
+                )
+            }
         }
 
-        let dateLabel = makeThreadMetaLabel(text: dateLine)
-        headerStack.addArrangedSubview(dateLabel)
+        if !isBlankThread {
+            let dateLabel = makeThreadMetaLabel(text: dateLine)
+            headerStack.addArrangedSubview(dateLabel)
+        }
 
         return headerStack
     }
@@ -363,6 +498,13 @@ final class ComposeThreadScrollView: UIView {
         label.textColor = IMessageDesignTokens.threadMetaTextUI
         label.textAlignment = .center
         label.text = text
+        return label
+    }
+
+    private func makeThreadMetaLabel(attributed: NSAttributedString) -> UILabel {
+        let label = UILabel()
+        label.textAlignment = .center
+        label.attributedText = attributed
         return label
     }
 
@@ -607,7 +749,7 @@ private final class ComposeBubbleColumnView: UIView {
 }
 
 /// iOS 26 单图：固定右缘 20pt；满宽按发件人首字中心→右缘推算，尺寸规则同比缩放
-private final class ComposeImageColumnView: UIView {
+final class ComposeImageColumnView: UIView {
     private let imageBubbleView: IOSOutgoingImageBubbleView
     private let delivered = UILabel()
     private let senderLineLabel: String

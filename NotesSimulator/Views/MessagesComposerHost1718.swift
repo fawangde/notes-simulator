@@ -5,6 +5,7 @@ import UIKit
 struct MessagesComposerHost1718: UIViewControllerRepresentable {
     @Binding var text: String
     var wantsFocus: Bool
+    var chromeStyle: IOS18ComposeChromeStyle = .standard
     var onPlusTap: (() -> Void)? = nil
 
     func makeCoordinator() -> Coordinator {
@@ -18,6 +19,7 @@ struct MessagesComposerHost1718: UIViewControllerRepresentable {
     }
 
     func updateUIViewController(_ controller: MessagesComposerHost1718Controller, context: Context) {
+        controller.applyChromeStyle(chromeStyle)
         controller.syncText(text)
         controller.bindPlusTap(onPlusTap)
         if wantsFocus {
@@ -77,6 +79,10 @@ final class MessagesComposerHost1718Controller: UIViewController {
         plate.onPlusTap = handler
     }
 
+    func applyChromeStyle(_ style: IOS18ComposeChromeStyle) {
+        plate.applyChromeStyle(style)
+    }
+
     func syncText(_ value: String) {
         if plate.field.text != value {
             plate.field.text = value
@@ -114,6 +120,7 @@ final class MessagesComposerPlate1718View: UIView {
     var onTextChange: ((String) -> Void)?
     var onPlusTap: (() -> Void)?
 
+    private var chromeStyle: IOS18ComposeChromeStyle = .standard
     private let plusButton = UIView()
     private let plusTapButton = UIButton(type: .system)
     private let plusIconView = UIImageView()
@@ -151,7 +158,7 @@ final class MessagesComposerPlate1718View: UIView {
         fieldWrap.layer.borderColor = IMessage1718DesignTokens.inputBorderColorUI.cgColor
         fieldWrap.translatesAutoresizingMaskIntoConstraints = false
 
-        field.placeholder = "iMessage 信息"
+        field.placeholder = nil
         field.font = .systemFont(ofSize: IMessage1718DesignTokens.inputFontSize)
         field.backgroundColor = .clear
         field.textColor = UIColor.label
@@ -161,10 +168,7 @@ final class MessagesComposerPlate1718View: UIView {
         let inset = IMessage1718DesignTokens.inputFieldHorizontalInset
         field.leftView = UIView(frame: CGRect(x: 0, y: 0, width: inset, height: 1))
         field.leftViewMode = .always
-        field.attributedPlaceholder = NSAttributedString(
-            string: "iMessage 信息",
-            attributes: [.foregroundColor: IMessage1718DesignTokens.inputPlaceholderColorUI]
-        )
+        applyChromeStyle(.standard)
         field.translatesAutoresizingMaskIntoConstraints = false
         field.addTarget(self, action: #selector(editingChanged), for: .editingChanged)
 
@@ -227,6 +231,18 @@ final class MessagesComposerPlate1718View: UIView {
 
     @available(*, unavailable)
     required init?(coder: NSCoder) { nil }
+
+    func applyChromeStyle(_ style: IOS18ComposeChromeStyle) {
+        chromeStyle = style
+        switch style {
+        case .standard:
+            field.placeholder = nil
+            field.attributedPlaceholder = IMessage18DesignTokens.makeIMessageInputPlaceholderAttributed()
+        case .greenSMS:
+            field.placeholder = nil
+            field.attributedPlaceholder = IMessage18DesignTokens.makeSMSInputPlaceholderAttributed()
+        }
+    }
 
     @objc private func editingChanged() {
         onTextChange?(field.text ?? "")

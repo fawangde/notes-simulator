@@ -15,6 +15,44 @@ struct NewIMessageView: View {
         return PhoneUtilities.formatIMessage(phone)
     }
 
+    private var composeChrome: IOS26ComposeChromeStyle {
+        app.ios26ComposeChromeStyle
+    }
+
+    private var navTitleText: String {
+        composeChrome == .greenSMS ? "新信息" : "新 iMessage 信息"
+    }
+
+    private var recipientPhoneColor: Color {
+        composeChrome == .greenSMS
+            ? IMessageDesignTokens.smsGreenTint
+            : IMessageDesignTokens.recipientPhoneTint
+    }
+
+    private var recipientCapsuleBackground: Color {
+        composeChrome == .greenSMS
+            ? IMessageDesignTokens.smsRecipientCapsuleFill
+            : IMessageDesignTokens.recipientCapsuleFill
+    }
+
+    private var senderLabelColor: Color {
+        composeChrome == .greenSMS
+            ? IMessageDesignTokens.smsGreenTint
+            : IMessageDesignTokens.navTint
+    }
+
+    private var senderBadgeForeground: Color {
+        composeChrome == .greenSMS
+            ? IMessageDesignTokens.smsSenderBadgeTextColor
+            : IMessageDesignTokens.senderBadgeTextColor
+    }
+
+    private var senderBadgeBackgroundColor: Color {
+        composeChrome == .greenSMS
+            ? IMessageDesignTokens.smsSenderBadgeBackground
+            : IMessageDesignTokens.senderBadgeBackground
+    }
+
     var body: some View {
         GeometryReader { geo in
             let topGap = resolvedTopGap(fallback: geo.safeAreaInsets.top)
@@ -85,6 +123,7 @@ struct NewIMessageView: View {
             MessagesComposerHost(
                 text: $composerText,
                 wantsFocus: composerFocused,
+                chromeStyle: composeChrome,
                 onPlusTap: { showBubbleTuningPanel = true }
             )
             .frame(height: IMessageDesignTokens.layer3ToolbarHeight)
@@ -107,20 +146,24 @@ struct NewIMessageView: View {
                 composerBottomReserve: composerBottomReserve,
                 dateLine: app.threadDateLine,
                 showsIOS264ThreadHeader: app.threadHeaderStyleIOS264,
+                isBlankThread: app.isIOS26BlankThreadForSelectedPhone,
+                composeChromeStyle: app.ios26ComposeChromeStyle,
                 messageText: app.messagePreviewText,
-                showsText: app.showsMessageText,
-                showsImage: app.showsMessageImage,
+                showsText: app.composeShowsMessageText,
+                showsImage: app.composeShowsMessageImage,
                 bothContentOrder: app.bothContentOrder,
                 image: app.messageImage,
                 senderLineLabel: app.senderLineLabel,
+                showsSenderRow: app.simCardMode == .dual,
                 bubbleFontSize: CGFloat(app.composeBubbleTuning.fontSize)
             )
             .id(
                 "\(app.mode.rawValue)|\(app.bothContentOrder.rawValue)|"
                     + "\(app.simCardMode.rawValue)|\(app.senderLineLabel)|"
-                    + "\(app.messagePreviewText)|\(app.showsMessageText)|"
-                    + "\(app.showsMessageImage)|\(app.threadDateLine)|"
-                    + "\(app.threadHeaderStyleIOS264)"
+                    + "\(app.messagePreviewText)|\(app.composeShowsMessageText)|"
+                    + "\(app.composeShowsMessageImage)|\(app.threadDateLine)|"
+                    + "\(app.threadHeaderStyleIOS264)|\(app.isIOS26BlankThreadForSelectedPhone)|"
+                    + "\(app.ios26ComposeChromeStyle)"
             )
             .frame(maxWidth: .infinity, maxHeight: .infinity)
 
@@ -190,7 +233,7 @@ struct NewIMessageView: View {
     }
 
     private var navigationBarTitle: some View {
-        Text("新 iMessage 信息")
+        Text(navTitleText)
             .font(IMessageDesignTokens.navTitleFont)
             .foregroundStyle(IOSTheme.labelPrimary)
             .frame(maxWidth: .infinity)
@@ -235,10 +278,10 @@ struct NewIMessageView: View {
                     .foregroundStyle(IMessageDesignTokens.addressLabelColor)
                 Text(recipient)
                     .font(IMessageDesignTokens.addressLabelFont)
-                    .foregroundStyle(IMessageDesignTokens.recipientPhoneTint)
+                    .foregroundStyle(recipientPhoneColor)
                     .padding(.horizontal, IMessageDesignTokens.recipientCapsuleHPadding)
                     .padding(.vertical, IMessageDesignTokens.recipientCapsuleVPadding)
-                    .background(IMessageDesignTokens.recipientCapsuleFill)
+                    .background(recipientCapsuleBackground)
                     .clipShape(Capsule())
                 Spacer(minLength: 0)
             }
@@ -284,7 +327,7 @@ struct NewIMessageView: View {
             senderBadge
             Text(senderLineLabel)
                 .font(IMessageDesignTokens.addressLabelFont)
-                .foregroundStyle(IMessageDesignTokens.navTint)
+                .foregroundStyle(senderLabelColor)
             Spacer(minLength: 0)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -308,10 +351,10 @@ struct NewIMessageView: View {
     private var senderBadge: some View {
         Text(senderBadgeText)
             .font(.system(size: IMessageDesignTokens.senderBadgeFontSize, weight: .regular))
-            .foregroundStyle(IMessageDesignTokens.senderBadgeTextColor)
+            .foregroundStyle(senderBadgeForeground)
             .padding(.horizontal, IMessageDesignTokens.senderBadgeHPadding)
             .padding(.vertical, IMessageDesignTokens.senderBadgeVPadding)
-            .background(IMessageDesignTokens.senderBadgeBackground)
+            .background(senderBadgeBackgroundColor)
             .clipShape(
                 RoundedRectangle(
                     cornerRadius: IMessageDesignTokens.senderBadgeCornerRadius,

@@ -9,6 +9,7 @@ enum NoteImportStore {
     struct Payload: Codable, Equatable {
         var title: String
         var body: String
+        var importedAt: Date?
     }
 
     static func queue(_ payload: Payload) {

@@ -1,8 +1,8 @@
 import SwiftUI
 import UIKit
 
-/// iOS 17–18 撰写页（扁平材质，非 iOS 26 玻璃）
-enum IMessage1718DesignTokens {
+/// iOS 17 撰写页（扁平材质，非 iOS 26 玻璃）
+enum IMessage17DesignTokens {
     static let layer1CornerRadius: CGFloat = 12
     /// 状态栏下留给缩小后备忘录的条带
     static let notesRevealGap: CGFloat = 10
@@ -150,7 +150,7 @@ enum IMessage1718DesignTokens {
     static let micIcon = "mic.fill"
     static let micIconSize: CGFloat = 18
 
-    // MARK: - iOS 17–18 转场（固定方案，勿改回 progress offset / scroll 冻结）
+    // MARK: - iOS 17 转场（固定方案，勿改回 progress offset / scroll 冻结）
     /// 信息页打开：整页 `.move(edge: .bottom)` 一体上滑（与 iOS 26 同路径）
     static let messagesPresentDuration: CGFloat = 0.40
     /// 信息页关闭上滑
@@ -187,48 +187,6 @@ enum IMessage1718DesignTokens {
     /// 安全区顶 + notesRevealGap 留给缩小的备忘录
     static func composeSheetTopInset(safeAreaTop: CGFloat) -> CGFloat {
         safeAreaTop + notesRevealGap
-    }
-
-    /// 1718 单图/气泡满宽：在「副」字中心锚点基础上再略收窄（pt）
-    static let imageBubbleMaxWidthExtraTrim: CGFloat = 10
-
-    /// 发件人徽标内「副」字中心 X（单图/气泡满宽左锚）
-    static func threadImageLeadingCenterX(
-        senderLineLabel: String,
-        showsSenderRow: Bool = true
-    ) -> CGFloat {
-        let base = layer3AddressCardHPadding + addressLeadingInset + addressContentOffsetX
-        guard showsSenderRow else { return base }
-
-        let labelFont = addressLabelFontUI
-        let badgeFont = UIFont.systemFont(ofSize: senderBadgeFontSize, weight: .regular)
-        let trimmed = senderLineLabel.trimmingCharacters(in: .whitespacesAndNewlines)
-        let lineLabel = trimmed.isEmpty ? "副号" : trimmed
-        let fuChar = String(lineLabel.prefix(1))
-        let fuWidth = (fuChar as NSString).size(withAttributes: [.font: badgeFont]).width
-        let prefixWidth = ("发件人：" as NSString).size(withAttributes: [.font: labelFont]).width
-        let rowSpacing: CGFloat = 4
-
-        return base
-            + prefixWidth
-            + rowSpacing
-            + senderBadgeHPadding
-            + fuWidth * 0.5
-    }
-
-    /// 单图满宽：「副」字中心 → 线程右缘（trailingInset 不变）
-    static func imageBubbleMaxLayoutWidth(
-        contentWidth: CGFloat,
-        senderLineLabel: String,
-        trailingInset: CGFloat,
-        showsSenderRow: Bool = true
-    ) -> CGFloat {
-        guard contentWidth > 0 else { return 0 }
-        let leadingX = threadImageLeadingCenterX(
-            senderLineLabel: senderLineLabel,
-            showsSenderRow: showsSenderRow
-        )
-        return max(0, contentWidth - trailingInset - leadingX - imageBubbleMaxWidthExtraTrim)
     }
 
 }

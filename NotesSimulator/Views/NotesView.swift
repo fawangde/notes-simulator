@@ -9,12 +9,11 @@ struct NotesView: View {
     @State private var rootFrameGlobal: CGRect = .zero
     @State private var frozenWindowAnchor: CGRect = .zero
     @State private var frozenMenuAnchor: CGRect = .zero
-    @State private var noteDisplayedDate = Date()
     @State private var bottomSafeInset: CGFloat = 0
     @State private var transitionProgress: CGFloat = 0
     var body: some View {
         ZStack {
-            if app.notesStyleIOS1718, app.showIMessage {
+            if app.usesLegacyNotesShell, app.showIMessage {
                 Color.black
                     .ignoresSafeArea()
                     .allowsHitTesting(false)
@@ -23,28 +22,50 @@ struct NotesView: View {
             notesLayer
 
             if app.showPhoneMenu, let phone = app.selectedPhone {
-                if app.notesStyleIOS1718 {
-                    PhoneActionMenuView1718(
-                        phone: phone,
-                        windowAnchor: frozenWindowAnchor,
-                        presentation: app.phoneMenuPresentation,
-                        tuning: app.notes1718Tuning,
-                        onMessage: openIMessage,
-                        onCopy: {
-                            UIPasteboard.general.string = phone
-                            app.showPhoneMenu = false
-                        },
-                        onDismiss: {
-                            app.phoneMenuBackdropStrength = 0
-                            app.showPhoneMenu = false
+                if let shell = app.legacyNotesShell {
+                    Group {
+                        switch shell {
+                        case .ios17:
+                            PhoneActionMenuView17(
+                                phone: phone,
+                                windowAnchor: frozenWindowAnchor,
+                                presentation: app.phoneMenuPresentation,
+                                tuning: app.notes17Tuning,
+                                onMessage: openIMessage,
+                                onCopy: {
+                                    UIPasteboard.general.string = phone
+                                    app.showPhoneMenu = false
+                                },
+                                onDismiss: {
+                                    app.phoneMenuBackdropStrength = 0
+                                    app.showPhoneMenu = false
+                                }
+                            )
+                        case .ios18:
+                            PhoneActionMenuView18(
+                                phone: phone,
+                                windowAnchor: frozenWindowAnchor,
+                                presentation: app.phoneMenuPresentation,
+                                tuning: app.notes18Tuning,
+                                onMessage: openIMessage,
+                                onCopy: {
+                                    UIPasteboard.general.string = phone
+                                    app.showPhoneMenu = false
+                                },
+                                onDismiss: {
+                                    app.phoneMenuBackdropStrength = 0
+                                    app.showPhoneMenu = false
+                                }
+                            )
                         }
-                    )
+                    }
                     .transition(.opacity)
                     .zIndex(20)
                 } else {
                     PhoneActionMenuView(
                         phone: phone,
                         anchor: frozenMenuAnchor,
+                        presentation: app.phoneMenuPresentation,
                         onMessage: openIMessage,
                         onCopy: {
                             UIPasteboard.general.string = phone
@@ -60,15 +81,21 @@ struct NotesView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .animation(
-            app.notesStyleIOS1718
-                ? .easeOut(duration: IMessage1718DesignTokens.messagesPresentDuration)
+            app.usesLegacyNotesShell
+                ? .easeOut(duration: (app.legacyNotesShell?.messagesPresentDuration ?? IMessage1718DesignTokens.messagesPresentDuration))
                 : imessageTransitionAnimation,
             value: app.showIMessage
         )
         .animation(
-            app.notesStyleIOS1718 ? nil : .spring(response: 0.48, dampingFraction: 0.82),
+            app.usesLegacyNotesShell ? nil : .spring(response: 0.48, dampingFraction: 0.82),
             value: app.showPhoneMenu
         )
+        .onAppear {
+            if !app.showIMessage {
+                transitionProgress = 0
+                app.phoneMenuBackdropStrength = 0
+            }
+        }
         .alert("请先激活 App", isPresented: $app.showActivationRequiredAlert) {
             Button("好", role: .cancel) {}
         }
@@ -83,7 +110,7 @@ struct NotesView: View {
             }
         }
         .background {
-            if !app.notesStyleIOS1718 {
+            if !app.usesLegacyNotesShell {
                 notesPaperBackground
                     .ignoresSafeArea()
             }
@@ -103,29 +130,41 @@ struct NotesView: View {
     /// iOS 17–18 信息页：与 iOS 26 相同 `.transition(.move(edge: .bottom))` 整页一体上滑。
     /// 禁止 progress offset / scroll 冻结 / 预估键盘（内部 scroll 与 26 同算法，仅 token 不同）。
     private var imessageOverlay: some View {
-        if app.notesStyleIOS1718 {
-            if app.showIMessage {
-                NewIMessageView1718(onClose: closeIMessage)
+        if app.showIMessage {
+            if let shell = app.legacyNotesShell {
+                switch shell {
+                case .ios17:
+                    NewIMessageView17(onClose: closeIMessage)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .ignoresSafeArea()
+                        .transition(.move(edge: .bottom))
+                        .zIndex(30)
+                case .ios18:
+                    NewIMessageView18(onClose: closeIMessage)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .ignoresSafeArea()
+                        .transition(.move(edge: .bottom))
+                        .zIndex(30)
+                }
+            } else {
+                NewIMessageView(onClose: closeIMessage)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .ignoresSafeArea()
                     .transition(.move(edge: .bottom))
                     .zIndex(30)
             }
-        } else if app.showIMessage {
-            NewIMessageView(onClose: closeIMessage)
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .ignoresSafeArea()
-                .transition(.move(edge: .bottom))
-                .zIndex(30)
         }
     }
 
     /// iOS 26：点「信息」后整体压暗（原逻辑）
     private var notesLayer: some View {
         Group {
-            if app.notesStyleIOS1718 {
-                notesLayer1718
-            } else {
+            switch app.legacyNotesShell {
+            case .ios17:
+                notesLayerLegacy(.ios17)
+            case .ios18:
+                notesLayerLegacy(.ios18)
+            case nil:
                 notesLayerIOS26
             }
         }
@@ -150,13 +189,14 @@ struct NotesView: View {
             .animation(imessageTransitionAnimation, value: app.showIMessage)
     }
 
-    /// iOS 17–18：固定屏高一体板 + compositingGroup，再 uniform scale
-    private var notesLayer1718: some View {
+    /// iOS 17 / 18：固定屏高一体板 + compositingGroup，再 uniform scale
+    private func notesLayerLegacy(_ shell: LegacyNotesShell) -> some View {
         GeometryReader { geo in
             let safeTop = resolvedStatusBarTop(fallback: geo.safeAreaInsets.top)
             let safeBottom = resolvedHomeIndicatorBottom(fallback: geo.safeAreaInsets.bottom)
 
-            notes1718FullScreenCard(
+            legacyFullScreenCard(
+                shell: shell,
                 width: geo.size.width,
                 height: geo.size.height,
                 safeTop: safeTop,
@@ -169,15 +209,13 @@ struct NotesView: View {
         .ignoresSafeArea()
         .allowsHitTesting(transitionProgress < 0.01)
         .sheet(isPresented: $showTuningPanel) {
-            if app.notesStyleIOS1718 {
-                Notes1718TuningPanel(settings: $app.notes1718Tuning)
-            } else {
-                Notes26TuningPanel(settings: $app.notes26Tuning)
+            switch shell {
+            case .ios17:
+                Notes17TuningPanel(settings: $app.notes17Tuning)
+            case .ios18:
+                Notes18TuningPanel(settings: $app.notes18Tuning)
             }
         }
-        .onAppear { noteDisplayedDate = Date() }
-        .onChange(of: app.noteTitle) { _ in touchNoteDate() }
-        .onChange(of: app.noteBody) { _ in touchNoteDate() }
         .fileImporter(
             isPresented: $showTextImporter,
             allowedContentTypes: [.plainText, .text, .data],
@@ -188,21 +226,22 @@ struct NotesView: View {
         }
     }
 
-    private func notes1718FullScreenCard(
+    private func legacyFullScreenCard(
+        shell: LegacyNotesShell,
         width: CGFloat,
         height: CGFloat,
         safeTop: CGFloat,
         safeBottom: CGFloat
     ) -> some View {
         let navH = NotesDesignTokens.Layout.navBarHeight
-        let chromeBelow = NotesStyle1718Tokens.chromeBelowNav
+        let chromeBelow = shell.chromeBelowNav
 
         return ZStack(alignment: .bottom) {
             VStack(spacing: 0) {
                 Color.clear.frame(height: safeTop)
-                Color.clear.frame(height: NotesStyle1718Tokens.unifiedNavExtraDownShift)
+                Color.clear.frame(height: shell.unifiedNavExtraDownShift)
 
-                classicNavBar
+                classicNavBar(shell: shell)
                     .padding(.horizontal, NotesDesignTokens.Official.Nav.horizontalMargin)
                     .frame(height: navH)
 
@@ -214,21 +253,21 @@ struct NotesView: View {
                     trackStyle: .ios1718(safeBottom: safeBottom)
                 ) {
                     ScrollView(showsIndicators: false) {
-                        notes1718ScrollBody
+                        legacyScrollBody(shell: shell)
                             .trackNotesReadingScrollContent()
-                            .padding(.bottom, 8 + notes1718ToolbarScrollReserve(safeBottom: safeBottom))
+                            .padding(.bottom, 8 + legacyToolbarScrollReserve(shell: shell, safeBottom: safeBottom))
                     }
                 }
             }
 
-            notes1718BottomToolbarOverlay(safeBottom: safeBottom)
+            legacyBottomToolbarOverlay(shell: shell, safeBottom: safeBottom)
         }
         .frame(width: width, height: height, alignment: .top)
         .background {
-            paper1718
+            shell.paperColor(app: app)
                 .frame(width: width, height: height)
         }
-        .blur(radius: longPressNotesBlurRadius)
+        .blur(radius: longPressNotesBlurRadius(shell: shell))
         .animation(
             app.phoneMenuBackdropStrength > 0 && app.phoneMenuBackdropStrength < 1
                 ? nil
@@ -236,7 +275,7 @@ struct NotesView: View {
             value: app.phoneMenuBackdropStrength
         )
         .overlay {
-            notes1718BackdropDimOverlay
+            legacyBackdropDimOverlay(shell: shell)
         }
         .compositingGroup()
         .modifier(
@@ -249,20 +288,18 @@ struct NotesView: View {
         )
     }
 
-    private func notes1718ToolbarScrollReserve(safeBottom: CGFloat) -> CGFloat {
+    private func legacyToolbarScrollReserve(shell: LegacyNotesShell, safeBottom: CGFloat) -> CGFloat {
         let barH = NotesDesignTokens.Layout.bottomToolbarHeight
-        let chromeAbove = NotesStyle1718Tokens.chromeAboveToolbar
-        return chromeAbove
+        return shell.chromeAboveToolbar
             + barH
             + safeBottom
-            + NotesStyle1718Tokens.unifiedBottomPlateExtraDownShift
+            + shell.unifiedBottomPlateExtraDownShift
     }
 
-    /// 1718 一体板底栏：与 classicBottomBar 同结构的可见纸底板 + 按键居中
-    private func notes1718BottomToolbarOverlay(safeBottom: CGFloat) -> some View {
+    private func legacyBottomToolbarOverlay(shell: LegacyNotesShell, safeBottom: CGFloat) -> some View {
         let barH = NotesDesignTokens.Layout.bottomToolbarHeight
-        let chromeAbove = NotesStyle1718Tokens.chromeAboveToolbar
-        let plateDown = NotesStyle1718Tokens.unifiedBottomPlateExtraDownShift
+        let chromeAbove = shell.chromeAboveToolbar
+        let plateDown = shell.unifiedBottomPlateExtraDownShift
         let iconBandHeight = chromeAbove + barH
 
         return ZStack(alignment: .bottom) {
@@ -270,7 +307,7 @@ struct NotesView: View {
                 let homeIndicator = max(proxy.safeAreaInsets.bottom, safeBottom)
                 let plateHeight = iconBandHeight + homeIndicator + plateDown
 
-                paper1718
+                shell.paperColor(app: app)
                     .frame(maxWidth: .infinity)
                     .frame(height: plateHeight)
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
@@ -278,7 +315,7 @@ struct NotesView: View {
             .ignoresSafeArea(edges: .bottom)
 
             ZStack {
-                classicBottomBarIcons
+                classicBottomBarIcons(shell: shell)
                     .padding(.horizontal, NotesDesignTokens.Official.Nav.horizontalMargin)
             }
             .frame(height: iconBandHeight)
@@ -288,10 +325,9 @@ struct NotesView: View {
         .frame(maxWidth: .infinity)
     }
 
-    /// 与 iOS 26 composeBackdropDim 同思路：黑色遮罩压暗，避免 ignoresSafeArea 顶/底栏不吃 opacity 叠出亮层
     @ViewBuilder
-    private var notes1718BackdropDimOverlay: some View {
-        let amount = notes1718BackdropDimAmount
+    private func legacyBackdropDimOverlay(shell: LegacyNotesShell) -> some View {
+        let amount = legacyBackdropDimAmount(shell: shell)
         if amount > 0.001 {
             Color.black
                 .opacity(amount)
@@ -300,16 +336,23 @@ struct NotesView: View {
         }
     }
 
-    private var notes1718BackdropDimAmount: CGFloat {
-        guard app.notesStyleIOS1718, app.showIMessage || transitionProgress > 0.001 else {
+    private func legacyBackdropDimAmount(shell: LegacyNotesShell) -> CGFloat {
+        guard app.usesLegacyNotesShell, app.showIMessage || transitionProgress > 0.001 else {
             return 0
         }
         let p = min(max(transitionProgress, 0), 1)
-        return p * (1 - IMessage1718DesignTokens.fromViewEndAlpha)
+        return p * (1 - shell.fromViewEndAlpha)
     }
 
-    private var notes1718ScrollBody: some View {
-        VStack(alignment: .leading, spacing: 0) {
+    private func legacyScrollBody(shell: LegacyNotesShell) -> some View {
+        let bridgedTuning = shell.bridged1718Tuning(app: app)
+        return VStack(alignment: .leading, spacing: 0) {
+            Text(NoteDateFormatting.string(from: app.noteImportedAt))
+                .font(NotesDesignTokens.Layout.dateFont)
+                .foregroundStyle(IOSTheme.labelSecondary)
+                .frame(maxWidth: .infinity)
+                .padding(.bottom, 10)
+
             ZStack(alignment: .topLeading) {
                 if app.noteTitle.isEmpty {
                     Text("标题")
@@ -320,7 +363,7 @@ struct NotesView: View {
                 NotesTitleEditor(
                     text: $app.noteTitle,
                     usesIOS1718Style: true,
-                    tuning1718: app.notes1718Tuning
+                    tuning1718: bridgedTuning
                 )
                 .fixedSize(horizontal: false, vertical: true)
             }
@@ -333,7 +376,7 @@ struct NotesView: View {
                 text: $app.noteBody,
                 hiddenPhone: hiddenPhoneForMenu,
                 usesIOS1718Style: true,
-                tuning1718: app.notes1718Tuning
+                tuning1718: bridgedTuning
             ) { phone, windowRect, presentation in
                 guard app.canUseSimulationFeatures else {
                     app.presentActivationRequired()
@@ -355,48 +398,16 @@ struct NotesView: View {
     }
 
     private var notesPaperBackground: some View {
-        Group {
-            if app.notesStyleIOS1718 {
-                app.notes1718Tuning.paperBackgroundColor()
-            } else {
-                IOSTheme.notesPaper
-            }
-        }
+        IOSTheme.notesPaper
     }
 
-    private var paper1718: Color {
-        app.notes1718Tuning.paperBackgroundColor()
-    }
-
-    /// 1718：打开/关闭信息页动画（easeOut，时长见 messagesPresentDuration）
     private var imessageTransitionAnimation: Animation {
-        if app.notesStyleIOS1718 {
-            return app.showIMessage
-                ? .easeOut(duration: IMessage1718DesignTokens.messagesPresentDuration)
-                : .easeOut(duration: IMessage1718DesignTokens.messagesDismissDuration)
-        }
-        return app.showIMessage
+        app.showIMessage
             ? .linear(duration: IMessageDesignTokens.presentLinearDuration)
             : .spring(
                 response: IMessageDesignTokens.dismissSpringResponse,
                 dampingFraction: IMessageDesignTokens.dismissSpringDamping
             )
-    }
-
-    private var notes1718FromViewOpenAnimation: Animation {
-        .easeOut(duration: IMessage1718DesignTokens.systemModalDuration)
-    }
-
-    private var notes1718FromViewCloseAnimation: Animation {
-        .easeOut(duration: IMessage1718DesignTokens.fromViewDismissDuration)
-    }
-
-    private var notes1718MessagesOpenAnimation: Animation {
-        .easeOut(duration: IMessage1718DesignTokens.messagesPresentDuration)
-    }
-
-    private var notes1718MessagesCloseAnimation: Animation {
-        .easeOut(duration: IMessage1718DesignTokens.messagesDismissDuration)
     }
 
     private func resolvedScreenHeight() -> CGFloat {
@@ -414,11 +425,10 @@ struct NotesView: View {
     }
 
     private var notesContent: some View {
-        NotesReadingProgressAttachment(trackStyle: .ios26) {
-            ScrollView(showsIndicators: false) {
-                VStack(alignment: .leading, spacing: 0) {
-                if !app.notesStyleIOS1718 {
-                    Text(NoteDateFormatting.string(from: noteDisplayedDate))
+        ScrollView(showsIndicators: false) {
+            VStack(alignment: .leading, spacing: 0) {
+                if !app.usesLegacyNotesShell {
+                    Text(NoteDateFormatting.string(from: app.noteImportedAt))
                         .font(NotesDesignTokens.Layout.dateFont)
                         .foregroundStyle(IOSTheme.labelSecondary)
                         .frame(maxWidth: .infinity)
@@ -434,11 +444,10 @@ struct NotesView: View {
                     }
                     NotesTitleEditor(
                         text: $app.noteTitle,
-                        usesIOS1718Style: app.notesStyleIOS1718,
-                        tuning1718: app.notes1718Tuning,
+                        usesIOS1718Style: false,
                         tuning26: app.notes26Tuning
                     )
-                        .fixedSize(horizontal: false, vertical: true)
+                    .fixedSize(horizontal: false, vertical: true)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.leading, NotesDesignTokens.Layout.titlePhoneAlignedLeadingInset)
@@ -448,8 +457,9 @@ struct NotesView: View {
                 NotesBodyEditor(
                     text: $app.noteBody,
                     hiddenPhone: hiddenPhoneForMenu,
-                    usesIOS1718Style: app.notesStyleIOS1718,
-                    tuning1718: app.notes1718Tuning,
+                    menuAnimatedPhone: menuBodyAnimatedPhone,
+                    phoneMenuBodyDismissSignal: app.phoneMenuBodyDismissSignal,
+                    usesIOS1718Style: false,
                     tuning26: app.notes26Tuning
                 ) { phone, windowRect, presentation in
                     guard app.canUseSimulationFeatures else {
@@ -467,14 +477,13 @@ struct NotesView: View {
                 }
                 .fixedSize(horizontal: false, vertical: true)
             }
-                .padding(.horizontal, NotesDesignTokens.Layout.contentInset)
-                .padding(.top, 6)
-                .padding(.bottom, 8 + bottomToolbarReserve)
-                .trackNotesReadingScrollContent()
-            }
+            .padding(.horizontal, NotesDesignTokens.Layout.contentInset)
+            .padding(.top, 6)
+            .padding(.bottom, 8 + bottomToolbarReserve)
+            .trackNotesReadingScrollContent()
         }
         .overlay(alignment: .top) {
-            if !app.notesStyleIOS1718 {
+            if !app.usesLegacyNotesShell {
                 NotesTopGlassFade()
                     .allowsHitTesting(false)
             }
@@ -486,12 +495,9 @@ struct NotesView: View {
             bottomBar
                 .ignoresSafeArea(.keyboard, edges: .bottom)
         }
+        .notesReadingProgressIndicatorIfNeeded(true, trackStyle: .ios26)
         .sheet(isPresented: $showTuningPanel) {
-            if app.notesStyleIOS1718 {
-                Notes1718TuningPanel(settings: $app.notes1718Tuning)
-            } else {
-                Notes26TuningPanel(settings: $app.notes26Tuning)
-            }
+            Notes26TuningPanel(settings: $app.notes26Tuning)
         }
         .background {
             GeometryReader { geo in
@@ -502,11 +508,6 @@ struct NotesView: View {
                     }
             }
         }
-        .onAppear {
-            noteDisplayedDate = Date()
-        }
-        .onChange(of: app.noteTitle) { _ in touchNoteDate() }
-        .onChange(of: app.noteBody) { _ in touchNoteDate() }
         .fileImporter(
             isPresented: $showTextImporter,
             allowedContentTypes: [.plainText, .text, .data],
@@ -519,76 +520,44 @@ struct NotesView: View {
 
     private var hiddenPhoneForMenu: String? {
         guard app.showPhoneMenu, let phone = app.selectedPhone else { return nil }
-        if app.notesStyleIOS1718, app.phoneMenuPresentation == .longPress {
-            return phone
+        if app.usesLegacyNotesShell {
+            if app.phoneMenuPresentation == .longPress { return phone }
+            return nil
         }
-        if app.notesStyleIOS1718 { return nil }
+        // iOS 26：长按保留正文号码（分身动画）；轻点仍隐藏
+        if app.phoneMenuPresentation == .longPress { return nil }
         return phone
     }
 
-    /// 长按时糊正文/顶栏/底栏，纸面背景保持清晰
-    private var longPressNotesBlurRadius: CGFloat {
-        guard app.notesStyleIOS1718,
+    /// iOS 26 长按：正文号码缩放动画目标
+    private var menuBodyAnimatedPhone: String? {
+        guard !app.usesLegacyNotesShell,
               app.showPhoneMenu,
-              app.phoneMenuPresentation == .longPress else { return 0 }
-        return CGFloat(app.notes1718Tuning.longPressTextBlurRadius) * CGFloat(app.phoneMenuBackdropStrength)
+              app.phoneMenuPresentation == .longPress,
+              let phone = app.selectedPhone else { return nil }
+        return phone
     }
 
-    private func touchNoteDate() {
-        noteDisplayedDate = Date()
+    /// 长按时糊正文/顶栏/底栏，纸面背景保持清晰（仅 legacy 17/18）
+    private func longPressNotesBlurRadius(shell: LegacyNotesShell) -> CGFloat {
+        guard app.showPhoneMenu, app.phoneMenuPresentation == .longPress else { return 0 }
+        return shell.longPressTextBlurRadius(app: app) * CGFloat(app.phoneMenuBackdropStrength)
     }
+
+    private var longPressNotesBlurRadius: CGFloat { 0 }
 
     /// 为底栏预留滚动空间（底栏 overlay 固定屏幕底部，不随键盘上移）
     private var bottomToolbarReserve: CGFloat {
         let barH = NotesDesignTokens.Layout.bottomToolbarHeight
         let gap = NotesDesignTokens.Official.Toolbar.bottomSafeGap
-        if app.notesStyleIOS1718 {
-            return barH
-                + NotesStyle1718Tokens.toolbarExtraDownShift
-                + NotesStyle1718Tokens.chromeAboveToolbar
-                + gap
-                + bottomSafeInset
-        }
         return barH + gap + bottomSafeInset
     }
 
     private var navBar: some View {
-        Group {
-            if app.notesStyleIOS1718 {
-                classicTopBar
-            } else {
-                modernNavBar
-                    .padding(.horizontal, NotesDesignTokens.Official.Nav.horizontalMargin)
-                    .frame(height: NotesDesignTokens.Layout.navBarHeight)
-                    .frame(maxWidth: .infinity)
-            }
-        }
-    }
-
-    private var classicTopBar: some View {
-        let navH = NotesDesignTokens.Layout.navBarHeight
-        let chromeBelow = NotesStyle1718Tokens.chromeBelowNav
-
-        return ZStack(alignment: .top) {
-            GeometryReader { proxy in
-                let safeTop = resolvedStatusBarTop(fallback: proxy.safeAreaInsets.top)
-                let plateHeight = safeTop + navH + chromeBelow
-
-                paper1718
-                    .frame(maxWidth: .infinity)
-                    .frame(height: plateHeight)
-                    .offset(y: -safeTop)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-            }
-            .ignoresSafeArea(edges: .top)
-
-            classicNavBar
-                .padding(.horizontal, NotesDesignTokens.Official.Nav.horizontalMargin)
-                .frame(height: navH)
-                .frame(maxWidth: .infinity)
-        }
-        .frame(height: navH + chromeBelow)
-        .frame(maxWidth: .infinity)
+        modernNavBar
+            .padding(.horizontal, NotesDesignTokens.Official.Nav.horizontalMargin)
+            .frame(height: NotesDesignTokens.Layout.navBarHeight)
+            .frame(maxWidth: .infinity)
     }
 
     private var modernNavBar: some View {
@@ -620,20 +589,21 @@ struct NotesView: View {
         }
     }
 
-    private var classicNavBar: some View {
-        HStack(alignment: .center, spacing: 0) {
-            NotesClassicBackButton {
+    private func classicNavBar(shell: LegacyNotesShell) -> some View {
+        let accent = shell == .ios17 ? NotesStyle17Tokens.iconColor : NotesStyle18Tokens.iconColor
+        return HStack(alignment: .center, spacing: 0) {
+            NotesClassicBackButton(iconColor: accent) {
                 app.leaveNotesToSettings()
                 closeIMessage()
             }
 
             Spacer(minLength: 0)
 
-            HStack(spacing: NotesStyle1718Tokens.navTrailingSpacing) {
-                NotesClassicIconButton(systemName: NotesStyle1718Tokens.navTrailingIcons[0]) {
+            HStack(spacing: shell.navTrailingSpacing) {
+                NotesClassicIconButton(systemName: shell.navTrailingIcons[0], iconColor: accent) {
                     showTextImporter = true
                 }
-                NotesClassicIconButton(systemName: NotesStyle1718Tokens.navTrailingIcons[1]) {
+                NotesClassicIconButton(systemName: shell.navTrailingIcons[1], iconColor: accent) {
                     KeyboardDismiss.resign()
                 }
             }
@@ -641,17 +611,11 @@ struct NotesView: View {
     }
 
     private var bottomBar: some View {
-        Group {
-            if app.notesStyleIOS1718 {
-                classicBottomBar
-            } else {
-                modernBottomBar
-                    .padding(.horizontal, NotesDesignTokens.Official.Nav.horizontalMargin)
-                    .padding(.bottom, NotesDesignTokens.Official.Toolbar.bottomSafeGap)
-                    .frame(height: NotesDesignTokens.Layout.bottomToolbarHeight)
-                    .frame(maxWidth: .infinity)
-            }
-        }
+        modernBottomBar
+            .padding(.horizontal, NotesDesignTokens.Official.Nav.horizontalMargin)
+            .padding(.bottom, NotesDesignTokens.Official.Toolbar.bottomSafeGap)
+            .frame(height: NotesDesignTokens.Layout.bottomToolbarHeight)
+            .frame(maxWidth: .infinity)
     }
 
     private var modernBottomBar: some View {
@@ -681,11 +645,13 @@ struct NotesView: View {
         }
     }
 
-    private var classicBottomBarIcons: some View {
-        HStack(spacing: 0) {
+    private func classicBottomBarIcons(shell: LegacyNotesShell) -> some View {
+        let accent = shell == .ios17 ? NotesStyle17Tokens.iconColor : NotesStyle18Tokens.iconColor
+        return HStack(spacing: 0) {
             NotesClassicIconButton(
-                systemName: NotesStyle1718Tokens.toolbarChecklistIcon,
-                iconSize: NotesStyle1718Tokens.toolbarIconSize
+                systemName: shell.toolbarChecklistIcon,
+                iconSize: shell.toolbarIconSize,
+                iconColor: accent
             ) {
                 showTuningPanel = true
             }
@@ -693,51 +659,27 @@ struct NotesView: View {
             Spacer(minLength: 0)
 
             NotesClassicIconButton(
-                systemName: NotesStyle1718Tokens.toolbarCameraIcon,
-                iconSize: NotesStyle1718Tokens.toolbarIconSize
+                systemName: shell.toolbarCameraIcon,
+                iconSize: shell.toolbarIconSize,
+                iconColor: accent
             ) {}
 
             Spacer(minLength: 0)
 
             NotesClassicIconButton(
-                systemName: NotesStyle1718Tokens.toolbarMarkupIcon,
-                iconSize: NotesStyle1718Tokens.toolbarIconSize
+                systemName: shell.toolbarMarkupIcon,
+                iconSize: shell.toolbarIconSize,
+                iconColor: accent
             ) {}
 
             Spacer(minLength: 0)
 
             NotesClassicIconButton(
-                systemName: NotesStyle1718Tokens.toolbarComposeIcon,
-                iconSize: NotesStyle1718Tokens.toolbarIconSize
+                systemName: shell.toolbarComposeIcon,
+                iconSize: shell.toolbarIconSize,
+                iconColor: accent
             ) {}
         }
-    }
-
-    private var classicBottomBar: some View {
-        let down = NotesStyle1718Tokens.toolbarExtraDownShift
-        let bottomGap = NotesDesignTokens.Official.Toolbar.bottomSafeGap
-        let barH = NotesDesignTokens.Layout.bottomToolbarHeight
-        let chromeAbove = NotesStyle1718Tokens.chromeAboveToolbar
-
-        return ZStack(alignment: .bottom) {
-            GeometryReader { proxy in
-                let homeIndicator = proxy.safeAreaInsets.bottom
-                let plateHeight = chromeAbove + barH + down + homeIndicator
-
-                paper1718
-                    .frame(maxWidth: .infinity)
-                    .frame(height: plateHeight)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
-            }
-            .ignoresSafeArea(edges: .bottom)
-
-            classicBottomBarIcons
-                .padding(.horizontal, NotesDesignTokens.Official.Nav.horizontalMargin)
-                .padding(.bottom, bottomGap)
-                .offset(y: down)
-        }
-        .frame(height: barH + down)
-        .frame(maxWidth: .infinity)
     }
 
     /// safeAreaInset 内 GeometryReader 的 top inset 常为 0，改读 keyWindow（与 NewIMessageView 一致）
@@ -764,16 +706,16 @@ struct NotesView: View {
             app.presentActivationRequired()
             return
         }
-        if app.notesStyleIOS1718 {
+        if let shell = app.legacyNotesShell {
             ComposeThread1718PinWarmup.refresh(app: app)
-            withAnimation(.easeIn(duration: IMessage1718DesignTokens.phoneMenuFadeOutDuration)) {
+            withAnimation(.easeIn(duration: shell.phoneMenuFadeOutDuration)) {
                 app.showPhoneMenu = false
                 app.phoneMenuBackdropStrength = 0
             }
-            withAnimation(notes1718FromViewOpenAnimation) {
+            withAnimation(.easeOut(duration: shell.systemModalDuration)) {
                 transitionProgress = 1
             }
-            withAnimation(notes1718MessagesOpenAnimation) {
+            withAnimation(.easeOut(duration: shell.messagesPresentDuration)) {
                 app.showIMessage = true
             }
         } else {
@@ -783,11 +725,11 @@ struct NotesView: View {
     }
 
     private func closeIMessage() {
-        if app.notesStyleIOS1718 {
-            withAnimation(notes1718MessagesCloseAnimation) {
+        if let shell = app.legacyNotesShell {
+            withAnimation(.easeOut(duration: shell.messagesDismissDuration)) {
                 app.showIMessage = false
             }
-            withAnimation(notes1718FromViewCloseAnimation) {
+            withAnimation(.easeOut(duration: shell.fromViewDismissDuration)) {
                 transitionProgress = 0
             }
         } else {

@@ -1,8 +1,8 @@
 import SwiftUI
 import UIKit
 
-/// iOS 17–18 撰写页（扁平材质，非 iOS 26 玻璃）
-enum IMessage1718DesignTokens {
+/// iOS 18 撰写页（扁平材质，非 iOS 26 玻璃）
+enum IMessage18DesignTokens {
     static let layer1CornerRadius: CGFloat = 12
     /// 状态栏下留给缩小后备忘录的条带
     static let notesRevealGap: CGFloat = 10
@@ -53,6 +53,67 @@ enum IMessage1718DesignTokens {
     static let senderBadgeHPadding: CGFloat = 2
     static let senderBadgeVPadding: CGFloat = 1
     static let senderBadgeCornerRadius: CGFloat = 2
+
+    /// 绿色 SMS 空白会话
+    static let smsGreenTint = Color(red: 52 / 255, green: 199 / 255, blue: 89 / 255)
+    static let smsGreenTintUI = UIColor(red: 52 / 255, green: 199 / 255, blue: 89 / 255, alpha: 1)
+    static let smsRecipientCapsuleFill = Color(uiColor: UIColor.systemGray3).opacity(0.34)
+    static let smsSenderBadgeTextColor = Color.white
+    static let smsSenderBadgeBackground = smsGreenTint
+
+    static let inputPlaceholderText = "iMessage 信息"
+
+    static func makeSMSDotLabelAttributed(
+        font: UIFont,
+        color: UIColor,
+        dotScale: CGFloat = 1.55
+    ) -> NSAttributedString {
+        let bodyAttrs: [NSAttributedString.Key: Any] = [
+            .font: font,
+            .foregroundColor: color,
+        ]
+
+        let emWidth = ("信" as NSString).size(withAttributes: bodyAttrs).width
+        let dotFont = UIFont(descriptor: font.fontDescriptor, size: font.pointSize * dotScale)
+        let dotChar = "·"
+        let dotWidth = (dotChar as NSString).size(withAttributes: [
+            .font: dotFont,
+            .foregroundColor: color,
+        ]).width
+        let sidePad = max(0, (emWidth - dotWidth) / 2)
+        let baselineOffset = (font.capHeight - dotFont.capHeight) / 2
+
+        let result = NSMutableAttributedString(string: "信息", attributes: bodyAttrs)
+        result.addAttribute(.kern, value: sidePad, range: NSRange(location: result.length - 1, length: 1))
+        result.append(NSAttributedString(
+            string: dotChar,
+            attributes: [
+                .font: dotFont,
+                .foregroundColor: color,
+                .baselineOffset: baselineOffset,
+            ]
+        ))
+        result.addAttribute(.kern, value: sidePad, range: NSRange(location: result.length - 1, length: 1))
+        result.append(NSAttributedString(string: "短信", attributes: bodyAttrs))
+        return result
+    }
+
+    static func makeIMessageInputPlaceholderAttributed() -> NSAttributedString {
+        NSAttributedString(
+            string: inputPlaceholderText,
+            attributes: [
+                .font: UIFont.systemFont(ofSize: inputFontSize),
+                .foregroundColor: inputPlaceholderColorUI,
+            ]
+        )
+    }
+
+    static func makeSMSInputPlaceholderAttributed() -> NSAttributedString {
+        makeSMSDotLabelAttributed(
+            font: .systemFont(ofSize: inputFontSize),
+            color: inputPlaceholderColorUI
+        )
+    }
 
     static let layer3NavOffsetY: CGFloat = 0
     static let layer3ToolbarHeight: CGFloat = 54
@@ -150,7 +211,7 @@ enum IMessage1718DesignTokens {
     static let micIcon = "mic.fill"
     static let micIconSize: CGFloat = 18
 
-    // MARK: - iOS 17–18 转场（固定方案，勿改回 progress offset / scroll 冻结）
+    // MARK: - iOS 18 转场（固定方案，勿改回 progress offset / scroll 冻结）
     /// 信息页打开：整页 `.move(edge: .bottom)` 一体上滑（与 iOS 26 同路径）
     static let messagesPresentDuration: CGFloat = 0.40
     /// 信息页关闭上滑
@@ -187,48 +248,6 @@ enum IMessage1718DesignTokens {
     /// 安全区顶 + notesRevealGap 留给缩小的备忘录
     static func composeSheetTopInset(safeAreaTop: CGFloat) -> CGFloat {
         safeAreaTop + notesRevealGap
-    }
-
-    /// 1718 单图/气泡满宽：在「副」字中心锚点基础上再略收窄（pt）
-    static let imageBubbleMaxWidthExtraTrim: CGFloat = 10
-
-    /// 发件人徽标内「副」字中心 X（单图/气泡满宽左锚）
-    static func threadImageLeadingCenterX(
-        senderLineLabel: String,
-        showsSenderRow: Bool = true
-    ) -> CGFloat {
-        let base = layer3AddressCardHPadding + addressLeadingInset + addressContentOffsetX
-        guard showsSenderRow else { return base }
-
-        let labelFont = addressLabelFontUI
-        let badgeFont = UIFont.systemFont(ofSize: senderBadgeFontSize, weight: .regular)
-        let trimmed = senderLineLabel.trimmingCharacters(in: .whitespacesAndNewlines)
-        let lineLabel = trimmed.isEmpty ? "副号" : trimmed
-        let fuChar = String(lineLabel.prefix(1))
-        let fuWidth = (fuChar as NSString).size(withAttributes: [.font: badgeFont]).width
-        let prefixWidth = ("发件人：" as NSString).size(withAttributes: [.font: labelFont]).width
-        let rowSpacing: CGFloat = 4
-
-        return base
-            + prefixWidth
-            + rowSpacing
-            + senderBadgeHPadding
-            + fuWidth * 0.5
-    }
-
-    /// 单图满宽：「副」字中心 → 线程右缘（trailingInset 不变）
-    static func imageBubbleMaxLayoutWidth(
-        contentWidth: CGFloat,
-        senderLineLabel: String,
-        trailingInset: CGFloat,
-        showsSenderRow: Bool = true
-    ) -> CGFloat {
-        guard contentWidth > 0 else { return 0 }
-        let leadingX = threadImageLeadingCenterX(
-            senderLineLabel: senderLineLabel,
-            showsSenderRow: showsSenderRow
-        )
-        return max(0, contentWidth - trailingInset - leadingX - imageBubbleMaxWidthExtraTrim)
     }
 
 }

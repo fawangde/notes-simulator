@@ -5,6 +5,7 @@ import UIKit
 struct MessagesComposerHost: UIViewControllerRepresentable {
     @Binding var text: String
     var wantsFocus: Bool
+    var chromeStyle: IOS26ComposeChromeStyle = .standard
     var onPlusTap: (() -> Void)? = nil
 
     func makeCoordinator() -> Coordinator {
@@ -19,6 +20,7 @@ struct MessagesComposerHost: UIViewControllerRepresentable {
 
     func updateUIViewController(_ controller: MessagesComposerHostController, context: Context) {
         controller.applyFrozenLayout()
+        controller.applyChromeStyle(chromeStyle)
         controller.syncText(text)
         controller.bindPlusTap(onPlusTap)
         if wantsFocus {
@@ -122,6 +124,10 @@ final class MessagesComposerHostController: UIViewController {
         plate.applyFrozenLayout()
     }
 
+    func applyChromeStyle(_ style: IOS26ComposeChromeStyle) {
+        plate.applyChromeStyle(style)
+    }
+
     func syncText(_ value: String) {
         if plate.field.text != value {
             plate.field.text = value
@@ -175,6 +181,7 @@ final class MessagesComposerPlateView: UIView {
     private let fieldWrap = UIView()
     private let plusIconView = UIImageView()
     private let mic = UIImageView()
+    private var chromeStyle: IOS26ComposeChromeStyle = .standard
 
     private var plusWidth: NSLayoutConstraint!
     private var plusHeight: NSLayoutConstraint!
@@ -207,12 +214,13 @@ final class MessagesComposerPlateView: UIView {
         plusTapButton.addTarget(self, action: #selector(plusTapped), for: .touchUpInside)
         plusChrome.addSubview(plusTapButton)
 
-        field.placeholder = "iMessage 信息"
+        field.placeholder = nil
         field.font = .systemFont(ofSize: IMessageDesignTokens.inputFontSize)
         field.backgroundColor = .clear
         field.textColor = IOSTheme.labelPrimaryUI
         field.borderStyle = .none
         field.autocorrectionType = .default
+        applyChromeStyle(.standard)
         let inset = IMessageDesignTokens.inputFieldHorizontalInset
         field.leftView = UIView(frame: CGRect(x: 0, y: 0, width: inset, height: 1))
         field.leftViewMode = .always
@@ -287,6 +295,18 @@ final class MessagesComposerPlateView: UIView {
         fieldChrome.refreshChromeLayout()
         setNeedsLayout()
         layoutIfNeeded()
+    }
+
+    func applyChromeStyle(_ style: IOS26ComposeChromeStyle) {
+        chromeStyle = style
+        switch style {
+        case .standard:
+            field.placeholder = nil
+            field.attributedPlaceholder = IMessageDesignTokens.makeIMessageInputPlaceholderAttributed()
+        case .greenSMS:
+            field.placeholder = nil
+            field.attributedPlaceholder = IMessageDesignTokens.makeSMSInputPlaceholderAttributed()
+        }
     }
 
     func applyFrozenLayout() {

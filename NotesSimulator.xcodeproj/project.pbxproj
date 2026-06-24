@@ -7,8 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		5A6377D02FE9BB8000628CC6 /* NotesSimulator_AdHoc 4.mobileprovision in Resources */ = {isa = PBXBuildFile; fileRef = 5A6377CF2FE9BB8000628CC6 /* NotesSimulator_AdHoc 4.mobileprovision */; };
-		5A6377D12FE9BB8000628CC6 /* NotesSimulator_AdHoc 4.mobileprovision in Resources */ = {isa = PBXBuildFile; fileRef = 5A6377CF2FE9BB8000628CC6 /* NotesSimulator_AdHoc 4.mobileprovision */; };
+		5A5255052FEC6C48005055E0 /* NotesSimulator_AdHoc 5.mobileprovision in Resources */ = {isa = PBXBuildFile; fileRef = 5A5255042FEC6C48005055E0 /* NotesSimulator_AdHoc 5.mobileprovision */; };
+		5A5255062FEC6C48005055E0 /* NotesSimulator_AdHoc 5.mobileprovision in Resources */ = {isa = PBXBuildFile; fileRef = 5A5255042FEC6C48005055E0 /* NotesSimulator_AdHoc 5.mobileprovision */; };
 		BF0000010000000000000001 /* NotesSimulatorApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR0000010000000000000001 /* NotesSimulatorApp.swift */; };
 		BF0000010000000000000002 /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR0000010000000000000002 /* AppState.swift */; };
 		BF0000010000000000000003 /* PhoneUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR0000010000000000000003 /* PhoneUtilities.swift */; };
@@ -96,6 +96,24 @@
 		BF0000010000000000000085 /* ComposeBubbleTuningSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR0000010000000000000085 /* ComposeBubbleTuningSettings.swift */; };
 		BF0000010000000000000086 /* ComposeBubbleTuningPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR0000010000000000000086 /* ComposeBubbleTuningPanel.swift */; };
 		BF000001000000000000008A /* NotesReadingProgressBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR000001000000000000008A /* NotesReadingProgressBar.swift */; };
+		BF000001000000000000008B /* LegacyNotesShell.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR000001000000000000008B /* LegacyNotesShell.swift */; };
+		BF000001000000000000008C /* NotesLegacyShellTokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR000001000000000000008C /* NotesLegacyShellTokens.swift */; };
+		BF000001000000000000008D /* Notes17TuningSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR000001000000000000008D /* Notes17TuningSettings.swift */; };
+		BF000001000000000000008E /* Notes18TuningSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR000001000000000000008E /* Notes18TuningSettings.swift */; };
+		BF000001000000000000008F /* NotesStyle17Tokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR000001000000000000008F /* NotesStyle17Tokens.swift */; };
+		BF0000010000000000000090 /* NotesStyle18Tokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR0000010000000000000090 /* NotesStyle18Tokens.swift */; };
+		BF0000010000000000000091 /* IMessage17DesignTokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR0000010000000000000091 /* IMessage17DesignTokens.swift */; };
+		BF0000010000000000000092 /* IMessage18DesignTokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR0000010000000000000092 /* IMessage18DesignTokens.swift */; };
+		BF0000010000000000000093 /* LegacyComposeBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR0000010000000000000093 /* LegacyComposeBridge.swift */; };
+		BF0000010000000000000094 /* NewIMessageView17.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR0000010000000000000094 /* NewIMessageView17.swift */; };
+		BF0000010000000000000095 /* NewIMessageView18.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR0000010000000000000095 /* NewIMessageView18.swift */; };
+		BF0000010000000000000096 /* Notes17TuningPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR0000010000000000000096 /* Notes17TuningPanel.swift */; };
+		BF0000010000000000000097 /* Notes18TuningPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR0000010000000000000097 /* Notes18TuningPanel.swift */; };
+		BF0000010000000000000098 /* PhoneActionMenuView17.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR0000010000000000000098 /* PhoneActionMenuView17.swift */; };
+		BF0000010000000000000099 /* PhoneActionMenuView18.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR0000010000000000000099 /* PhoneActionMenuView18.swift */; };
+		BF000001000000000000009A /* PhoneMenu26Layout.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR000001000000000000009A /* PhoneMenu26Layout.swift */; };
+		BF000001000000000000009B /* BlankThread26.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR000001000000000000009B /* BlankThread26.swift */; };
+		BF000001000000000000009C /* BlankThread18.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR000001000000000000009C /* BlankThread18.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -123,7 +141,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		5A6377CF2FE9BB8000628CC6 /* NotesSimulator_AdHoc 4.mobileprovision */ = {isa = PBXFileReference; lastKnownFileType = file; path = "NotesSimulator_AdHoc 4.mobileprovision"; sourceTree = "<group>"; };
+		5A5255042FEC6C48005055E0 /* NotesSimulator_AdHoc 5.mobileprovision */ = {isa = PBXFileReference; lastKnownFileType = file; path = "NotesSimulator_AdHoc 5.mobileprovision"; sourceTree = "<group>"; };
 		FR0000010000000000000001 /* NotesSimulatorApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotesSimulatorApp.swift; sourceTree = "<group>"; };
 		FR0000010000000000000002 /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
 		FR0000010000000000000003 /* PhoneUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneUtilities.swift; sourceTree = "<group>"; };
@@ -214,6 +232,24 @@
 		FR0000010000000000000085 /* ComposeBubbleTuningSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComposeBubbleTuningSettings.swift; sourceTree = "<group>"; };
 		FR0000010000000000000086 /* ComposeBubbleTuningPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComposeBubbleTuningPanel.swift; sourceTree = "<group>"; };
 		FR000001000000000000008A /* NotesReadingProgressBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotesReadingProgressBar.swift; sourceTree = "<group>"; };
+		FR000001000000000000008B /* LegacyNotesShell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LegacyNotesShell.swift; sourceTree = "<group>"; };
+		FR000001000000000000008C /* NotesLegacyShellTokens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotesLegacyShellTokens.swift; sourceTree = "<group>"; };
+		FR000001000000000000008D /* Notes17TuningSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Notes17TuningSettings.swift; sourceTree = "<group>"; };
+		FR000001000000000000008E /* Notes18TuningSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Notes18TuningSettings.swift; sourceTree = "<group>"; };
+		FR000001000000000000008F /* NotesStyle17Tokens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotesStyle17Tokens.swift; sourceTree = "<group>"; };
+		FR0000010000000000000090 /* NotesStyle18Tokens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotesStyle18Tokens.swift; sourceTree = "<group>"; };
+		FR0000010000000000000091 /* IMessage17DesignTokens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IMessage17DesignTokens.swift; sourceTree = "<group>"; };
+		FR0000010000000000000092 /* IMessage18DesignTokens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IMessage18DesignTokens.swift; sourceTree = "<group>"; };
+		FR0000010000000000000093 /* LegacyComposeBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LegacyComposeBridge.swift; sourceTree = "<group>"; };
+		FR0000010000000000000094 /* NewIMessageView17.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewIMessageView17.swift; sourceTree = "<group>"; };
+		FR0000010000000000000095 /* NewIMessageView18.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewIMessageView18.swift; sourceTree = "<group>"; };
+		FR0000010000000000000096 /* Notes17TuningPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Notes17TuningPanel.swift; sourceTree = "<group>"; };
+		FR0000010000000000000097 /* Notes18TuningPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Notes18TuningPanel.swift; sourceTree = "<group>"; };
+		FR0000010000000000000098 /* PhoneActionMenuView17.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneActionMenuView17.swift; sourceTree = "<group>"; };
+		FR0000010000000000000099 /* PhoneActionMenuView18.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneActionMenuView18.swift; sourceTree = "<group>"; };
+		FR000001000000000000009A /* PhoneMenu26Layout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneMenu26Layout.swift; sourceTree = "<group>"; };
+		FR000001000000000000009B /* BlankThread26.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlankThread26.swift; sourceTree = "<group>"; };
+		FR000001000000000000009C /* BlankThread18.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlankThread18.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -242,7 +278,7 @@
 				GR000001000000000000000D /* NotesSimulator */,
 				GR0000010000000000000055 /* NotesShareExtension */,
 				GR000001000000000000000E /* Products */,
-				5A6377CF2FE9BB8000628CC6 /* NotesSimulator_AdHoc 4.mobileprovision */,
+				5A5255042FEC6C48005055E0 /* NotesSimulator_AdHoc 5.mobileprovision */,
 			);
 			sourceTree = "<group>";
 		};
@@ -301,14 +337,26 @@
 				FR0000010000000000000075 /* FirebaseBootstrap.swift */,
 				FR0000010000000000000062 /* DevelopmentFlags.swift */,
 				FR0000010000000000000063 /* NotesStyle1718Tokens.swift */,
+				FR000001000000000000008F /* NotesStyle17Tokens.swift */,
+				FR0000010000000000000090 /* NotesStyle18Tokens.swift */,
 				FR000001000000000000006B /* Notes1718TuningSettings.swift */,
+				FR000001000000000000008D /* Notes17TuningSettings.swift */,
+				FR000001000000000000008E /* Notes18TuningSettings.swift */,
+				FR000001000000000000008B /* LegacyNotesShell.swift */,
+				FR000001000000000000008C /* NotesLegacyShellTokens.swift */,
+				FR0000010000000000000093 /* LegacyComposeBridge.swift */,
 				FR0000010000000000000083 /* Notes26TuningSettings.swift */,
 				FR0000010000000000000085 /* ComposeBubbleTuningSettings.swift */,
 				FR0000010000000000000082 /* ComposeThreadPinDebug1718.swift */,
 				FR0000010000000000000068 /* PhoneMenu1718Layout.swift */,
+				FR000001000000000000009A /* PhoneMenu26Layout.swift */,
+				FR000001000000000000009B /* BlankThread26.swift */,
+				FR000001000000000000009C /* BlankThread18.swift */,
 				FR0000010000000000000018 /* DisplaySharpness.swift */,
 				FR0000010000000000000022 /* IMessageDesignTokens.swift */,
 				FR000001000000000000006E /* IMessage1718DesignTokens.swift */,
+				FR0000010000000000000091 /* IMessage17DesignTokens.swift */,
+				FR0000010000000000000092 /* IMessage18DesignTokens.swift */,
 				FR0000010000000000000072 /* IMessage1718BubbleTailTuningSettings.swift */,
 				FR0000010000000000000073 /* IMessage1718BubbleTailPreset.swift */,
 				FR0000010000000000000078 /* BubbleTail1718ProbeRegistry.swift */,
@@ -328,6 +376,8 @@
 				FR0000010000000000000008 /* PhoneActionMenuView.swift */,
 				FR0000010000000000000009 /* NewIMessageView.swift */,
 				FR000001000000000000006F /* NewIMessageView1718.swift */,
+				FR0000010000000000000094 /* NewIMessageView17.swift */,
+				FR0000010000000000000095 /* NewIMessageView18.swift */,
 				FR0000010000000000000025 /* SystemGlassEffectView.swift */,
 				FR0000010000000000000026 /* SystemPopoverGlassView.swift */,
 				FR0000010000000000000027 /* MessagesComposerHost.swift */,
@@ -359,9 +409,13 @@
 				FR0000010000000000000016 /* NotesGlassControls.swift */,
 				FR0000010000000000000064 /* NotesClassicControls.swift */,
 				FR0000010000000000000067 /* PhoneActionMenuView1718.swift */,
+				FR0000010000000000000098 /* PhoneActionMenuView17.swift */,
+				FR0000010000000000000099 /* PhoneActionMenuView18.swift */,
 				FR0000010000000000000069 /* PhoneMenu1718ProbeOverlay.swift */,
 				FR000001000000000000006A /* ContactPlaceholderAvatar1718.swift */,
 				FR000001000000000000006C /* Notes1718TuningPanel.swift */,
+				FR0000010000000000000096 /* Notes17TuningPanel.swift */,
+				FR0000010000000000000097 /* Notes18TuningPanel.swift */,
 				FR0000010000000000000084 /* Notes26TuningPanel.swift */,
 				FR0000010000000000000086 /* ComposeBubbleTuningPanel.swift */,
 				FR000001000000000000006D /* Notes1718AvatarTuningPanel.swift */,
@@ -472,8 +526,8 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				5A6377D12FE9BB8000628CC6 /* NotesSimulator_AdHoc 4.mobileprovision in Resources */,
 				BF000001000000000000000A /* Assets.xcassets in Resources */,
+				5A5255062FEC6C48005055E0 /* NotesSimulator_AdHoc 5.mobileprovision in Resources */,
 				BF0000010000000000000049 /* GoogleService-Info.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -482,7 +536,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				5A6377D02FE9BB8000628CC6 /* NotesSimulator_AdHoc 4.mobileprovision in Resources */,
+				5A5255052FEC6C48005055E0 /* NotesSimulator_AdHoc 5.mobileprovision in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -514,6 +568,24 @@
 				BF0000010000000000000012 /* NotesDesignTokens.swift in Sources */,
 				BF0000010000000000000013 /* NotesTopGlassFade.swift in Sources */,
 				BF000001000000000000008A /* NotesReadingProgressBar.swift in Sources */,
+				BF000001000000000000008B /* LegacyNotesShell.swift in Sources */,
+				BF000001000000000000008C /* NotesLegacyShellTokens.swift in Sources */,
+				BF000001000000000000008D /* Notes17TuningSettings.swift in Sources */,
+				BF000001000000000000008E /* Notes18TuningSettings.swift in Sources */,
+				BF000001000000000000008F /* NotesStyle17Tokens.swift in Sources */,
+				BF0000010000000000000090 /* NotesStyle18Tokens.swift in Sources */,
+				BF0000010000000000000091 /* IMessage17DesignTokens.swift in Sources */,
+				BF0000010000000000000092 /* IMessage18DesignTokens.swift in Sources */,
+				BF0000010000000000000093 /* LegacyComposeBridge.swift in Sources */,
+				BF0000010000000000000094 /* NewIMessageView17.swift in Sources */,
+				BF0000010000000000000095 /* NewIMessageView18.swift in Sources */,
+				BF0000010000000000000096 /* Notes17TuningPanel.swift in Sources */,
+				BF0000010000000000000097 /* Notes18TuningPanel.swift in Sources */,
+				BF0000010000000000000098 /* PhoneActionMenuView17.swift in Sources */,
+				BF0000010000000000000099 /* PhoneActionMenuView18.swift in Sources */,
+				BF000001000000000000009A /* PhoneMenu26Layout.swift in Sources */,
+				BF000001000000000000009B /* BlankThread26.swift in Sources */,
+				BF000001000000000000009C /* BlankThread18.swift in Sources */,
 				BF0000010000000000000014 /* NotesGlassControls.swift in Sources */,
 				BF0000010000000000000015 /* NoteDateFormatting.swift in Sources */,
 				BF0000010000000000000041 /* NoteImportService.swift in Sources */,
@@ -643,7 +715,7 @@
 				CODE_SIGN_ENTITLEMENTS = NotesSimulator/NotesSimulator.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 6;
+				CURRENT_PROJECT_VERSION = 7;
 				DEVELOPMENT_TEAM = 562KJH9T58;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -676,7 +748,7 @@
 				CODE_SIGN_ENTITLEMENTS = NotesSimulator/NotesSimulator.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 6;
+				CURRENT_PROJECT_VERSION = 7;
 				DEVELOPMENT_TEAM = 562KJH9T58;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -706,7 +778,7 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = NotesShareExtension/NotesShareExtension.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 6;
+				CURRENT_PROJECT_VERSION = 7;
 				DEVELOPMENT_TEAM = 562KJH9T58;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = NotesShareExtension/Info.plist;
@@ -732,7 +804,7 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = NotesShareExtension/NotesShareExtension.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 6;
+				CURRENT_PROJECT_VERSION = 7;
 				DEVELOPMENT_TEAM = 562KJH9T58;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = NotesShareExtension/Info.plist;
