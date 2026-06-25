@@ -51,6 +51,11 @@
 		BF0000010000000000000047 /* ActivationFormatting.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR0000010000000000000047 /* ActivationFormatting.swift */; };
 		BF0000010000000000000048 /* ActivationSheetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR0000010000000000000048 /* ActivationSheetView.swift */; };
 		BF000001000000000000009D /* AppUsageTutorialView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR000001000000000000009D /* AppUsageTutorialView.swift */; };
+		BF000001000000000000009F /* PurchaseModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR000001000000000000009F /* PurchaseModels.swift */; };
+		BF00000100000000000000A0 /* PurchaseOrderStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR00000100000000000000A0 /* PurchaseOrderStore.swift */; };
+		BF00000100000000000000A1 /* PurchaseOrderService.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR00000100000000000000A1 /* PurchaseOrderService.swift */; };
+		BF00000100000000000000A2 /* PurchaseView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR00000100000000000000A2 /* PurchaseView.swift */; };
+		BF00000100000000000000A3 /* DeveloperOrderPushService.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR00000100000000000000A3 /* DeveloperOrderPushService.swift */; };
 		BF000001000000000000009E /* AppUsageTutorial.md in Resources */ = {isa = PBXBuildFile; fileRef = FR000001000000000000009E /* AppUsageTutorial.md */; };
 		BF0000010000000000000049 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = FR0000010000000000000049 /* GoogleService-Info.plist */; };
 		BF0000010000000000000050 /* ShareViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR0000010000000000000050 /* ShareViewController.swift */; };
@@ -189,6 +194,11 @@
 		FR0000010000000000000047 /* ActivationFormatting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivationFormatting.swift; sourceTree = "<group>"; };
 		FR0000010000000000000048 /* ActivationSheetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivationSheetView.swift; sourceTree = "<group>"; };
 		FR000001000000000000009D /* AppUsageTutorialView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppUsageTutorialView.swift; sourceTree = "<group>"; };
+		FR000001000000000000009F /* PurchaseModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PurchaseModels.swift; sourceTree = "<group>"; };
+		FR00000100000000000000A0 /* PurchaseOrderStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PurchaseOrderStore.swift; sourceTree = "<group>"; };
+		FR00000100000000000000A1 /* PurchaseOrderService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PurchaseOrderService.swift; sourceTree = "<group>"; };
+		FR00000100000000000000A2 /* PurchaseView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PurchaseView.swift; sourceTree = "<group>"; };
+		FR00000100000000000000A3 /* DeveloperOrderPushService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeveloperOrderPushService.swift; sourceTree = "<group>"; };
 		FR000001000000000000009E /* AppUsageTutorial.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = AppUsageTutorial.md; sourceTree = "<group>"; };
 		FR0000010000000000000049 /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		FR0000010000000000000050 /* ShareViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareViewController.swift; sourceTree = "<group>"; };
@@ -316,6 +326,7 @@
 			isa = PBXGroup;
 			children = (
 				FR0000010000000000000002 /* AppState.swift */,
+				FR000001000000000000009F /* PurchaseModels.swift */,
 				FR0000010000000000000056 /* ActivationMode.swift */,
 				FR0000010000000000000066 /* PhoneMenuPresentation.swift */,
 				FR0000010000000000000040 /* BubbleRenderParams.swift */,
@@ -333,6 +344,9 @@
 				FR0000010000000000000041 /* NoteImportService.swift */,
 				FR0000010000000000000045 /* NoteImportStore.swift */,
 				FR0000010000000000000046 /* ActivationService.swift */,
+				FR00000100000000000000A0 /* PurchaseOrderStore.swift */,
+				FR00000100000000000000A1 /* PurchaseOrderService.swift */,
+				FR00000100000000000000A3 /* DeveloperOrderPushService.swift */,
 				FR0000010000000000000047 /* ActivationFormatting.swift */,
 				FR0000010000000000000057 /* NetworkMonitor.swift */,
 				FR0000010000000000000058 /* ActivationErrorMapper.swift */,
@@ -376,6 +390,7 @@
 				FR0000010000000000000004 /* RootView.swift */,
 				FR0000010000000000000005 /* HomeView.swift */,
 				FR0000010000000000000048 /* ActivationSheetView.swift */,
+				FR00000100000000000000A2 /* PurchaseView.swift */,
 				FR000001000000000000009D /* AppUsageTutorialView.swift */,
 				FR0000010000000000000006 /* NotesView.swift */,
 				FR0000010000000000000007 /* NotesBodyEditor.swift */,
@@ -600,6 +615,11 @@
 				BF0000010000000000000046 /* ActivationService.swift in Sources */,
 				BF0000010000000000000047 /* ActivationFormatting.swift in Sources */,
 				BF0000010000000000000048 /* ActivationSheetView.swift in Sources */,
+				BF000001000000000000009F /* PurchaseModels.swift in Sources */,
+				BF00000100000000000000A0 /* PurchaseOrderStore.swift in Sources */,
+				BF00000100000000000000A1 /* PurchaseOrderService.swift in Sources */,
+				BF00000100000000000000A3 /* DeveloperOrderPushService.swift in Sources */,
+				BF00000100000000000000A2 /* PurchaseView.swift in Sources */,
 				BF000001000000000000009D /* AppUsageTutorialView.swift in Sources */,
 				BF0000010000000000000056 /* ActivationMode.swift in Sources */,
 				BF0000010000000000000057 /* NetworkMonitor.swift in Sources */,
@@ -723,7 +743,7 @@
 				CODE_SIGN_ENTITLEMENTS = NotesSimulator/NotesSimulator.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 8;
+				CURRENT_PROJECT_VERSION = 9;
 				DEVELOPMENT_TEAM = 562KJH9T58;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -756,7 +776,7 @@
 				CODE_SIGN_ENTITLEMENTS = NotesSimulator/NotesSimulator.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 8;
+				CURRENT_PROJECT_VERSION = 9;
 				DEVELOPMENT_TEAM = 562KJH9T58;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -786,7 +806,7 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = NotesShareExtension/NotesShareExtension.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 8;
+				CURRENT_PROJECT_VERSION = 9;
 				DEVELOPMENT_TEAM = 562KJH9T58;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = NotesShareExtension/Info.plist;
@@ -812,7 +832,7 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = NotesShareExtension/NotesShareExtension.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 8;
+				CURRENT_PROJECT_VERSION = 9;
 				DEVELOPMENT_TEAM = 562KJH9T58;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = NotesShareExtension/Info.plist;

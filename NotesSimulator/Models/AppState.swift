@@ -216,6 +216,9 @@ final class AppState: ObservableObject {
     @Published var activationMode: ActivationMode?
     @Published var activationRemainingClicks: Int?
     @Published var showActivationRequiredAlert = false
+    @Published var showPurchaseActivationSuccessAlert = false
+    @Published var showPurchasePaymentRejectedAlert = false
+    @Published var purchaseActivationErrorMessage: String?
     @Published var showNetworkGuideAlert = false
     /// 次数码：仅通过「返回备忘录」扣次后解锁；离开设置页或导入后失效
     @Published private(set) var notesSimulationUnlocked = false

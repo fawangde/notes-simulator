@@ -8,6 +8,7 @@ struct HomeView: View {
     @FocusState private var isTimeRangeFocused: Bool
     @FocusState private var isSenderLabelFocused: Bool
     @State private var showActivationSheet = false
+    @State private var showPurchaseSheet = false
     @State private var showActivationRequiredAlert = false
     @State private var activationInput = ""
     @State private var activationErrorMessage: String?
@@ -45,6 +46,18 @@ struct HomeView: View {
                 displayNow = tick
                 app.checkLocalTimeActivationExpiry()
             }
+            .task {
+                if !showPurchaseSheet {
+                    await PurchaseOrderService.shared.reconcilePendingOrder(app: app)
+                }
+            }
+            .onChange(of: showPurchaseSheet) { isOpen in
+                if isOpen {
+                    PurchaseOrderService.shared.stopObserving()
+                } else {
+                    Task { await PurchaseOrderService.shared.reconcilePendingOrder(app: app) }
+                }
+            }
             .onChange(of: app.activationExpiresAt) { _ in
                 displayNow = Date()
             }
@@ -59,6 +72,10 @@ struct HomeView: View {
             }
             .sheet(isPresented: $showTutorial) {
                 AppUsageTutorialView()
+            }
+            .sheet(isPresented: $showPurchaseSheet) {
+                PurchaseView()
+                    .environmentObject(app)
             }
             .sheet(isPresented: $showActivationSheet) {
                 ActivationSheetView(
@@ -115,32 +132,59 @@ struct HomeView: View {
                 .clipShape(RoundedRectangle(cornerRadius: 12))
                 .accessibilityLabel(app.activationRemainingText(at: displayNow))
             } else {
-                Button {
-                    guard NetworkMonitor.shared.isConnected else {
-                        app.showNetworkGuideAlert = true
-                        return
+                VStack(spacing: 10) {
+                    Button {
+                        guard NetworkMonitor.shared.isConnected else {
+                            app.showNetworkGuideAlert = true
+                            return
+                        }
+                        showPurchaseSheet = true
+                    } label: {
+                        HStack(spacing: 12) {
+                            Image(systemName: "cart.fill")
+                                .font(.title3)
+                            Text("购买激活")
+                                .font(.headline)
+                            Spacer(minLength: 0)
+                            Image(systemName: "chevron.right")
+                                .font(.footnote.weight(.semibold))
+                                .foregroundStyle(.tertiary)
+                        }
+                        .foregroundStyle(IOSTheme.labelPrimary)
+                        .padding()
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(Color(.secondarySystemGroupedBackground))
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
                     }
-                    activationInput = ""
-                    activationErrorMessage = nil
-                    showActivationSheet = true
-                } label: {
-                    HStack(spacing: 12) {
-                        Image(systemName: "key.fill")
-                            .font(.title3)
-                        Text("请激活APP")
-                            .font(.headline)
-                        Spacer(minLength: 0)
-                        Image(systemName: "chevron.right")
-                            .font(.footnote.weight(.semibold))
-                            .foregroundStyle(.tertiary)
+                    .buttonStyle(.plain)
+
+                    Button {
+                        guard NetworkMonitor.shared.isConnected else {
+                            app.showNetworkGuideAlert = true
+                            return
+                        }
+                        activationInput = ""
+                        activationErrorMessage = nil
+                        showActivationSheet = true
+                    } label: {
+                        HStack(spacing: 12) {
+                            Image(systemName: "key.fill")
+                                .font(.title3)
+                            Text("请激活APP")
+                                .font(.headline)
+                            Spacer(minLength: 0)
+                            Image(systemName: "chevron.right")
+                                .font(.footnote.weight(.semibold))
+                                .foregroundStyle(.tertiary)
+                        }
+                        .foregroundStyle(IOSTheme.labelPrimary)
+                        .padding()
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(Color(.secondarySystemGroupedBackground))
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
                     }
-                    .foregroundStyle(IOSTheme.labelPrimary)
-                    .padding()
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(Color(.secondarySystemGroupedBackground))
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                    .buttonStyle(.plain)
                 }
-                .buttonStyle(.plain)
             }
         }
     }

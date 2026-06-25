@@ -5,6 +5,12 @@
         ".read": true,
         ".write": "(data.child('used').val() == false && newData.child('used').val() == true) || (data.child('used').val() == true && data.child('deviceId').val() == newData.child('deviceId').val() && data.child('mode').val() == 'clicks' && newData.child('remainingClicks').isNumber() && newData.child('remainingClicks').val() == data.child('remainingClicks').val() - 1 && newData.child('used').val() == true)"
       }
+    },
+    "purchaseOrders": {
+      "$orderId": {
+        ".read": true,
+        ".write": "!data.exists() && newData.child('status').val() == 'userClaimedPaid' && newData.child('deviceId').isString() && newData.child('deviceMemo').isString() && newData.child('product').isString() && newData.child('amount').isNumber() && newData.child('paymentMethod').isString() && newData.child('createdAt').isNumber() && newData.child('updatedAt').isNumber() && (newData.child('product').val() != 'clicks' || (newData.child('clickCount').isNumber() && newData.child('clickCount').val() >= 1 && newData.child('clickCount').val() <= 100))"
+      }
     }
   }
 }

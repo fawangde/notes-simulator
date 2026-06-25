@@ -39,7 +39,10 @@ struct NotesSimulatorApp: App {
             if phase == .active {
                 appState.checkLocalTimeActivationExpiry()
                 appState.consumePendingImportIfNeeded()
-                Task { await appState.performPeriodicActivationCheck() }
+                Task {
+                    await appState.performPeriodicActivationCheck()
+                    await PurchaseOrderService.shared.reconcilePendingOrder(app: appState)
+                }
             }
         }
     }

@@ -19,6 +19,25 @@ struct RootView: View {
         .onAppear {
             app.checkLocalTimeActivationExpiry()
             presentNetworkGuideIfNeeded()
+            Task { await PurchaseOrderService.shared.reconcilePendingOrder(app: app) }
+        }
+        .alert("激活成功", isPresented: $app.showPurchaseActivationSuccessAlert) {
+            Button("好", role: .cancel) {}
+        } message: {
+            Text("开发者已确认收款，App 已自动激活。")
+        }
+        .alert("暂未收到付款", isPresented: $app.showPurchasePaymentRejectedAlert) {
+            Button("好", role: .cancel) {}
+        } message: {
+            Text("请联系开发者核实转账信息。")
+        }
+        .alert("激活失败", isPresented: Binding(
+            get: { app.purchaseActivationErrorMessage != nil },
+            set: { if !$0 { app.purchaseActivationErrorMessage = nil } }
+        )) {
+            Button("好", role: .cancel) {}
+        } message: {
+            Text(app.purchaseActivationErrorMessage ?? "")
         }
         .alert("激活需要网络", isPresented: $app.showNetworkGuideAlert) {
             Button("好", role: .cancel) {}
