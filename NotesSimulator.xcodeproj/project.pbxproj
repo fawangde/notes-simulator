@@ -50,6 +50,8 @@
 		BF0000010000000000000046 /* ActivationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR0000010000000000000046 /* ActivationService.swift */; };
 		BF0000010000000000000047 /* ActivationFormatting.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR0000010000000000000047 /* ActivationFormatting.swift */; };
 		BF0000010000000000000048 /* ActivationSheetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR0000010000000000000048 /* ActivationSheetView.swift */; };
+		BF000001000000000000009D /* AppUsageTutorialView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR000001000000000000009D /* AppUsageTutorialView.swift */; };
+		BF000001000000000000009E /* AppUsageTutorial.md in Resources */ = {isa = PBXBuildFile; fileRef = FR000001000000000000009E /* AppUsageTutorial.md */; };
 		BF0000010000000000000049 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = FR0000010000000000000049 /* GoogleService-Info.plist */; };
 		BF0000010000000000000050 /* ShareViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR0000010000000000000050 /* ShareViewController.swift */; };
 		BF0000010000000000000051 /* ImportPayload.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR0000010000000000000051 /* ImportPayload.swift */; };
@@ -186,6 +188,8 @@
 		FR0000010000000000000046 /* ActivationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivationService.swift; sourceTree = "<group>"; };
 		FR0000010000000000000047 /* ActivationFormatting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivationFormatting.swift; sourceTree = "<group>"; };
 		FR0000010000000000000048 /* ActivationSheetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivationSheetView.swift; sourceTree = "<group>"; };
+		FR000001000000000000009D /* AppUsageTutorialView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppUsageTutorialView.swift; sourceTree = "<group>"; };
+		FR000001000000000000009E /* AppUsageTutorial.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = AppUsageTutorial.md; sourceTree = "<group>"; };
 		FR0000010000000000000049 /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		FR0000010000000000000050 /* ShareViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareViewController.swift; sourceTree = "<group>"; };
 		FR0000010000000000000051 /* ImportPayload.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImportPayload.swift; sourceTree = "<group>"; };
@@ -290,6 +294,7 @@
 				FR0000010000000000000043 /* Info.plist */,
 				FR0000010000000000000044 /* NotesSimulator.entitlements */,
 				FR0000010000000000000049 /* GoogleService-Info.plist */,
+				FR000001000000000000009E /* AppUsageTutorial.md */,
 				GR000001000000000000000F /* Models */,
 				GR0000010000000000000010 /* Utilities */,
 				GR0000010000000000000011 /* Views */,
@@ -371,6 +376,7 @@
 				FR0000010000000000000004 /* RootView.swift */,
 				FR0000010000000000000005 /* HomeView.swift */,
 				FR0000010000000000000048 /* ActivationSheetView.swift */,
+				FR000001000000000000009D /* AppUsageTutorialView.swift */,
 				FR0000010000000000000006 /* NotesView.swift */,
 				FR0000010000000000000007 /* NotesBodyEditor.swift */,
 				FR0000010000000000000008 /* PhoneActionMenuView.swift */,
@@ -529,6 +535,7 @@
 				BF000001000000000000000A /* Assets.xcassets in Resources */,
 				5A5255062FEC6C48005055E0 /* NotesSimulator_AdHoc 5.mobileprovision in Resources */,
 				BF0000010000000000000049 /* GoogleService-Info.plist in Resources */,
+				BF000001000000000000009E /* AppUsageTutorial.md in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -593,6 +600,7 @@
 				BF0000010000000000000046 /* ActivationService.swift in Sources */,
 				BF0000010000000000000047 /* ActivationFormatting.swift in Sources */,
 				BF0000010000000000000048 /* ActivationSheetView.swift in Sources */,
+				BF000001000000000000009D /* AppUsageTutorialView.swift in Sources */,
 				BF0000010000000000000056 /* ActivationMode.swift in Sources */,
 				BF0000010000000000000057 /* NetworkMonitor.swift in Sources */,
 				BF0000010000000000000058 /* ActivationErrorMapper.swift in Sources */,
@@ -715,7 +723,7 @@
 				CODE_SIGN_ENTITLEMENTS = NotesSimulator/NotesSimulator.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 7;
+				CURRENT_PROJECT_VERSION = 8;
 				DEVELOPMENT_TEAM = 562KJH9T58;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -748,7 +756,7 @@
 				CODE_SIGN_ENTITLEMENTS = NotesSimulator/NotesSimulator.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 7;
+				CURRENT_PROJECT_VERSION = 8;
 				DEVELOPMENT_TEAM = 562KJH9T58;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -778,7 +786,7 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = NotesShareExtension/NotesShareExtension.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 7;
+				CURRENT_PROJECT_VERSION = 8;
 				DEVELOPMENT_TEAM = 562KJH9T58;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = NotesShareExtension/Info.plist;
@@ -804,7 +812,7 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = NotesShareExtension/NotesShareExtension.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 7;
+				CURRENT_PROJECT_VERSION = 8;
 				DEVELOPMENT_TEAM = 562KJH9T58;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = NotesShareExtension/Info.plist;

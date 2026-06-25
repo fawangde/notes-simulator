@@ -186,7 +186,7 @@ final class AppState: ObservableObject {
     @Published var messageImage: UIImage?
     @Published var noteTitle = ""
     @Published var noteBody = ""
-    /// 备忘录顶栏日期：导入时写入，返回备忘录或编辑正文不再刷新
+    /// 备忘录顶栏日期：导入时写入（仅持久化，展示见 `noteHeaderDisplayDate`）
     @Published var noteImportedAt = Date()
     /// 撰写页时间小字区间，格式「HH:mm-HH:mm」，按备忘录行数从上到下分配
     @Published var threadTimeRangeInput = ""
@@ -488,6 +488,12 @@ final class AppState: ObservableObject {
 
     var composeShowsMessageImage: Bool {
         showsMessageImage && !isIOS26BlankThreadForSelectedPhone && !isIOS18BlankThreadForSelectedPhone
+    }
+
+    /// 备忘录顶栏日期：时间小字区间开始时间的前 2 分钟（随区间设置变化，不用导入时间）
+    var noteHeaderDisplayDate: Date {
+        let startMinutes = ThreadTimeRange.parse(threadTimeRangeInput)?.startMinutes ?? (9 * 60)
+        return NoteDateFormatting.notesHeaderDate(startMinutesFromMidnight: startMinutes)
     }
 
     /// 按备忘录行序与所选号码，在时间区间内分配撰写页时间小字

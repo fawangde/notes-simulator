@@ -12,6 +12,16 @@ enum NoteDateFormatting {
         formatter.string(from: date)
     }
 
+    /// 备忘录顶栏：当天日期 + 时间小字开始时间前 2 分钟
+    static func notesHeaderDate(startMinutesFromMidnight: Int, on day: Date = Date()) -> Date {
+        let calendar = Calendar.current
+        let startOfDay = calendar.startOfDay(for: day)
+        guard let start = calendar.date(byAdding: .minute, value: startMinutesFromMidnight, to: startOfDay) else {
+            return day
+        }
+        return calendar.date(byAdding: .minute, value: -2, to: start) ?? start
+    }
+
     /// 撰写页时间戳第二行：「今天 01:53」「昨天 22:58」
     static func composeThreadDateLabel(from date: Date) -> String {
         let calendar = Calendar.current

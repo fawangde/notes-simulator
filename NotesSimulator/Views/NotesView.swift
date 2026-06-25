@@ -347,7 +347,7 @@ struct NotesView: View {
     private func legacyScrollBody(shell: LegacyNotesShell) -> some View {
         let bridgedTuning = shell.bridged1718Tuning(app: app)
         return VStack(alignment: .leading, spacing: 0) {
-            Text(NoteDateFormatting.string(from: app.noteImportedAt))
+            Text(NoteDateFormatting.string(from: app.noteHeaderDisplayDate))
                 .font(NotesDesignTokens.Layout.dateFont)
                 .foregroundStyle(IOSTheme.labelSecondary)
                 .frame(maxWidth: .infinity)
@@ -428,7 +428,7 @@ struct NotesView: View {
         ScrollView(showsIndicators: false) {
             VStack(alignment: .leading, spacing: 0) {
                 if !app.usesLegacyNotesShell {
-                    Text(NoteDateFormatting.string(from: app.noteImportedAt))
+                    Text(NoteDateFormatting.string(from: app.noteHeaderDisplayDate))
                         .font(NotesDesignTokens.Layout.dateFont)
                         .foregroundStyle(IOSTheme.labelSecondary)
                         .frame(maxWidth: .infinity)

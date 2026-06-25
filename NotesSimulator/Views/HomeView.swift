@@ -13,6 +13,7 @@ struct HomeView: View {
     @State private var activationErrorMessage: String?
     @State private var isActivating = false
     @State private var displayNow = Date()
+    @State private var showTutorial = false
 
     private let activationTimer = Timer.publish(every: 30, on: .main, in: .common).autoconnect()
 
@@ -21,6 +22,7 @@ struct HomeView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 24) {
                     headerSection
+                    tutorialSection
                     activationSection
                     gatedContent
                     Spacer(minLength: 0)
@@ -54,6 +56,9 @@ struct HomeView: View {
             }
             .alert("请先激活 App", isPresented: $app.showActivationRequiredAlert) {
                 Button("好", role: .cancel) {}
+            }
+            .sheet(isPresented: $showTutorial) {
+                AppUsageTutorialView()
             }
             .sheet(isPresented: $showActivationSheet) {
                 ActivationSheetView(
@@ -166,6 +171,30 @@ struct HomeView: View {
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
         }
+    }
+
+    private var tutorialSection: some View {
+        Button {
+            showTutorial = true
+        } label: {
+            HStack(spacing: 12) {
+                Image(systemName: "book.pages.fill")
+                    .font(.title3)
+                    .foregroundStyle(.blue)
+                Text("操作教程")
+                    .font(.headline)
+                    .foregroundStyle(IOSTheme.labelPrimary)
+                Spacer(minLength: 0)
+                Image(systemName: "chevron.right")
+                    .font(.footnote.weight(.semibold))
+                    .foregroundStyle(.tertiary)
+            }
+            .padding()
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(Color(.secondarySystemGroupedBackground))
+            .clipShape(RoundedRectangle(cornerRadius: 12))
+        }
+        .buttonStyle(.plain)
     }
 
     private var simCardSection: some View {
