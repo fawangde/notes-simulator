@@ -16,6 +16,7 @@ struct ComposeThreadBackdropHost1718: UIViewRepresentable {
     var showsSenderRow = true
     var bubbleTailParams: IMessage1718BubbleTailParams = .default
     var bubbleFontSize: CGFloat = 17
+    var messageLinkUnderlineHidden = false
 
     func makeUIView(context: Context) -> ComposeThreadScrollView1718 {
         ComposeThreadScrollView1718()
@@ -35,7 +36,8 @@ struct ComposeThreadBackdropHost1718: UIViewRepresentable {
             senderLineLabel: senderLineLabel,
             showsSenderRow: showsSenderRow,
             bubbleTailParams: bubbleTailParams,
-            bubbleFontSize: bubbleFontSize
+            bubbleFontSize: bubbleFontSize,
+            messageLinkUnderlineHidden: messageLinkUnderlineHidden
         )
     }
 }
@@ -51,6 +53,7 @@ final class ComposeThreadScrollView1718: UIView {
     private var contentSignature: ThreadContentSignature?
     private var bubbleTailParams = IMessage1718BubbleTailParams.default
     private var bubbleFontSize: CGFloat = 17
+    private var messageLinkUnderlineHidden = false
     private var userDidScroll = false
     /// 默认顶对齐：时间小字在收发件人下 10pt；触线前气泡向下长、offset 保持 0
     private var prefersInitialTopAlignment = true
@@ -234,7 +237,8 @@ final class ComposeThreadScrollView1718: UIView {
         senderLineLabel: String,
         showsSenderRow: Bool,
         bubbleTailParams: IMessage1718BubbleTailParams,
-        bubbleFontSize: CGFloat
+        bubbleFontSize: CGFloat,
+        messageLinkUnderlineHidden: Bool
     ) {
         let reserveChanged = abs(composerBottomReserve - self.composerBottomReserve) > 0.5
         self.composerBottomReserve = composerBottomReserve
@@ -242,6 +246,8 @@ final class ComposeThreadScrollView1718: UIView {
         self.bubbleTailParams = bubbleTailParams
         let fontChanged = abs(self.bubbleFontSize - bubbleFontSize) > 0.25
         self.bubbleFontSize = bubbleFontSize
+        let linkUnderlineChanged = self.messageLinkUnderlineHidden != messageLinkUnderlineHidden
+        self.messageLinkUnderlineHidden = messageLinkUnderlineHidden
 
         let signature = ThreadContentSignature(
             chromeBottomY: chromeBottomY,
@@ -262,7 +268,10 @@ final class ComposeThreadScrollView1718: UIView {
             if fontChanged {
                 updateVisibleBubbleFontSize(bubbleFontSize)
             }
-            if reserveChanged || tailParamsChanged || fontChanged || signature.showsImage {
+            if linkUnderlineChanged {
+                updateVisibleLinkUnderlineHidden(messageLinkUnderlineHidden)
+            }
+            if reserveChanged || tailParamsChanged || fontChanged || linkUnderlineChanged || signature.showsImage {
                 setNeedsLayout()
                 layoutIfNeeded()
                 if fontChanged {
@@ -450,6 +459,18 @@ final class ComposeThreadScrollView1718: UIView {
         setNeedsLayout()
     }
 
+    private func updateVisibleLinkUnderlineHidden(_ hidden: Bool) {
+        func visit(_ view: UIView) {
+            if let bubble = view as? ComposeBubbleColumnView1718 {
+                bubble.applyLinkUnderlineHidden(hidden)
+            }
+            view.subviews.forEach { visit($0) }
+        }
+        stack.arrangedSubviews.forEach { visit($0) }
+        stack.setNeedsLayout()
+        setNeedsLayout()
+    }
+
     private func updateVisibleMessageText(_ text: String, dateLine: String) {
         func visit(_ view: UIView) {
             if let bubble = view as? ComposeBubbleColumnView1718 {
@@ -482,7 +503,8 @@ final class ComposeThreadScrollView1718: UIView {
                 bubbleTailParams: self.bubbleTailParams,
                 senderLineLabel: senderLineLabel,
                 showsSenderRow: showsSenderRow,
-                bubbleFontSize: self.bubbleFontSize
+                bubbleFontSize: self.bubbleFontSize,
+                linkUnderlineHidden: self.messageLinkUnderlineHidden
             )
             let bubbleRow = self.trailingRow(
                 bubble,
@@ -890,7 +912,8 @@ private final class ComposeBubbleColumnView1718: UIView {
         bubbleTailParams: IMessage1718BubbleTailParams,
         senderLineLabel: String,
         showsSenderRow: Bool,
-        bubbleFontSize: CGFloat = 17
+        bubbleFontSize: CGFloat = 17,
+        linkUnderlineHidden: Bool = false
     ) {
         self.bubbleTailParams = bubbleTailParams
         self.senderLineLabel = senderLineLabel
@@ -904,6 +927,7 @@ private final class ComposeBubbleColumnView1718: UIView {
         setContentCompressionResistancePriority(.required, for: .vertical)
 
         bubbleView.applyBubbleFontSize(bubbleFontSize)
+        bubbleView.applyLinkUnderlineHidden(linkUnderlineHidden)
         bubbleView.setBubbleText(text)
 
         delivered.text = "已送达"
@@ -939,6 +963,11 @@ private final class ComposeBubbleColumnView1718: UIView {
 
     func updateText(_ text: String) {
         bubbleView.setBubbleText(text)
+        setNeedsLayout()
+    }
+
+    func applyLinkUnderlineHidden(_ hidden: Bool) {
+        bubbleView.applyLinkUnderlineHidden(hidden)
         setNeedsLayout()
     }
 
@@ -1410,3 +1439,6 @@ private enum ComposeThread1718MeasureHarness {
         )
     }
 }
+
+
+

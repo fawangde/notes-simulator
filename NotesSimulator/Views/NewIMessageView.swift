@@ -106,7 +106,15 @@ struct NewIMessageView: View {
             KeyboardDismiss.resign()
         }
         .sheet(isPresented: $showBubbleTuningPanel) {
-            ComposeBubbleTuningPanel(settings: $app.composeBubbleTuning)
+            IOS26ComposeTuningSheet(bubbleTextSettings: $app.composeBubbleTuning)
+        }
+        .onChange(of: showBubbleTuningPanel) { isOpen in
+            if isOpen {
+                composerFocused = false
+                KeyboardDismiss.resign()
+            } else {
+                composerFocused = true
+            }
         }
     }
 
@@ -152,10 +160,11 @@ struct NewIMessageView: View {
                 showsText: app.composeShowsMessageText,
                 showsImage: app.composeShowsMessageImage,
                 bothContentOrder: app.bothContentOrder,
-                image: app.messageImage,
+                image: app.messageDisplayImage,
                 senderLineLabel: app.senderLineLabel,
                 showsSenderRow: app.simCardMode == .dual,
-                bubbleFontSize: CGFloat(app.composeBubbleTuning.fontSize)
+                bubbleFontSize: CGFloat(app.composeBubbleTuning.fontSize),
+                messageLinkUnderlineHidden: app.messageLinkUnderlineHidden
             )
             .id(
                 "\(app.mode.rawValue)|\(app.bothContentOrder.rawValue)|"

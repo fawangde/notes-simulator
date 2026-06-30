@@ -814,6 +814,8 @@ final class IOSOutgoingChatBubbleView1718: UIView {
     private var laidOutBodyHeight: CGFloat = 0
     private(set) var currentTailParams = IMessage1718BubbleTailParams.default
     private var bubbleFontSize: CGFloat = 17
+    private var bubbleText: String = ""
+    private var underlineLinks = true
 
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -864,14 +866,28 @@ final class IOSOutgoingChatBubbleView1718: UIView {
         UIFont.systemFont(ofSize: bubbleFontSize, weight: .regular)
     }
 
+    func applyLinkUnderlineHidden(_ hidden: Bool) {
+        let underlineLinks = !hidden
+        guard self.underlineLinks != underlineLinks else { return }
+        self.underlineLinks = underlineLinks
+        guard !bubbleText.isEmpty else { return }
+        refreshBubbleAttributedText()
+    }
+
     func setBubbleText(_ text: String) {
+        bubbleText = text
+        refreshBubbleAttributedText()
+        setNeedsLayout()
+    }
+
+    private func refreshBubbleAttributedText() {
         label.attributedText = BubbleTextLinkFormatting.attributedString(
-            for: text,
+            for: bubbleText,
             font: bubbleFontUI(),
             textColor: .white,
-            kern: -0.41
+            kern: -0.41,
+            underlineLinks: underlineLinks
         )
-        setNeedsLayout()
     }
 
     override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
@@ -1127,8 +1143,9 @@ final class IOSOutgoingImageBubbleView1718: UIView {
     var image: UIImage? {
         get { imageView.image }
         set {
-            imageView.image = newValue
-            tailFillColor = Self.tailAdjacentColor(from: newValue)
+            let displayImage = ImageBubbleWhiteBackgroundAdjust.displayImage(from: newValue) ?? newValue
+            imageView.image = displayImage
+            tailFillColor = Self.tailAdjacentColor(from: displayImage)
             setNeedsLayout()
             invalidateIntrinsicContentSize()
         }

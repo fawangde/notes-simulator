@@ -56,6 +56,13 @@
 		BF00000100000000000000A1 /* PurchaseOrderService.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR00000100000000000000A1 /* PurchaseOrderService.swift */; };
 		BF00000100000000000000A2 /* PurchaseView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR00000100000000000000A2 /* PurchaseView.swift */; };
 		BF00000100000000000000A3 /* DeveloperOrderPushService.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR00000100000000000000A3 /* DeveloperOrderPushService.swift */; };
+		BF00000100000000000000A4 /* AppUpdateService.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR00000100000000000000A4 /* AppUpdateService.swift */; };
+		BF00000100000000000000A5 /* IOS26BubbleColorPreview.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR00000100000000000000A5 /* IOS26BubbleColorPreview.swift */; };
+		BF00000100000000000000A6 /* IOS26BubbleColorPreviewPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR00000100000000000000A6 /* IOS26BubbleColorPreviewPanel.swift */; };
+		BF00000100000000000000A9 /* IOS26OutgoingBubbleGradientPreview.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR00000100000000000000A9 /* IOS26OutgoingBubbleGradientPreview.swift */; };
+		BF00000100000000000000AA /* BubbleBlueGradient.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR00000100000000000000AA /* BubbleBlueGradient.swift */; };
+		BF00000100000000000000AB /* ImageBubbleWhiteBackgroundAdjust.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR00000100000000000000AB /* ImageBubbleWhiteBackgroundAdjust.swift */; };
+		BF00000100000000000000A7 /* IOS26ComposeTuningSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR00000100000000000000A7 /* IOS26ComposeTuningSheet.swift */; };
 		BF000001000000000000009E /* AppUsageTutorial.md in Resources */ = {isa = PBXBuildFile; fileRef = FR000001000000000000009E /* AppUsageTutorial.md */; };
 		BF0000010000000000000049 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = FR0000010000000000000049 /* GoogleService-Info.plist */; };
 		BF0000010000000000000050 /* ShareViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR0000010000000000000050 /* ShareViewController.swift */; };
@@ -199,6 +206,13 @@
 		FR00000100000000000000A1 /* PurchaseOrderService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PurchaseOrderService.swift; sourceTree = "<group>"; };
 		FR00000100000000000000A2 /* PurchaseView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PurchaseView.swift; sourceTree = "<group>"; };
 		FR00000100000000000000A3 /* DeveloperOrderPushService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeveloperOrderPushService.swift; sourceTree = "<group>"; };
+		FR00000100000000000000A4 /* AppUpdateService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppUpdateService.swift; sourceTree = "<group>"; };
+		FR00000100000000000000A5 /* IOS26BubbleColorPreview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IOS26BubbleColorPreview.swift; sourceTree = "<group>"; };
+		FR00000100000000000000A6 /* IOS26BubbleColorPreviewPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IOS26BubbleColorPreviewPanel.swift; sourceTree = "<group>"; };
+		FR00000100000000000000A9 /* IOS26OutgoingBubbleGradientPreview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IOS26OutgoingBubbleGradientPreview.swift; sourceTree = "<group>"; };
+		FR00000100000000000000AA /* BubbleBlueGradient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BubbleBlueGradient.swift; sourceTree = "<group>"; };
+		FR00000100000000000000AB /* ImageBubbleWhiteBackgroundAdjust.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageBubbleWhiteBackgroundAdjust.swift; sourceTree = "<group>"; };
+		FR00000100000000000000A7 /* IOS26ComposeTuningSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IOS26ComposeTuningSheet.swift; sourceTree = "<group>"; };
 		FR000001000000000000009E /* AppUsageTutorial.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = AppUsageTutorial.md; sourceTree = "<group>"; };
 		FR0000010000000000000049 /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		FR0000010000000000000050 /* ShareViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareViewController.swift; sourceTree = "<group>"; };
@@ -347,6 +361,10 @@
 				FR00000100000000000000A0 /* PurchaseOrderStore.swift */,
 				FR00000100000000000000A1 /* PurchaseOrderService.swift */,
 				FR00000100000000000000A3 /* DeveloperOrderPushService.swift */,
+				FR00000100000000000000A4 /* AppUpdateService.swift */,
+				FR00000100000000000000A5 /* IOS26BubbleColorPreview.swift */,
+				FR00000100000000000000AA /* BubbleBlueGradient.swift */,
+				FR00000100000000000000AB /* ImageBubbleWhiteBackgroundAdjust.swift */,
 				FR0000010000000000000047 /* ActivationFormatting.swift */,
 				FR0000010000000000000057 /* NetworkMonitor.swift */,
 				FR0000010000000000000058 /* ActivationErrorMapper.swift */,
@@ -439,6 +457,9 @@
 				FR0000010000000000000097 /* Notes18TuningPanel.swift */,
 				FR0000010000000000000084 /* Notes26TuningPanel.swift */,
 				FR0000010000000000000086 /* ComposeBubbleTuningPanel.swift */,
+				FR00000100000000000000A6 /* IOS26BubbleColorPreviewPanel.swift */,
+				FR00000100000000000000A9 /* IOS26OutgoingBubbleGradientPreview.swift */,
+				FR00000100000000000000A7 /* IOS26ComposeTuningSheet.swift */,
 				FR000001000000000000006D /* Notes1718AvatarTuningPanel.swift */,
 				FR0000010000000000000021 /* PreviewBubbleGlassBackground.swift */,
 			);
@@ -619,6 +640,13 @@
 				BF00000100000000000000A0 /* PurchaseOrderStore.swift in Sources */,
 				BF00000100000000000000A1 /* PurchaseOrderService.swift in Sources */,
 				BF00000100000000000000A3 /* DeveloperOrderPushService.swift in Sources */,
+				BF00000100000000000000A4 /* AppUpdateService.swift in Sources */,
+				BF00000100000000000000A5 /* IOS26BubbleColorPreview.swift in Sources */,
+				BF00000100000000000000A6 /* IOS26BubbleColorPreviewPanel.swift in Sources */,
+				BF00000100000000000000A9 /* IOS26OutgoingBubbleGradientPreview.swift in Sources */,
+				BF00000100000000000000AA /* BubbleBlueGradient.swift in Sources */,
+				BF00000100000000000000AB /* ImageBubbleWhiteBackgroundAdjust.swift in Sources */,
+				BF00000100000000000000A7 /* IOS26ComposeTuningSheet.swift in Sources */,
 				BF00000100000000000000A2 /* PurchaseView.swift in Sources */,
 				BF000001000000000000009D /* AppUsageTutorialView.swift in Sources */,
 				BF0000010000000000000056 /* ActivationMode.swift in Sources */,
@@ -743,7 +771,7 @@
 				CODE_SIGN_ENTITLEMENTS = NotesSimulator/NotesSimulator.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 9;
+				CURRENT_PROJECT_VERSION = 10;
 				DEVELOPMENT_TEAM = 562KJH9T58;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -776,7 +804,7 @@
 				CODE_SIGN_ENTITLEMENTS = NotesSimulator/NotesSimulator.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 9;
+				CURRENT_PROJECT_VERSION = 10;
 				DEVELOPMENT_TEAM = 562KJH9T58;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -806,7 +834,7 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = NotesShareExtension/NotesShareExtension.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 9;
+				CURRENT_PROJECT_VERSION = 10;
 				DEVELOPMENT_TEAM = 562KJH9T58;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = NotesShareExtension/Info.plist;
@@ -832,7 +860,7 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = NotesShareExtension/NotesShareExtension.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 9;
+				CURRENT_PROJECT_VERSION = 10;
 				DEVELOPMENT_TEAM = 562KJH9T58;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = NotesShareExtension/Info.plist;

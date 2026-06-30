@@ -302,7 +302,7 @@ struct HomeView: View {
 
                 if app.mode == .text || app.mode == .both {
                     TextField("iMessage 气泡文字", text: $app.messageText, axis: .vertical)
-                        .lineLimit(3...8)
+                        .lineLimit(3...24)
                         .focused($isMessageFieldFocused)
                 }
 
@@ -320,7 +320,7 @@ struct HomeView: View {
                             }
                         }
                     }
-                    if let image = app.messageImage {
+                    if let image = app.messageDisplayImage {
                         Image(uiImage: image)
                             .resizable()
                             .scaledToFit()
@@ -390,6 +390,13 @@ struct HomeView: View {
 
                 Toggle("iOS 26.4 三行样式", isOn: $app.threadHeaderStyleIOS264)
                 Text("仅切换 iMessage 时间小字排版。iOS 26.4 及以上用户建议开启。")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+
+                Divider()
+
+                Toggle("信息页链接隐藏下划线", isOn: $app.messageLinkUnderlineHidden)
+                Text("开启后，信息气泡内的网址（如 example.com）不再显示下划线；关闭则保持当前带下划线样式。")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }

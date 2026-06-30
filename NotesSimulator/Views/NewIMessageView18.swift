@@ -159,14 +159,15 @@ struct NewIMessageView18: View {
                 showsText: app.composeShowsMessageText,
                 showsImage: app.composeShowsMessageImage,
                 bothContentOrder: app.bothContentOrder,
-                image: app.messageImage,
+                image: app.messageDisplayImage,
                 senderLineLabel: app.senderLineLabel,
                 showsSenderRow: app.simCardMode == .dual,
                 bubbleTailParams: IMessage18BubbleTailPreset.resolvedParams(
                     presetID: app.notes18Tuning.bubbleTailPresetID,
                     tuning: app.notes18Tuning
                 ),
-                bubbleFontSize: CGFloat(app.composeBubbleTuning.fontSize)
+                bubbleFontSize: CGFloat(app.composeBubbleTuning.fontSize),
+                messageLinkUnderlineHidden: app.messageLinkUnderlineHidden
             )
             .id(
                 "\(app.mode.rawValue)|\(app.bothContentOrder.rawValue)|"

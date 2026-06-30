@@ -17,6 +17,7 @@ struct ComposeThreadBackdropHost: UIViewRepresentable {
     let senderLineLabel: String
     var showsSenderRow = true
     var bubbleFontSize: CGFloat = 17
+    var messageLinkUnderlineHidden = false
     func makeUIView(context: Context) -> ComposeThreadScrollView {
         ComposeThreadScrollView()
     }
@@ -37,7 +38,8 @@ struct ComposeThreadBackdropHost: UIViewRepresentable {
             senderLineLabel: senderLineLabel,
             showsSenderRow: showsSenderRow,
             horizontalPadding: IMessageDesignTokens.layer2ThreadPaddingH,
-            bubbleFontSize: bubbleFontSize
+            bubbleFontSize: bubbleFontSize,
+            messageLinkUnderlineHidden: messageLinkUnderlineHidden
         )
     }
 }
@@ -52,6 +54,7 @@ final class ComposeThreadScrollView: UIView {
     private var lastComposerReserve: CGFloat = 0
     private var contentSignature: ThreadContentSignature?
     private var bubbleFontSize: CGFloat = 17
+    private var messageLinkUnderlineHidden = false
     private var userDidScroll = false
     /// 长按打开信息页后首屏顶对齐（与参考图一致），文案变长后再走贴底上滚
     private var prefersInitialTopAlignment = true
@@ -72,6 +75,7 @@ final class ComposeThreadScrollView: UIView {
         let showsSenderRow: Bool
         let horizontalPadding: CGFloat
         let bubbleFontSize: CGFloat
+        let messageLinkUnderlineHidden: Bool
     }
 
     private var pendingFullApply: PendingFullApply?
@@ -155,7 +159,8 @@ final class ComposeThreadScrollView: UIView {
                 senderLineLabel: snapshot.senderLineLabel,
                 showsSenderRow: snapshot.showsSenderRow,
                 horizontalPadding: snapshot.horizontalPadding,
-                bubbleFontSize: snapshot.bubbleFontSize
+                bubbleFontSize: snapshot.bubbleFontSize,
+                messageLinkUnderlineHidden: snapshot.messageLinkUnderlineHidden
             )
         }
         scrollView.contentInset.bottom = composerBottomReserve
@@ -191,12 +196,15 @@ final class ComposeThreadScrollView: UIView {
         senderLineLabel: String,
         showsSenderRow: Bool,
         horizontalPadding: CGFloat,
-        bubbleFontSize: CGFloat
+        bubbleFontSize: CGFloat,
+        messageLinkUnderlineHidden: Bool
     ) {
         let reserveChanged = abs(composerBottomReserve - self.composerBottomReserve) > 0.5
         self.composerBottomReserve = composerBottomReserve
         let fontChanged = abs(self.bubbleFontSize - bubbleFontSize) > 0.25
         self.bubbleFontSize = bubbleFontSize
+        let linkUnderlineChanged = self.messageLinkUnderlineHidden != messageLinkUnderlineHidden
+        self.messageLinkUnderlineHidden = messageLinkUnderlineHidden
 
         let signature = ThreadContentSignature(
             chromeBottomY: chromeBottomY,
@@ -218,6 +226,8 @@ final class ComposeThreadScrollView: UIView {
                 setNeedsLayout()
                 layoutIfNeeded()
                 reconcileScrollOffset(animated: false, forcePin: !userDidScroll)
+            } else if linkUnderlineChanged {
+                updateVisibleLinkUnderlineHidden(messageLinkUnderlineHidden)
             } else if reserveChanged || signature.showsImage {
                 setNeedsLayout()
                 layoutIfNeeded()
@@ -259,7 +269,8 @@ final class ComposeThreadScrollView: UIView {
                 senderLineLabel: senderLineLabel,
                 showsSenderRow: showsSenderRow,
                 horizontalPadding: horizontalPadding,
-                bubbleFontSize: bubbleFontSize
+                bubbleFontSize: bubbleFontSize,
+                messageLinkUnderlineHidden: messageLinkUnderlineHidden
             )
             setNeedsLayout()
             return
@@ -378,6 +389,16 @@ final class ComposeThreadScrollView: UIView {
         stack.arrangedSubviews.forEach { visit($0) }
     }
 
+    private func updateVisibleLinkUnderlineHidden(_ hidden: Bool) {
+        func visit(_ view: UIView) {
+            if let bubble = view as? ComposeBubbleColumnView {
+                bubble.applyLinkUnderlineHidden(hidden)
+            }
+            view.subviews.forEach { visit($0) }
+        }
+        stack.arrangedSubviews.forEach { visit($0) }
+    }
+
     private func appendMessageContent(
         messageText: String,
         showsText: Bool,
@@ -388,9 +409,20 @@ final class ComposeThreadScrollView: UIView {
         showsSenderRow: Bool,
         horizontalPadding: CGFloat
     ) {
+        let isBoth = showsText && showsImage
+
         let addText = {
             guard showsText else { return }
-            let bubble = ComposeBubbleColumnView(text: messageText, bubbleFontSize: self.bubbleFontSize)
+            let showsDelivered = !isBoth || bothContentOrder == .imageFirst
+            let showsTail = !isBoth || bothContentOrder == .imageFirst
+            let bubble = ComposeBubbleColumnView(
+                text: messageText,
+                bubbleFontSize: self.bubbleFontSize,
+                linkUnderlineHidden: self.messageLinkUnderlineHidden,
+                showsDelivered: showsDelivered,
+                showsTail: showsTail,
+                usesBothModeTextCorner: isBoth
+            )
             let bubbleRow = self.trailingRow(
                 bubble,
                 horizontalPadding: IMessageDesignTokens.threadBubbleTrailingInset
@@ -400,10 +432,11 @@ final class ComposeThreadScrollView: UIView {
 
         let addImage = {
             guard showsImage, let image else { return }
+            let showsDelivered = !isBoth || bothContentOrder == .textFirst
             let column = ComposeImageColumnView(
                 image: image,
                 senderLineLabel: senderLineLabel,
-                showsDelivered: !showsText
+                showsDelivered: showsDelivered
             )
             let imageRow = self.trailingRow(
                 column,
@@ -415,9 +448,19 @@ final class ComposeThreadScrollView: UIView {
         switch bothContentOrder {
         case .textFirst:
             addText()
+            if isBoth {
+                stack.addArrangedSubview(
+                    fixedSpacer(IMessageDesignTokens.threadBothTextFirstTextBottomToImageTop)
+                )
+            }
             addImage()
         case .imageFirst:
             addImage()
+            if isBoth {
+                stack.addArrangedSubview(
+                    fixedSpacer(IMessageDesignTokens.threadBothImageFirstTailToTextTop)
+                )
+            }
             addText()
         }
     }
@@ -647,10 +690,19 @@ extension ComposeThreadScrollView: UIScrollViewDelegate {
 private final class ComposeBubbleColumnView: UIView {
     private let bubbleView = IOSOutgoingChatBubbleView()
     private let delivered = UILabel()
+    private let showsDelivered: Bool
     private var widthConstraint: NSLayoutConstraint?
     private var heightConstraint: NSLayoutConstraint?
 
-    init(text: String, bubbleFontSize: CGFloat = 17) {
+    init(
+        text: String,
+        bubbleFontSize: CGFloat = 17,
+        linkUnderlineHidden: Bool = false,
+        showsDelivered: Bool = true,
+        showsTail: Bool = true,
+        usesBothModeTextCorner: Bool = false
+    ) {
+        self.showsDelivered = showsDelivered
         super.init(frame: .zero)
         clipsToBounds = false
         setContentHuggingPriority(.required, for: .horizontal)
@@ -658,14 +710,21 @@ private final class ComposeBubbleColumnView: UIView {
         setContentCompressionResistancePriority(.required, for: .horizontal)
         setContentCompressionResistancePriority(.required, for: .vertical)
 
+        bubbleView.applyLinkUnderlineHidden(linkUnderlineHidden)
         bubbleView.setBubbleText(text)
         bubbleView.applyBubbleFontSize(bubbleFontSize)
-        bubbleView.applyRenderParams(Self.composeBubbleParams(.frozenDefault))
+        var params = Self.composeBubbleParams(.frozenDefault)
+        params.showsTail = showsTail
+        if usesBothModeTextCorner {
+            params.bodyCornerRadius = IMessageDesignTokens.bubbleCornerBothTextNoTail
+        }
+        bubbleView.applyRenderParams(params)
 
         delivered.text = "已送达"
         delivered.font = IMessageDesignTokens.deliveredFontUI
         delivered.textColor = IMessageDesignTokens.threadMetaTextUI
         delivered.textAlignment = .right
+        delivered.isHidden = !showsDelivered
 
         addSubview(bubbleView)
         addSubview(delivered)
@@ -681,19 +740,19 @@ private final class ComposeBubbleColumnView: UIView {
         setNeedsLayout()
     }
 
+    func applyLinkUnderlineHidden(_ hidden: Bool) {
+        bubbleView.applyLinkUnderlineHidden(hidden)
+        setNeedsLayout()
+    }
+
     func applyBubbleFontSize(_ size: CGFloat) {
         bubbleView.applyBubbleFontSize(size)
         setNeedsLayout()
     }
 
-    /// 撰写页气泡填充色固定为收件人号码蓝；尾巴几何仍走调参
+    /// 撰写页气泡：填充色走 IMessageDesignTokens 三点渐变；此处只保留尾巴几何。
     private static func composeBubbleParams(_ params: BubbleTailRenderParams) -> BubbleTailRenderParams {
-        let fill = IMessageDesignTokens.bubbleBlueFill.rgbaComponents
-        var merged = params
-        merged.fillRed = Double(fill.r)
-        merged.fillGreen = Double(fill.g)
-        merged.fillBlue = Double(fill.b)
-        return merged
+        params
     }
 
     private func bubbleFitMaxWidth() -> CGFloat {
@@ -724,6 +783,13 @@ private final class ComposeBubbleColumnView: UIView {
         )
         bubbleView.layoutIfNeeded()
 
+        widthConstraint?.constant = bubbleSize.width
+
+        guard showsDelivered else {
+            heightConstraint?.constant = bubbleSize.height
+            return
+        }
+
         let deliveredSize = delivered.sizeThatFits(
             CGSize(width: bounds.width, height: .greatestFiniteMagnitude)
         )
@@ -738,7 +804,6 @@ private final class ComposeBubbleColumnView: UIView {
             height: deliveredSize.height
         )
 
-        widthConstraint?.constant = bubbleSize.width
         heightConstraint?.constant = max(bubbleSize.height, delivered.frame.maxY)
     }
 

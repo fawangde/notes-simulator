@@ -102,74 +102,19 @@ enum IOSOutgoingBubblePath {
         )
     }
 
-    static func sentLastBubblePath(
-        bodyWidth: CGFloat,
-        flatBottomY: CGFloat,
-        tailScale: CGFloat,
-        tailShiftX: CGFloat,
-        tailOffsetY: CGFloat,
-        groupedLastInThread: Bool = false
-    ) -> UIBezierPath {
-        let tl = groupedLastInThread
-            ? IMessageDesignTokens.bubbleCornerTLGroupedLast
-            : IMessageDesignTokens.bubbleCornerTLCompose
-        let tr = IMessageDesignTokens.bubbleCornerTR
-        let bl = IMessageDesignTokens.bubbleCornerBL
-        let tailDrop = IMessageDesignTokens.bubbleTailDrop * tailScale
-        let W = bodyWidth
+    private static func pixelAlign(_ value: CGFloat) -> CGFloat {
+        let scale = UIScreen.main.scale
+        return (value * scale).rounded(.toNearestOrAwayFromZero) / scale
+    }
 
-        func mapTail(_ p: CGPoint) -> CGPoint {
-            mapCKPoint(
-                p,
-                bodyWidth: W,
-                flatBottomY: flatBottomY,
-                tailDrop: tailDrop,
-                shiftX: tailShiftX,
-                shiftY: tailOffsetY
-            )
-        }
-
-        func mapRight(_ p: CGPoint) -> CGPoint {
-            mapRightEdgePoint(
-                p,
-                bodyWidth: W,
-                flatBottomY: flatBottomY,
-                tailDrop: tailDrop,
-                shiftX: tailShiftX,
-                shiftY: tailOffsetY
-            )
-        }
-
-        let path = UIBezierPath()
-        path.move(to: CGPoint(x: 0, y: tl))
-        path.addArc(
-            withCenter: CGPoint(x: tl, y: tl),
-            radius: tl,
-            startAngle: .pi,
-            endAngle: -.pi / 2,
-            clockwise: true
-        )
-        path.addLine(to: CGPoint(x: W - tr, y: 0))
-        path.addArc(
-            withCenter: CGPoint(x: W - tr, y: tr),
-            radius: tr,
-            startAngle: -.pi / 2,
-            endAngle: 0,
-            clockwise: true
-        )
-
-        // ChatKit 右缘 cubic 下落（内收圆角，避免 (W,flatY) 缺角）
-        path.addLine(to: mapRight(ckRightEdgeTop))
-        for cubic in ckRightEdgeDown {
-            path.addCurve(
-                to: mapRight(cubic.end),
-                controlPoint1: mapRight(cubic.c1),
-                controlPoint2: mapRight(cubic.c2)
-            )
-        }
-
-        // 右缘终点 (≈W-11pt) → 尾巴入口 (≈W-7pt)：用 tail 坐标系插值，避免 mapRight/mapTail 接缝露白
-        let rightCorner = mapRight(ckRightEdgeDown.last!.end)
+    /// 右缘竖直段 → 尾巴桥接 → ChatKit 尾巴 cubic → 左下圆角
+    private static func appendTailFromRightCorner(
+        _ path: UIBezierPath,
+        rightCorner: CGPoint,
+        mapTail: (CGPoint) -> CGPoint,
+        bl: CGFloat,
+        tl: CGFloat
+    ) {
         let tailEntry = mapTail(ckApproach)
         let bridgeMid = mapTail(
             CGPoint(
@@ -208,6 +153,136 @@ enum IOSOutgoingBubblePath {
         )
         path.addLine(to: CGPoint(x: 0, y: tl))
         path.close()
+    }
+
+    static func sentLastBubblePath(
+        bodyWidth: CGFloat,
+        flatBottomY: CGFloat,
+        tailScale: CGFloat,
+        tailShiftX: CGFloat,
+        tailOffsetY: CGFloat,
+        groupedLastInThread: Bool = false,
+        includesTail: Bool = true,
+        bodyCornerRadius: CGFloat? = nil
+    ) -> UIBezierPath {
+        let tailDrop = IMessageDesignTokens.bubbleTailDrop * tailScale
+        let W = bodyWidth
+
+        let tl: CGFloat
+        let tr: CGFloat
+        let br: CGFloat
+        let bl: CGFloat
+        if let bodyCornerRadius {
+            tl = bodyCornerRadius
+            tr = bodyCornerRadius
+            br = bodyCornerRadius
+            bl = bodyCornerRadius
+        } else if !includesTail {
+            let radius = IMessageDesignTokens.bubbleCornerBothTextNoTail
+            tl = radius
+            tr = radius
+            br = radius
+            bl = radius
+        } else {
+            tl = groupedLastInThread
+                ? IMessageDesignTokens.bubbleCornerTLGroupedLast
+                : IMessageDesignTokens.bubbleCornerTLCompose
+            tr = IMessageDesignTokens.bubbleCornerTR
+            br = IMessageDesignTokens.bubbleCornerBR
+            bl = IMessageDesignTokens.bubbleCornerBL
+        }
+
+        func mapTail(_ p: CGPoint) -> CGPoint {
+            mapCKPoint(
+                p,
+                bodyWidth: W,
+                flatBottomY: flatBottomY,
+                tailDrop: tailDrop,
+                shiftX: tailShiftX,
+                shiftY: tailOffsetY
+            )
+        }
+
+        func mapRight(_ p: CGPoint) -> CGPoint {
+            mapRightEdgePoint(
+                p,
+                bodyWidth: W,
+                flatBottomY: flatBottomY,
+                tailDrop: tailDrop,
+                shiftX: tailShiftX,
+                shiftY: tailOffsetY
+            )
+        }
+
+        let path = UIBezierPath()
+        let rightEdgeX = pixelAlign(W)
+        path.move(to: CGPoint(x: 0, y: tl))
+        path.addArc(
+            withCenter: CGPoint(x: tl, y: tl),
+            radius: tl,
+            startAngle: .pi,
+            endAngle: -.pi / 2,
+            clockwise: true
+        )
+
+        if !includesTail {
+            path.addLine(to: CGPoint(x: rightEdgeX - tr, y: 0))
+            path.addArc(
+                withCenter: CGPoint(x: rightEdgeX - tr, y: tr),
+                radius: tr,
+                startAngle: -.pi / 2,
+                endAngle: 0,
+                clockwise: true
+            )
+            let bottomY = flatBottomY + tailOffsetY
+            path.addLine(to: CGPoint(x: rightEdgeX, y: bottomY - br))
+            path.addArc(
+                withCenter: CGPoint(x: rightEdgeX - br, y: bottomY - br),
+                radius: br,
+                startAngle: 0,
+                endAngle: .pi / 2,
+                clockwise: true
+            )
+            path.addLine(to: CGPoint(x: bl, y: bottomY))
+            path.addArc(
+                withCenter: CGPoint(x: bl, y: bottomY - bl),
+                radius: bl,
+                startAngle: .pi / 2,
+                endAngle: .pi,
+                clockwise: true
+            )
+            path.addLine(to: CGPoint(x: 0, y: tl))
+            path.close()
+            return path
+        }
+
+        // 带尾巴：TR 与 ChatKit 右缘/右下内收曲线同一坐标系（bodyWidth），保留 BR 圆角过渡
+        path.addLine(to: CGPoint(x: W - tr, y: 0))
+        path.addArc(
+            withCenter: CGPoint(x: W - tr, y: tr),
+            radius: tr,
+            startAngle: -.pi / 2,
+            endAngle: 0,
+            clockwise: true
+        )
+
+        // ChatKit 右缘 cubic 下落（内收圆角，避免 (W,flatY) 缺角）
+        path.addLine(to: mapRight(ckRightEdgeTop))
+        for cubic in ckRightEdgeDown {
+            path.addCurve(
+                to: mapRight(cubic.end),
+                controlPoint1: mapRight(cubic.c1),
+                controlPoint2: mapRight(cubic.c2)
+            )
+        }
+
+        appendTailFromRightCorner(
+            path,
+            rightCorner: mapRight(ckRightEdgeDown.last!.end),
+            mapTail: mapTail,
+            bl: bl,
+            tl: tl
+        )
         return path
     }
 
@@ -216,10 +291,14 @@ enum IOSOutgoingBubblePath {
         flatBottomY: CGFloat,
         tailScale: CGFloat,
         tailShiftX: CGFloat,
-        tailOffsetY: CGFloat
+        tailOffsetY: CGFloat,
+        includesTail: Bool = true
     ) -> CGSize {
         _ = tailShiftX
         _ = tailOffsetY
+        if !includesTail {
+            return CGSize(width: bodyWidth, height: flatBottomY)
+        }
         let tailDrop = IMessageDesignTokens.bubbleTailDrop * tailScale
         return CGSize(width: bodyWidth, height: flatBottomY + tailDrop)
     }
@@ -229,8 +308,13 @@ enum IOSOutgoingBubblePath {
         flatBottomY: CGFloat,
         tailScale: CGFloat,
         tailShiftX: CGFloat,
-        tailOffsetY: CGFloat
+        tailOffsetY: CGFloat,
+        includesTail: Bool = true
     ) -> CGPoint {
+        if !includesTail {
+            let brRadius = IMessageDesignTokens.bubbleCornerBothTextNoTail
+            return CGPoint(x: bodyWidth - brRadius, y: flatBottomY + tailOffsetY)
+        }
         let tailDrop = IMessageDesignTokens.bubbleTailDrop * tailScale
         return mapCKPoint(
             ckTip,
@@ -247,8 +331,12 @@ enum IOSOutgoingBubblePath {
         flatBottomY: CGFloat,
         tailScale: CGFloat,
         tailShiftX: CGFloat,
-        tailOffsetY: CGFloat
+        tailOffsetY: CGFloat,
+        includesTail: Bool = true
     ) -> CGPoint {
+        if !includesTail {
+            return CGPoint(x: bodyWidth, y: flatBottomY + tailOffsetY)
+        }
         let tailDrop = IMessageDesignTokens.bubbleTailDrop * tailScale
         return mapCKPoint(
             ckJoin,
@@ -263,26 +351,42 @@ enum IOSOutgoingBubblePath {
 
 private final class BubbleFillView: UIView {
     private let shapeLayer = CAShapeLayer()
+    private let gradientLayer = CAGradientLayer()
+    private let maskLayer = CAShapeLayer()
 
     var fillColor: UIColor = .clear {
         didSet {
+            guard !usesSmoothGradient else { return }
             shapeLayer.fillColor = fillColor.cgColor
             shapeLayer.strokeColor = fillColor.cgColor
         }
     }
+
+    private var usesSmoothGradient = false
 
     override init(frame: CGRect) {
         super.init(frame: frame)
         isUserInteractionEnabled = false
         backgroundColor = .clear
         clipsToBounds = false
+        layer.addSublayer(gradientLayer)
         layer.addSublayer(shapeLayer)
+        gradientLayer.isHidden = true
         shapeLayer.fillColor = fillColor.cgColor
         shapeLayer.strokeColor = fillColor.cgColor
         shapeLayer.lineWidth = 1 / UIScreen.main.scale
         shapeLayer.lineJoin = .round
         shapeLayer.lineCap = .round
         shapeLayer.contentsScale = UIScreen.main.scale
+        gradientLayer.startPoint = CGPoint(x: 0.5, y: 0)
+        gradientLayer.endPoint = CGPoint(x: 0.5, y: 1)
+        maskLayer.fillColor = UIColor.white.cgColor
+        maskLayer.strokeColor = UIColor.clear.cgColor
+        maskLayer.lineWidth = 0
+        maskLayer.allowsEdgeAntialiasing = true
+        maskLayer.contentsScale = UIScreen.main.scale
+        gradientLayer.allowsEdgeAntialiasing = true
+        gradientLayer.contentsScale = UIScreen.main.scale
     }
 
     @available(*, unavailable)
@@ -290,14 +394,44 @@ private final class BubbleFillView: UIView {
         fatalError("init(coder:) has not been implemented")
     }
 
-    func applyPath(_ path: UIBezierPath) {
-        shapeLayer.frame = bounds
+    func applySmoothBubbleGradient(path: UIBezierPath, lineCount: Int) {
+        usesSmoothGradient = true
+        shapeLayer.isHidden = true
+        gradientLayer.isHidden = false
+        gradientLayer.colors = IMessageDesignTokens.bubbleBlueGradientCGColors(lineCount: lineCount)
+        gradientLayer.locations = IMessageDesignTokens.bubbleBlueGradientLocations(lineCount: lineCount)
+        gradientLayer.mask = maskLayer
+        maskLayer.path = path.cgPath
+        maskLayer.frame = bounds
+        gradientLayer.frame = bounds
+    }
+
+    func applySolidFill(_ color: UIColor, path: UIBezierPath) {
+        usesSmoothGradient = false
+        gradientLayer.isHidden = true
+        gradientLayer.mask = nil
+        shapeLayer.isHidden = false
+        fillColor = color
         shapeLayer.path = path.cgPath
+        shapeLayer.frame = bounds
+    }
+
+    func applyPath(_ path: UIBezierPath) {
+        if usesSmoothGradient {
+            maskLayer.path = path.cgPath
+            maskLayer.frame = bounds
+            gradientLayer.frame = bounds
+        } else {
+            shapeLayer.path = path.cgPath
+            shapeLayer.frame = bounds
+        }
     }
 
     override func layoutSubviews() {
         super.layoutSubviews()
         shapeLayer.frame = bounds
+        maskLayer.frame = bounds
+        gradientLayer.frame = bounds
     }
 }
 
@@ -308,6 +442,8 @@ final class IOSOutgoingChatBubbleView: UIView {
     private var laidOutBodyWidth: CGFloat = 0
     private var laidOutFlatBottomY: CGFloat = 0
     private var bubbleFontSize: CGFloat = 17
+    private var bubbleText: String = ""
+    private var underlineLinks = true
 
     var renderParams: BubbleTailRenderParams?
 
@@ -346,14 +482,28 @@ final class IOSOutgoingChatBubbleView: UIView {
         invalidateIntrinsicContentSize()
     }
 
+    func applyLinkUnderlineHidden(_ hidden: Bool) {
+        let underlineLinks = !hidden
+        guard self.underlineLinks != underlineLinks else { return }
+        self.underlineLinks = underlineLinks
+        guard !bubbleText.isEmpty else { return }
+        refreshBubbleAttributedText()
+    }
+
     func setBubbleText(_ text: String) {
-        label.attributedText = BubbleTextLinkFormatting.attributedString(
-            for: text,
-            font: .systemFont(ofSize: bubbleFontSize),
-            textColor: .white
-        )
+        bubbleText = text
+        refreshBubbleAttributedText()
         setNeedsLayout()
         invalidateIntrinsicContentSize()
+    }
+
+    private func refreshBubbleAttributedText() {
+        label.attributedText = BubbleTextLinkFormatting.attributedString(
+            for: bubbleText,
+            font: .systemFont(ofSize: bubbleFontSize),
+            textColor: .white,
+            underlineLinks: underlineLinks
+        )
     }
 
     private func activeParams() -> BubbleTailRenderParams {
@@ -395,7 +545,8 @@ final class IOSOutgoingChatBubbleView: UIView {
             flatBottomY: flatBottom,
             tailScale: CGFloat(params.scale),
             tailShiftX: shiftX,
-            tailOffsetY: shiftY
+            tailOffsetY: shiftY,
+            includesTail: params.showsTail
         )
         return (bodyW, flatBottom, shiftX, shiftY, size)
     }
@@ -409,17 +560,19 @@ final class IOSOutgoingChatBubbleView: UIView {
         laidOutBodyWidth = metrics.bodyWidth
         laidOutFlatBottomY = metrics.flatBottomY
 
-        fillView.frame = bounds
-        fillView.fillColor = params.fillUIColor
-        fillView.applyPath(
-            IOSOutgoingBubblePath.sentLastBubblePath(
-                bodyWidth: metrics.bodyWidth,
-                flatBottomY: metrics.flatBottomY,
-                tailScale: CGFloat(params.scale),
-                tailShiftX: metrics.tailShiftX,
-                tailOffsetY: metrics.tailOffsetY
-            )
+        let bubblePath = IOSOutgoingBubblePath.sentLastBubblePath(
+            bodyWidth: metrics.bodyWidth,
+            flatBottomY: metrics.flatBottomY,
+            tailScale: CGFloat(params.scale),
+            tailShiftX: metrics.tailShiftX,
+            tailOffsetY: metrics.tailOffsetY,
+            includesTail: params.showsTail,
+            bodyCornerRadius: params.bodyCornerRadius
         )
+
+        fillView.frame = bounds
+        let lineCount = BubbleBlueGradient.lineCount(in: bubbleText)
+        fillView.applySmoothBubbleGradient(path: bubblePath, lineCount: lineCount)
 
         let hPad = IMessageDesignTokens.bubbleHPadding
         let vPad = IMessageDesignTokens.bubbleVPadding
@@ -443,7 +596,8 @@ final class IOSOutgoingChatBubbleView: UIView {
             flatBottomY: metrics.flatBottomY,
             tailScale: CGFloat(params.scale),
             tailShiftX: metrics.tailShiftX,
-            tailOffsetY: metrics.tailOffsetY
+            tailOffsetY: metrics.tailOffsetY,
+            includesTail: params.showsTail
         )
     }
 
@@ -455,7 +609,8 @@ final class IOSOutgoingChatBubbleView: UIView {
             flatBottomY: metrics.flatBottomY,
             tailScale: CGFloat(params.scale),
             tailShiftX: metrics.tailShiftX,
-            tailOffsetY: metrics.tailOffsetY
+            tailOffsetY: metrics.tailOffsetY,
+            includesTail: params.showsTail
         )
     }
 
@@ -495,8 +650,9 @@ final class IOSOutgoingImageBubbleView: UIView {
     var image: UIImage? {
         get { imageView.image }
         set {
-            imageView.image = newValue
-            tailFillColor = Self.tailAdjacentColor(from: newValue)
+            let displayImage = ImageBubbleWhiteBackgroundAdjust.displayImage(from: newValue) ?? newValue
+            imageView.image = displayImage
+            tailFillColor = Self.tailAdjacentColor(from: displayImage)
             setNeedsLayout()
             invalidateIntrinsicContentSize()
         }
@@ -614,8 +770,7 @@ final class IOSOutgoingImageBubbleView: UIView {
         layer.mask = outlineMaskLayer
 
         tailFillView.frame = bounds
-        tailFillView.fillColor = tailFillColor
-        tailFillView.applyPath(path)
+        tailFillView.applySolidFill(tailFillColor, path: path)
 
         imageView.frame = CGRect(
             x: 0,

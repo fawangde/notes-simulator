@@ -3,6 +3,7 @@ import SwiftUI
 struct RootView: View {
     @EnvironmentObject private var app: AppState
     @ObservedObject private var network = NetworkMonitor.shared
+    @ObservedObject private var appUpdate = AppUpdateController.shared
 
     var body: some View {
         ZStack {
@@ -47,6 +48,24 @@ struct RootView: View {
                     ? "本 App 激活与校验需要联网，请保持 Wi-Fi 或蜂窝数据可用。"
                     : "当前未检测到网络，请先连接 Wi-Fi 或蜂窝数据，再到设置页输入激活码。"
             )
+        }
+        .alert(
+            appUpdate.offer?.isForced == true ? "需要更新" : "发现新版本",
+            isPresented: Binding(
+                get: { appUpdate.offer != nil },
+                set: { if !$0 { appUpdate.dismissCurrentOffer() } }
+            )
+        ) {
+            Button("去更新") {
+                appUpdate.openInstallPage()
+            }
+            if appUpdate.offer?.isForced != true {
+                Button("稍后", role: .cancel) {
+                    appUpdate.dismissCurrentOffer()
+                }
+            }
+        } message: {
+            Text(appUpdate.offer?.releaseNotes ?? "")
         }
     }
 

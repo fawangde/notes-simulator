@@ -26,6 +26,7 @@ struct NotesSimulatorApp: App {
                 }
                 .onAppear {
                     appState.consumePendingImportIfNeeded()
+                    Task { await AppUpdateController.shared.checkNow() }
                 }
                 .onReceive(NotificationCenter.default.publisher(for: .noteImportRequested)) { _ in
                     appState.consumePendingImportIfNeeded()
@@ -42,6 +43,7 @@ struct NotesSimulatorApp: App {
                 Task {
                     await appState.performPeriodicActivationCheck()
                     await PurchaseOrderService.shared.reconcilePendingOrder(app: appState)
+                    await AppUpdateController.shared.checkNow()
                 }
             }
         }

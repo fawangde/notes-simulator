@@ -20,13 +20,16 @@ struct BubbleTailRenderParams: Equatable {
     var offsetX: Double
     var offsetY: Double
     var scale: Double
+    var showsTail: Bool
+    /// 图文模式文字气泡四角统一圆角（nil = 撰写页默认 22pt）
+    var bodyCornerRadius: CGFloat?
 
     var fillUIColor: UIColor {
         UIColor(red: fillRed, green: fillGreen, blue: fillBlue, alpha: 1)
     }
 
     static let frozenDefault: BubbleTailRenderParams = {
-        let fill = IMessageDesignTokens.bubbleBlueFill.rgbaComponents
+        let fill = IMessageDesignTokens.bubbleBlueMid.rgbaComponents
         return BubbleTailRenderParams(
             fillRed: Double(fill.r),
             fillGreen: Double(fill.g),
@@ -34,7 +37,9 @@ struct BubbleTailRenderParams: Equatable {
             anchorXFraction: Double(IMessageDesignTokens.bubbleTailAnchorXFraction),
             offsetX: Double(IMessageDesignTokens.bubbleTailOffsetX),
             offsetY: Double(IMessageDesignTokens.bubbleTailOffsetY),
-            scale: Double(IMessageDesignTokens.bubbleTailScale)
+            scale: Double(IMessageDesignTokens.bubbleTailScale),
+            showsTail: true,
+            bodyCornerRadius: nil
         )
     }()
 }

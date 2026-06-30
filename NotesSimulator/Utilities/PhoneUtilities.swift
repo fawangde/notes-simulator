@@ -188,7 +188,8 @@ enum BubbleTextLinkFormatting {
         for text: String,
         font: UIFont,
         textColor: UIColor,
-        kern: CGFloat = 0
+        kern: CGFloat = 0,
+        underlineLinks: Bool = true
     ) -> NSAttributedString {
         let baseAttrs: [NSAttributedString.Key: Any] = [
             .font: font,
@@ -206,6 +207,8 @@ enum BubbleTextLinkFormatting {
         }
 
         let result = NSMutableAttributedString(string: text, attributes: baseAttrs)
+        guard underlineLinks else { return result }
+
         let fullRange = NSRange(location: 0, length: length)
         let linkAttrs = linkAttributes(textColor: textColor)
 

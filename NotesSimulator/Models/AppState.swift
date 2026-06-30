@@ -64,6 +64,7 @@ private struct AppStateSnapshot: Codable {
     var noteImportedAt: Double?
     var threadTimeRangeInput: String
     var threadHeaderStyleIOS264: Bool
+    var messageLinkUnderlineHidden: Bool
     var notesStyleIOS17: Bool
     var notesStyleIOS18: Bool
     var activationExpiresAt: Double?
@@ -75,7 +76,7 @@ private struct AppStateSnapshot: Codable {
     enum CodingKeys: String, CodingKey {
         case mode, bothContentOrder, simCardMode, senderLineLabel, messageText
         case messageImageJPEG, noteTitle, noteBody, noteImportedAt, threadTimeRangeInput
-        case threadHeaderStyleIOS264, notesStyleIOS17, notesStyleIOS18, activationExpiresAt, activationCode, activationBoundUID
+        case threadHeaderStyleIOS264, messageLinkUnderlineHidden, notesStyleIOS17, notesStyleIOS18, activationExpiresAt, activationCode, activationBoundUID
         case activationMode, activationRemainingClicks
     }
 
@@ -91,6 +92,7 @@ private struct AppStateSnapshot: Codable {
         noteImportedAt: Double? = nil,
         threadTimeRangeInput: String,
         threadHeaderStyleIOS264: Bool = false,
+        messageLinkUnderlineHidden: Bool = false,
         notesStyleIOS17: Bool = false,
         notesStyleIOS18: Bool = false,
         activationExpiresAt: Double? = nil,
@@ -110,6 +112,7 @@ private struct AppStateSnapshot: Codable {
         self.noteImportedAt = noteImportedAt
         self.threadTimeRangeInput = threadTimeRangeInput
         self.threadHeaderStyleIOS264 = threadHeaderStyleIOS264
+        self.messageLinkUnderlineHidden = messageLinkUnderlineHidden
         self.notesStyleIOS17 = notesStyleIOS17
         self.notesStyleIOS18 = notesStyleIOS18
         self.activationExpiresAt = activationExpiresAt
@@ -132,6 +135,7 @@ private struct AppStateSnapshot: Codable {
         noteImportedAt = try c.decodeIfPresent(Double.self, forKey: .noteImportedAt)
         threadTimeRangeInput = try c.decode(String.self, forKey: .threadTimeRangeInput)
         threadHeaderStyleIOS264 = try c.decodeIfPresent(Bool.self, forKey: .threadHeaderStyleIOS264) ?? false
+        messageLinkUnderlineHidden = try c.decodeIfPresent(Bool.self, forKey: .messageLinkUnderlineHidden) ?? false
         notesStyleIOS17 = try c.decodeIfPresent(Bool.self, forKey: .notesStyleIOS17) ?? false
         notesStyleIOS18 = try c.decodeIfPresent(Bool.self, forKey: .notesStyleIOS18) ?? false
         if !notesStyleIOS17 && !notesStyleIOS18 {
@@ -192,6 +196,8 @@ final class AppState: ObservableObject {
     @Published var threadTimeRangeInput = ""
     /// 三行时间小字样式（对齐 iOS 26.4 Messages；与系统版本无关，仅改展示）
     @Published var threadHeaderStyleIOS264 = false
+    /// 信息页气泡内网址是否隐藏下划线（开启=无下划线，关闭=保持现状）
+    @Published var messageLinkUnderlineHidden = false
     /// 备忘录页 iOS 17 legacy 样式（与系统版本无关，仅改展示）
     @Published var notesStyleIOS17 = false
     /// 备忘录页 iOS 18 legacy 样式（与系统版本无关，仅改展示）
@@ -493,6 +499,12 @@ final class AppState: ObservableObject {
         showsMessageImage && !isIOS26BlankThreadForSelectedPhone && !isIOS18BlankThreadForSelectedPhone
     }
 
+    /// 单图展示：纯白底图压灰（全系 iOS 17/18/26 撰写页与设置预览共用）
+    var messageDisplayImage: UIImage? {
+        guard let messageImage else { return nil }
+        return ImageBubbleWhiteBackgroundAdjust.displayImage(from: messageImage) ?? messageImage
+    }
+
     /// 备忘录顶栏日期：时间小字区间开始时间的前 2 分钟（随区间设置变化，不用导入时间）
     var noteHeaderDisplayDate: Date {
         let startMinutes = ThreadTimeRange.parse(threadTimeRangeInput)?.startMinutes ?? (9 * 60)
@@ -509,7 +521,10 @@ final class AppState: ObservableObject {
             return NoteDateFormatting.composeThreadDateLabel(from: Date())
         }
         let minutes = range.minutes(atLineIndex: index, lineCount: count)
-        return NoteDateFormatting.composeThreadDateLabel(minutesFromMidnight: minutes)
+        return NoteDateFormatting.composeThreadDateLabel(
+            minutesFromMidnight: minutes,
+            timeRange: range
+        )
     }
 
     func clearMessageTextAndImage() {
@@ -624,6 +639,7 @@ final class AppState: ObservableObject {
             $noteImportedAt.map { _ in () }.eraseToAnyPublisher(),
             $threadTimeRangeInput.map { _ in () }.eraseToAnyPublisher(),
             $threadHeaderStyleIOS264.map { _ in () }.eraseToAnyPublisher(),
+            $messageLinkUnderlineHidden.map { _ in () }.eraseToAnyPublisher(),
             $notesStyleIOS17.map { _ in () }.eraseToAnyPublisher(),
             $notesStyleIOS18.map { _ in () }.eraseToAnyPublisher(),
             $notes17Tuning.map { _ in () }.eraseToAnyPublisher(),
@@ -682,6 +698,7 @@ final class AppState: ObservableObject {
         }
         threadTimeRangeInput = snapshot.threadTimeRangeInput
         threadHeaderStyleIOS264 = snapshot.threadHeaderStyleIOS264
+        messageLinkUnderlineHidden = snapshot.messageLinkUnderlineHidden
         notesStyleIOS17 = snapshot.notesStyleIOS17
         notesStyleIOS18 = snapshot.notesStyleIOS18
         activationCode = snapshot.activationCode
@@ -721,6 +738,7 @@ final class AppState: ObservableObject {
             noteImportedAt: noteImportedAt.timeIntervalSince1970,
             threadTimeRangeInput: threadTimeRangeInput,
             threadHeaderStyleIOS264: threadHeaderStyleIOS264,
+            messageLinkUnderlineHidden: messageLinkUnderlineHidden,
             notesStyleIOS17: notesStyleIOS17,
             notesStyleIOS18: notesStyleIOS18,
             activationExpiresAt: activationExpiresAt?.timeIntervalSince1970,
@@ -757,6 +775,8 @@ struct ThreadTimeRange {
     let startMinutes: Int
     let endMinutes: Int
 
+    var crossesMidnight: Bool { endMinutes < startMinutes }
+
     static func parse(_ input: String) -> ThreadTimeRange? {
         let trimmed = ThreadTimeRangeInputFormatting.formatted(from: input)
         let parts = trimmed.split(separator: "-", maxSplits: 1).map(String.init)
@@ -773,6 +793,15 @@ struct ThreadTimeRange {
         if count == 1 { return startMinutes }
         let clampedIndex = min(max(index, 0), count - 1)
         let progress = Double(clampedIndex) / Double(count - 1)
+
+        if crossesMidnight {
+            let span = (24 * 60 - startMinutes) + endMinutes
+            let offset = Int((Double(span) * progress).rounded())
+            var minutes = startMinutes + offset
+            if minutes >= 24 * 60 { minutes -= 24 * 60 }
+            return minutes
+        }
+
         let delta = endMinutes - startMinutes
         return startMinutes + Int((Double(delta) * progress).rounded())
     }

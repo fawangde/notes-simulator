@@ -23,22 +23,33 @@ enum NoteDateFormatting {
     }
 
     /// 撰写页时间戳第二行：「今天 01:53」「昨天 22:58」
+    /// 跨午夜区间（如 23:xx-00:xx）：23:xx 段显示昨天，00:xx 段显示今天。
     static func composeThreadDateLabel(from date: Date) -> String {
         let calendar = Calendar.current
         let hour = calendar.component(.hour, from: date)
         let minute = calendar.component(.minute, from: date)
-        return composeThreadDateLabel(minutesFromMidnight: hour * 60 + minute, on: date)
+        return composeThreadDateLabel(minutesFromMidnight: hour * 60 + minute, on: date, timeRange: nil)
     }
 
     static func composeThreadDateLabel(minutesFromMidnight: Int) -> String {
-        composeThreadDateLabel(minutesFromMidnight: minutesFromMidnight, on: Date())
+        composeThreadDateLabel(minutesFromMidnight: minutesFromMidnight, on: Date(), timeRange: nil)
     }
 
-    static func composeThreadDateLabel(minutesFromMidnight: Int, on day: Date) -> String {
+    static func composeThreadDateLabel(minutesFromMidnight: Int, timeRange: ThreadTimeRange?) -> String {
+        composeThreadDateLabel(minutesFromMidnight: minutesFromMidnight, on: Date(), timeRange: timeRange)
+    }
+
+    static func composeThreadDateLabel(minutesFromMidnight: Int, on day: Date, timeRange: ThreadTimeRange? = nil) -> String {
         let clamped = max(0, min(23 * 60 + 59, minutesFromMidnight))
         let hour = clamped / 60
         let minute = clamped % 60
         let time = String(format: "%02d:%02d", hour, minute)
+
+        if let timeRange, timeRange.crossesMidnight {
+            let dayWord = clamped >= timeRange.startMinutes ? "昨天" : "今天"
+            return "\(dayWord) \(time)"
+        }
+
         let calendar = Calendar.current
         if calendar.isDateInToday(day) {
             return "今天 \(time)"

@@ -24,6 +24,10 @@ enum IMessageDesignTokens {
     /// 时间小字距收发件人卡片底 5pt；气泡距时间小字 5pt
     static let threadTimestampBelowCard: CGFloat = 5
     static let threadBubbleBelowTimestamp: CGFloat = 5
+    /// 图文 · 先图后文：图片尾巴尖距文字气泡顶缘
+    static let threadBothImageFirstTailToTextTop: CGFloat = 2
+    /// 图文 · 先文后图：文字气泡底缘距图片顶缘
+    static let threadBothTextFirstTextBottomToImageTop: CGFloat = 5
     /// 「已送达」距输入框顶 5pt（气泡先向下长，触及后改为上滚）
     static let threadDeliveredAboveInput: CGFloat = 5
     /// 短文案也可上滑：栈底留白，撑出可滚区间
@@ -257,6 +261,8 @@ enum IMessageDesignTokens {
     static let bubbleCornerTLGroupedLast: CGFloat = 5
     /// 撰写页单条发送（四角同半径）
     static let bubbleCornerTLCompose: CGFloat = 22
+    /// 图文 · 先文后图无尾巴文字气泡：与设置页底部操作按钮圆角一致
+    static let bubbleCornerBothTextNoTail: CGFloat = 20
     static let bubbleCornerTR: CGFloat = 22
     static let bubbleCornerBR: CGFloat = 22
     static let bubbleCornerBL: CGFloat = 22
@@ -280,8 +286,8 @@ enum IMessageDesignTokens {
     static let bubbleFont = Font.system(size: 17, weight: .regular)
     static let bubbleLineHeight: CGFloat = 22
     static let bubbleTextColor = Color.white
-    /// 发送气泡蓝（基于收件人号码蓝略调淡）
-    static let bubbleBlueFill: UIColor = {
+    /// 归档：2026-06-28 改色前（收件人号码蓝 sat×0.88 + brightness+0.02）
+    static let bubbleBlueFillArchived: UIColor = {
         var hue: CGFloat = 0
         var saturation: CGFloat = 0
         var brightness: CGFloat = 0
@@ -297,12 +303,42 @@ enum IMessageDesignTokens {
             alpha: alpha
         )
     }()
+    /// 真机目标色（Mac 测色计 · 真机截图，2026-06-26）
+    /// 顶 0.433/0.729/0.960 · 底 0.320/0.625/0.969
+    /// 取样：标准校准气泡（16 行，顶/底行见 IOS26BubbleColorCalibration）
+    /// 填色：以中色为锚、按行数向顶/底对称扩展（BubbleBlueGradient.referenceProgress）
+    /// 模拟器回测（补偿 v1 后）：顶 0.455/0.736/0.977 · 底 0.333/0.604/0.964
+    /// 补偿 v2：代码色 += 真机目标 − 模拟器实测（中点用顶/底修正均值）
+    static let bubbleBlueTop = UIColor(red: 0.332, green: 0.741, blue: 0.983, alpha: 1)
+    static let bubbleBlueMid = UIColor(red: 0.261, green: 0.679, blue: 0.994, alpha: 1)
+    static let bubbleBlueBottom = UIColor(red: 0.192, green: 0.628, blue: 0.994, alpha: 1)
+    /// 兼容单色素引用：取中间色
+    static let bubbleBlueFill = bubbleBlueMid
+
+    static var bubbleBlueGradientCGColors: [CGColor] {
+        bubbleBlueGradientCGColors(lineCount: IOS26BubbleColorCalibration.lineCount)
+    }
+
+    static var bubbleBlueGradientLocations: [NSNumber] {
+        bubbleBlueGradientLocations(lineCount: IOS26BubbleColorCalibration.lineCount)
+    }
+
+    static func bubbleBlueGradientCGColors(lineCount: Int) -> [CGColor] {
+        BubbleBlueGradient.scaledCGColors(
+            lineCount: lineCount,
+            top: bubbleBlueTop,
+            mid: bubbleBlueMid,
+            bottom: bubbleBlueBottom
+        )
+    }
+
+    static func bubbleBlueGradientLocations(lineCount: Int) -> [NSNumber] {
+        BubbleBlueGradient.scaledLocations(lineCount: lineCount)
+    }
     static let bubbleTailAnchorXFraction: CGFloat = 0.920
     static let bubbleTailOffsetX: CGFloat = -0.7
     static let bubbleTailOffsetY: CGFloat = -4.0
     static let bubbleTailScale: CGFloat = 1.00
-    static let bubbleBlueTop = bubbleBlueFill
-    static let bubbleBlueBottom = bubbleBlueFill
     static let bubbleShadowColor = UIColor.clear
     static let bubbleShadowOffset = CGSize.zero
     static let bubbleShadowRadius: CGFloat = 0
@@ -317,6 +353,27 @@ enum IMessageDesignTokens {
     static let imageBubbleGIFMaxHeight: CGFloat = 260
     /// 单图圆角与撰写页发送气泡一致
     static var imageBubbleCornerRadius: CGFloat { bubbleCornerTLCompose }
+    /// 纯白底图：边缘近白占比阈值（判定是否为「白底图」）
+    static let imageBubbleWhiteBackgroundEdgeRatio: CGFloat = 0.88
+    /// 纯白底图：内部近白占比阈值
+    static let imageBubbleWhiteBackgroundInteriorRatio: CGFloat = 0.40
+    /// 近白像素判定（0–255），仅用于白底图背景连通区
+    static let imageBubbleWhiteBackgroundNearWhiteThreshold: UInt8 = 250
+    static let imageBubbleWhiteBackgroundMinAlpha: UInt8 = 16
+    /// 白底替换色：仅比纯白略压一点（撰写页白底 0.98），避免融为一体
+    static let imageBubbleWhiteBackgroundReplacementUI = UIColor(white: 0.96, alpha: 1)
+    static var imageBubbleWhiteBackgroundReplacementRGB: (r: UInt8, g: UInt8, b: UInt8) {
+        var red: CGFloat = 0
+        var green: CGFloat = 0
+        var blue: CGFloat = 0
+        var alpha: CGFloat = 0
+        imageBubbleWhiteBackgroundReplacementUI.getRed(&red, green: &green, blue: &blue, alpha: &alpha)
+        return (
+            UInt8(min(max(Int(round(red * 255)), 0), 255)),
+            UInt8(min(max(Int(round(green * 255)), 0), 255)),
+            UInt8(min(max(Int(round(blue * 255)), 0), 255))
+        )
+    }
 
     /// 发件人标签（如「副号」）首字中心 X
     static func threadImageLeadingCenterX(senderLineLabel: String) -> CGFloat {
