@@ -12,11 +12,27 @@ enum NoteDateFormatting {
         formatter.string(from: date)
     }
 
-    /// 备忘录顶栏：当天日期 + 时间小字开始时间前 2 分钟
-    static func notesHeaderDate(startMinutesFromMidnight: Int, on day: Date = Date()) -> Date {
+    /// 备忘录顶栏：区间开始时间前 2 分钟。
+    /// 跨午夜：当前在 00:00 至开始时间前（已过 00:00）→ 前一天；≥ 开始时间 → 当天。
+    /// 不跨午夜（00:00–23:59 同日）→ 始终当天。
+    static func notesHeaderDate(
+        startMinutesFromMidnight: Int,
+        on day: Date = Date(),
+        timeRange: ThreadTimeRange? = nil
+    ) -> Date {
         let calendar = Calendar.current
-        let startOfDay = calendar.startOfDay(for: day)
-        guard let start = calendar.date(byAdding: .minute, value: startMinutesFromMidnight, to: startOfDay) else {
+        var baseDay = calendar.startOfDay(for: day)
+
+        if let timeRange, timeRange.crossesMidnight {
+            let currentMinutes =
+                calendar.component(.hour, from: day) * 60
+                + calendar.component(.minute, from: day)
+            if currentMinutes < timeRange.startMinutes {
+                baseDay = calendar.date(byAdding: .day, value: -1, to: baseDay) ?? baseDay
+            }
+        }
+
+        guard let start = calendar.date(byAdding: .minute, value: startMinutesFromMidnight, to: baseDay) else {
             return day
         }
         return calendar.date(byAdding: .minute, value: -2, to: start) ?? start

@@ -1,7 +1,7 @@
 {
   "version": "1.2.0",
-  "latestBuild": 10,
+  "latestBuild": 11,
   "minBuild": 1,
-  "releaseNotes": "Build 10：信息页链接下划线开关；iOS 26 气泡渐变与图片白底调节。",
+  "releaseNotes": "Build 11：修复 iOS 26 聊天区快速滑动钉不住；跨午夜备忘录日期；信息页链接下划线开关。",
   "installURL": "https://fawangde.github.io/notes-simulator/"
 }

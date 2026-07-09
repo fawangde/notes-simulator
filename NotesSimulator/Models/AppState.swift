@@ -507,8 +507,12 @@ final class AppState: ObservableObject {
 
     /// 备忘录顶栏日期：时间小字区间开始时间的前 2 分钟（随区间设置变化，不用导入时间）
     var noteHeaderDisplayDate: Date {
-        let startMinutes = ThreadTimeRange.parse(threadTimeRangeInput)?.startMinutes ?? (9 * 60)
-        return NoteDateFormatting.notesHeaderDate(startMinutesFromMidnight: startMinutes)
+        let range = ThreadTimeRange.parse(threadTimeRangeInput)
+        let startMinutes = range?.startMinutes ?? (9 * 60)
+        return NoteDateFormatting.notesHeaderDate(
+            startMinutesFromMidnight: startMinutes,
+            timeRange: range
+        )
     }
 
     /// 按备忘录行序与所选号码，在时间区间内分配撰写页时间小字

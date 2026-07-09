@@ -58,6 +58,26 @@ final class ComposeThreadScrollView: UIView {
     private var userDidScroll = false
     /// 长按打开信息页后首屏顶对齐（与参考图一致），文案变长后再走贴底上滚
     private var prefersInitialTopAlignment = true
+    /// 已送达贴输入框后进入钉住态（对齐 1718 稳定算法）
+    private var isComposerPinEngaged = false
+    private var pendingTargetY: CGFloat?
+    private var pendingPinLineY: CGFloat?
+    private var settlePassesRemaining = 0
+    private var reserveSettlePassesRemaining = 0
+    private var lastReserveDelta: CGFloat = 0
+    private var isProgrammaticScroll = false
+    private var lastAnchorBottom: CGFloat = 0
+    private var pendingInitialPinAfterBounds = false
+
+    private struct PinMetrics {
+        let targetY: CGFloat
+        let anchorBottom: CGFloat
+        let composerPinLine: CGFloat
+        let insetBottom: CGFloat
+        let bubbleRowSize: CGSize
+
+        var gapToPinLine: CGFloat { anchorBottom - composerPinLine }
+    }
 
     private struct PendingFullApply {
         let chromeBottomY: CGFloat
@@ -137,6 +157,48 @@ final class ComposeThreadScrollView: UIView {
     override func didMoveToWindow() {
         super.didMoveToWindow()
         ComposeBackdropRegistry.register(scrollView)
+        if window != nil, pendingInitialPinAfterBounds {
+            setNeedsLayout()
+        }
+    }
+
+    private func hasValidBounds() -> Bool {
+        scrollView.bounds.width > 10 && scrollView.bounds.height > 10
+    }
+
+    private func setScrollOffsetY(_ y: CGFloat, animated: Bool) {
+        isProgrammaticScroll = true
+        scrollView.setContentOffset(CGPoint(x: 0, y: y), animated: animated)
+        isProgrammaticScroll = false
+    }
+
+    /// 等多行气泡高度稳定后再判断是否触线钉住
+    private func scheduleReconcileAfterLayout() {
+        func pass(_ next: (() -> Void)?) {
+            guard hasValidBounds() else {
+                pendingInitialPinAfterBounds = true
+                guard let next else { return }
+                DispatchQueue.main.async(execute: next)
+                return
+            }
+            layoutIfNeeded()
+            reconcileScrollOffset(animated: false)
+            lastContentHeight = scrollView.contentSize.height
+            guard let next else {
+                ComposeBackdropRegistry.notifyChanged()
+                return
+            }
+            DispatchQueue.main.async(execute: next)
+        }
+        DispatchQueue.main.async {
+            pass {
+                pass {
+                    pass {
+                        pass(nil)
+                    }
+                }
+            }
+        }
     }
 
     override func layoutSubviews() {
@@ -163,17 +225,54 @@ final class ComposeThreadScrollView: UIView {
                 messageLinkUnderlineHidden: snapshot.messageLinkUnderlineHidden
             )
         }
+
+        let previousReserve = lastComposerReserve
         scrollView.contentInset.bottom = composerBottomReserve
-        let reserveChanged = abs(composerBottomReserve - lastComposerReserve) > 0.5
-        lastComposerReserve = composerBottomReserve
-        guard !userDidScroll else { return }
-        if needsDeliveredPin() {
-            prefersInitialTopAlignment = false
-        }
-        if prefersInitialTopAlignment, !reserveChanged, !needsDeliveredPin() {
+
+        guard hasValidBounds() else {
+            pendingInitialPinAfterBounds = contentSignature != nil
             return
         }
-        reconcileScrollOffset(animated: false, forcePin: reserveChanged || needsDeliveredPin())
+
+        if pendingInitialPinAfterBounds, contentSignature != nil {
+            pendingInitialPinAfterBounds = false
+            layoutIfNeeded()
+            scheduleReconcileAfterLayout()
+        }
+
+        let reserveDelta = composerBottomReserve - previousReserve
+        let reserveChanged = abs(reserveDelta) > 0.5
+        lastReserveDelta = reserveChanged ? reserveDelta : 0
+
+        if reserveChanged {
+            pendingTargetY = nil
+            pendingPinLineY = nil
+            reserveSettlePassesRemaining = max(reserveSettlePassesRemaining, 4)
+            if scrollView.contentOffset.y > 0.5 {
+                let maxY = maxScrollOffsetY()
+                let adjusted = max(0, min(scrollView.contentOffset.y + reserveDelta, maxY))
+                if abs(adjusted - scrollView.contentOffset.y) > 0.5 {
+                    setScrollOffsetY(adjusted, animated: false)
+                }
+            }
+            lastComposerReserve = composerBottomReserve
+            return
+        }
+
+        if reserveSettlePassesRemaining > 0 {
+            reserveSettlePassesRemaining -= 1
+            lastComposerReserve = composerBottomReserve
+            return
+        }
+
+        lastComposerReserve = composerBottomReserve
+        guard !userDidScroll else { return }
+        if prefersInitialTopAlignment, !isComposerPinEngaged {
+            if pinMetrics().targetY <= 0.5 {
+                return
+            }
+        }
+        reconcileScrollOffset(animated: false)
     }
 
     @available(*, unavailable)
@@ -225,7 +324,8 @@ final class ComposeThreadScrollView: UIView {
                 updateVisibleBubbleFontSize(bubbleFontSize)
                 setNeedsLayout()
                 layoutIfNeeded()
-                reconcileScrollOffset(animated: false, forcePin: !userDidScroll)
+                settlePassesRemaining = 3
+                scheduleReconcileAfterLayout()
             } else if linkUnderlineChanged {
                 updateVisibleLinkUnderlineHidden(messageLinkUnderlineHidden)
             } else if reserveChanged || signature.showsImage {
@@ -249,7 +349,10 @@ final class ComposeThreadScrollView: UIView {
             updateVisibleMessageText(signature.messageText, dateLine: signature.dateLine)
             setNeedsLayout()
             layoutIfNeeded()
-            reconcileScrollOffset(animated: false, forcePin: !userDidScroll)
+            pendingTargetY = nil
+            pendingPinLineY = nil
+            settlePassesRemaining = 3
+            scheduleReconcileAfterLayout()
             return
         }
 
@@ -281,6 +384,12 @@ final class ComposeThreadScrollView: UIView {
         self.chromeBottomY = chromeBottomY
         userDidScroll = false
         prefersInitialTopAlignment = true
+        isComposerPinEngaged = false
+        pendingTargetY = nil
+        pendingPinLineY = nil
+        settlePassesRemaining = 0
+        reserveSettlePassesRemaining = 0
+        lastAnchorBottom = 0
 
         stack.arrangedSubviews.forEach {
             stack.removeArrangedSubview($0)
@@ -353,16 +462,9 @@ final class ComposeThreadScrollView: UIView {
 
         lastContentHeight = 0
         setNeedsLayout()
-        DispatchQueue.main.async {
-            self.layoutIfNeeded()
-            if self.needsDeliveredPin() {
-                self.prefersInitialTopAlignment = false
-                self.reconcileScrollOffset(animated: false, forcePin: true)
-            } else {
-                self.scrollView.setContentOffset(.zero, animated: false)
-            }
-            self.lastContentHeight = self.scrollView.contentSize.height
-            ComposeBackdropRegistry.notifyChanged()
+        pendingInitialPinAfterBounds = !hasValidBounds()
+        if hasValidBounds() {
+            scheduleReconcileAfterLayout()
         }
     }
 
@@ -630,45 +732,172 @@ final class ComposeThreadScrollView: UIView {
         return nil
     }
 
-    /// 先向下长；「已送达」贴输入区顶后停止下移，再多则上滚
-    private func targetPinnedOffsetY() -> CGFloat {
-        scrollView.layoutIfNeeded()
-        let viewport = scrollView.bounds.height
-        guard viewport > 0,
-              let anchorBottom = messagePinAnchorBottomY() else { return 0 }
+    private func bubbleRowDimensions() -> CGSize {
+        for row in stack.arrangedSubviews.reversed() {
+            for child in row.subviews where child is ComposeBubbleColumnView {
+                row.layoutIfNeeded()
+                return row.bounds.size
+            }
+        }
+        return .zero
+    }
 
-        let composerLine = viewport - scrollView.contentInset.bottom
-        if anchorBottom <= composerLine + 0.5 {
-            return 0
+    private func isLayoutStable(_ metrics: PinMetrics) -> Bool {
+        guard hasValidBounds() else { return false }
+        return metrics.bubbleRowSize.width > 10 && metrics.bubbleRowSize.height > 62
+    }
+
+    private func composerPinLineY(viewport: CGFloat) -> CGFloat {
+        viewport - scrollView.contentInset.bottom
+    }
+
+    private func pinMetrics() -> PinMetrics {
+        scrollView.layoutIfNeeded()
+        stack.layoutIfNeeded()
+        let viewport = scrollView.bounds.height
+        let insetBottom = scrollView.contentInset.bottom
+        let composerPinLine = viewport > 0 ? composerPinLineY(viewport: viewport) : 0
+        let anchorBottom = messagePinAnchorBottomY() ?? 0
+        let bubbleRowSize = bubbleRowDimensions()
+
+        guard viewport > 0, anchorBottom > 0, composerPinLine > 0 else {
+            return PinMetrics(
+                targetY: 0,
+                anchorBottom: anchorBottom,
+                composerPinLine: composerPinLine,
+                insetBottom: insetBottom,
+                bubbleRowSize: bubbleRowSize
+            )
         }
 
-        let pinOffset = anchorBottom - composerLine
-        return max(0, min(pinOffset, naturalMaxScrollOffsetY()))
+        if anchorBottom <= composerPinLine + 0.5 {
+            return PinMetrics(
+                targetY: 0,
+                anchorBottom: anchorBottom,
+                composerPinLine: composerPinLine,
+                insetBottom: insetBottom,
+                bubbleRowSize: bubbleRowSize
+            )
+        }
+
+        let offsetY = scrollView.contentOffset.y
+        if offsetY <= 0.5, !isComposerPinEngaged, anchorBottom > viewport - 1 {
+            return PinMetrics(
+                targetY: 0,
+                anchorBottom: anchorBottom,
+                composerPinLine: composerPinLine,
+                insetBottom: insetBottom,
+                bubbleRowSize: bubbleRowSize
+            )
+        }
+
+        let pinOffset = anchorBottom - composerPinLine
+        let maxY = naturalMaxScrollOffsetY()
+        return PinMetrics(
+            targetY: max(0, min(pinOffset, maxY)),
+            anchorBottom: anchorBottom,
+            composerPinLine: composerPinLine,
+            insetBottom: insetBottom,
+            bubbleRowSize: bubbleRowSize
+        )
     }
 
-    private func needsDeliveredPin() -> Bool {
-        targetPinnedOffsetY() > 0.5
-    }
+    /// 先向下长；「已送达」贴输入区顶后停止下移，再多则上滚
+    private func reconcileScrollOffset(animated: Bool) {
+        if scrollView.contentOffset.x != 0 {
+            scrollView.contentOffset.x = 0
+        }
 
-    /// 先向下长；「已送达」触输入框上 5pt 后自动上滚；短文案也可手动上滑
-    private func reconcileScrollOffset(animated: Bool, forcePin: Bool = false) {
         let maxY = maxScrollOffsetY()
         let contentH = scrollView.contentSize.height
+        let metrics = pinMetrics()
+        let targetY = metrics.targetY
 
-        let grew = contentH > lastContentHeight + 1
-        lastContentHeight = contentH
-
-        let targetY = targetPinnedOffsetY()
         if targetY > 0.5 {
             prefersInitialTopAlignment = false
-        }
-        if forcePin || (grew && targetY > 0.5) {
-            scrollView.setContentOffset(CGPoint(x: 0, y: targetY), animated: animated)
+            let wasPinned = isComposerPinEngaged
+            isComposerPinEngaged = true
+            let clampedY = min(targetY, maxY)
+            lastAnchorBottom = metrics.anchorBottom
+            let nextY: CGFloat
+            if userDidScroll {
+                nextY = scrollView.contentOffset.y
+                pendingTargetY = nil
+                pendingPinLineY = nil
+            } else if wasPinned {
+                nextY = clampedY
+                pendingTargetY = nil
+                pendingPinLineY = nil
+            } else {
+                let pinLn = metrics.composerPinLine
+                if let pendingT = pendingTargetY,
+                   let pendingL = pendingPinLineY,
+                   abs(pendingT - clampedY) <= 2,
+                   abs(pendingL - pinLn) <= 2 {
+                    nextY = clampedY
+                    pendingTargetY = nil
+                    pendingPinLineY = nil
+                } else {
+                    pendingTargetY = clampedY
+                    pendingPinLineY = pinLn
+                    lastContentHeight = contentH
+                    return
+                }
+            }
+            if abs(scrollView.contentOffset.y - nextY) > 0.5 {
+                setScrollOffsetY(nextY, animated: animated)
+            }
+            lastContentHeight = contentH
             return
         }
 
+        lastAnchorBottom = metrics.anchorBottom
+        pendingTargetY = nil
+        pendingPinLineY = nil
+
+        let stable = isLayoutStable(metrics)
+        let allowSnapBack = stable && settlePassesRemaining == 0 && reserveSettlePassesRemaining == 0
+        if !allowSnapBack, scrollView.contentOffset.y > 0.5 {
+            isComposerPinEngaged = true
+            prefersInitialTopAlignment = false
+        } else if isComposerPinEngaged, metrics.gapToPinLine > 0.5, targetY <= 0.5 {
+            let pinY = min(max(0, metrics.anchorBottom - metrics.composerPinLine), maxY)
+            if abs(scrollView.contentOffset.y - pinY) > 0.5 {
+                setScrollOffsetY(pinY, animated: animated)
+            }
+            prefersInitialTopAlignment = false
+        } else {
+            isComposerPinEngaged = false
+            if !userDidScroll, scrollView.contentOffset.y > 0.5, allowSnapBack {
+                setScrollOffsetY(0, animated: animated)
+                prefersInitialTopAlignment = true
+            }
+        }
+
+        if settlePassesRemaining > 0 {
+            settlePassesRemaining -= 1
+        }
+
+        lastContentHeight = contentH
         if scrollView.contentOffset.y > maxY {
             scrollView.contentOffset.y = maxY
+        }
+    }
+
+    private func snapComposerPinAfterUserScroll() {
+        guard !isProgrammaticScroll else { return }
+        let metrics = pinMetrics()
+        guard metrics.targetY > 0.5, isComposerPinEngaged else { return }
+        let target = min(metrics.targetY, maxScrollOffsetY())
+        let current = scrollView.contentOffset.y
+        if current > target + 12 {
+            return
+        }
+        userDidScroll = false
+        if abs(current - target) > 0.5 {
+            setScrollOffsetY(target, animated: true)
+        } else {
+            reconcileScrollOffset(animated: false)
         }
     }
 }
@@ -679,11 +908,26 @@ extension ComposeThreadScrollView: UIScrollViewDelegate {
     }
 
     func scrollViewDidScroll(_ scrollView: UIScrollView) {
+        if scrollView.contentOffset.x != 0 {
+            scrollView.contentOffset.x = 0
+        }
         let maxY = maxScrollOffsetY()
         if scrollView.contentOffset.y > maxY {
             scrollView.contentOffset.y = maxY
         }
-        ComposeBackdropRegistry.notifyChanged()
+        if !isProgrammaticScroll {
+            ComposeBackdropRegistry.notifyChanged()
+        }
+    }
+
+    func scrollViewDidEndDragging(_ scrollView: UIScrollView, willDecelerate decelerate: Bool) {
+        if !decelerate {
+            snapComposerPinAfterUserScroll()
+        }
+    }
+
+    func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
+        snapComposerPinAfterUserScroll()
     }
 }
 
