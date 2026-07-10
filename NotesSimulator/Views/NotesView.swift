@@ -490,6 +490,7 @@ struct NotesView: View {
         }
         .safeAreaInset(edge: .top, spacing: 0) {
             navBar
+                .zIndex(1)
         }
         .overlay(alignment: .bottom) {
             bottomBar

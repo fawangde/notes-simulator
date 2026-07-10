@@ -1,7 +1,7 @@
 {
   "version": "1.4.0",
-  "latestBuild": 13,
+  "latestBuild": 14,
   "minBuild": 1,
-  "releaseNotes": "iMessage工具全家桶已上线，同步激活pc端工具使用权",
+  "releaseNotes": "修复 iOS 16 首次进入备忘录时无法返回控制台的问题。",
   "installURL": "https://fawangde.github.io/notes-simulator/"
 }

@@ -18,6 +18,7 @@ struct NotesGlassCircleButton: View {
                 )
                 .background {
                     NotesFrostedBackground.navButtonGlass()
+                        .allowsHitTesting(false)
                 }
                 .clipShape(Circle())
                 .shadow(
@@ -71,6 +72,7 @@ struct NotesGlassCapsuleGroup: View {
         .frame(height: NotesDesignTokens.Official.Nav.buttonSize)
         .background {
             NotesFrostedBackground.toolbarGlass()
+                .allowsHitTesting(false)
         }
         .clipShape(Capsule())
         .shadow(

@@ -55,6 +55,7 @@ struct NotesReadingProgressAttachment<Content: View>: View {
         content
             .overlay(alignment: .trailing) {
                 NotesReadingProgressUIKitIndicator(trackStyle: trackStyle)
+                    .allowsHitTesting(false)
             }
     }
 }
@@ -64,6 +65,7 @@ extension View {
     func notesReadingProgressIndicator(trackStyle: NotesReadingProgressTrackStyle) -> some View {
         overlay(alignment: .trailing) {
             NotesReadingProgressUIKitIndicator(trackStyle: trackStyle)
+                .allowsHitTesting(false)
         }
     }
 
