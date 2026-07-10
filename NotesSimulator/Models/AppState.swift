@@ -72,12 +72,15 @@ private struct AppStateSnapshot: Codable {
     var activationBoundUID: String?
     var activationMode: String?
     var activationRemainingClicks: Int?
+    var converterExpiresAt: Double?
+    var activationInitialClickCount: Int?
+    var converterActivatedAt: Double?
 
     enum CodingKeys: String, CodingKey {
         case mode, bothContentOrder, simCardMode, senderLineLabel, messageText
         case messageImageJPEG, noteTitle, noteBody, noteImportedAt, threadTimeRangeInput
         case threadHeaderStyleIOS264, messageLinkUnderlineHidden, notesStyleIOS17, notesStyleIOS18, activationExpiresAt, activationCode, activationBoundUID
-        case activationMode, activationRemainingClicks
+        case activationMode, activationRemainingClicks, converterExpiresAt, activationInitialClickCount, converterActivatedAt
     }
 
     init(
@@ -99,7 +102,10 @@ private struct AppStateSnapshot: Codable {
         activationCode: String? = nil,
         activationBoundUID: String? = nil,
         activationMode: String? = nil,
-        activationRemainingClicks: Int? = nil
+        activationRemainingClicks: Int? = nil,
+        converterExpiresAt: Double? = nil,
+        activationInitialClickCount: Int? = nil,
+        converterActivatedAt: Double? = nil
     ) {
         self.mode = mode
         self.bothContentOrder = bothContentOrder
@@ -120,6 +126,9 @@ private struct AppStateSnapshot: Codable {
         self.activationBoundUID = activationBoundUID
         self.activationMode = activationMode
         self.activationRemainingClicks = activationRemainingClicks
+        self.converterExpiresAt = converterExpiresAt
+        self.activationInitialClickCount = activationInitialClickCount
+        self.converterActivatedAt = converterActivatedAt
     }
 
     init(from decoder: Decoder) throws {
@@ -149,6 +158,9 @@ private struct AppStateSnapshot: Codable {
         activationBoundUID = try c.decodeIfPresent(String.self, forKey: .activationBoundUID)
         activationMode = try c.decodeIfPresent(String.self, forKey: .activationMode)
         activationRemainingClicks = try c.decodeIfPresent(Int.self, forKey: .activationRemainingClicks)
+        converterExpiresAt = try c.decodeIfPresent(Double.self, forKey: .converterExpiresAt)
+        activationInitialClickCount = try c.decodeIfPresent(Int.self, forKey: .activationInitialClickCount)
+        converterActivatedAt = try c.decodeIfPresent(Double.self, forKey: .converterActivatedAt)
     }
 }
 
@@ -221,6 +233,13 @@ final class AppState: ObservableObject {
     @Published var activationBoundUID: String?
     @Published var activationMode: ActivationMode?
     @Published var activationRemainingClicks: Int?
+    @Published var converterExpiresAt: Date?
+    @Published var activationInitialClickCount: Int?
+    @Published var converterActivatedAt: Date?
+    @Published var converterImportToast: String?
+    @Published var showConverterHost = false
+    /// 用户主动打开过转换器；分享/切 App 导致 fullScreenCover 临时消失时不重置
+    @Published private(set) var isConverterSessionEngaged = false
     @Published var showActivationRequiredAlert = false
     @Published var showPurchaseActivationSuccessAlert = false
     @Published var showPurchasePaymentRejectedAlert = false
@@ -254,6 +273,7 @@ final class AppState: ObservableObject {
         startPeriodicActivationCheck()
         Task { @MainActor in
             await syncActivationIfNeeded()
+            backfillConverterAccessIfNeeded()
         }
     }
 
@@ -312,6 +332,40 @@ final class AppState: ObservableObject {
             return notesSimulationUnlocked
         }
         return true
+    }
+
+    var canUseConverter: Bool {
+        if DevelopmentFlags.bypassActivation { return true }
+        guard isActivated else { return false }
+        guard let expiry = effectiveConverterExpiresAt else { return false }
+        return expiry > Date()
+    }
+
+    var effectiveConverterExpiresAt: Date? {
+        switch activationMode {
+        case .time:
+            return activationExpiresAt
+        case .clicks:
+            return converterExpiresAt
+        case nil:
+            return nil
+        }
+    }
+
+    var converterAccessDeniedMessage: String {
+        if !isActivated {
+            return ConverterAccess.notActivatedMessage
+        }
+        if activationMode == .clicks, isActivated {
+            return ConverterAccess.expiredWhileClicksRemainMessage
+        }
+        return "超级转换器不可用，请重新激活"
+    }
+
+    func converterRemainingText(at now: Date = Date()) -> String? {
+        guard isActivated, activationMode == .clicks,
+              let expiry = effectiveConverterExpiresAt else { return nil }
+        return "转换器 " + ConverterAccess.remainingTimeText(until: expiry, now: now)
     }
 
     func activationRemainingText(at now: Date = Date()) -> String {
@@ -390,9 +444,7 @@ final class AppState: ObservableObject {
         let outcome = try await ActivationService.shared.activate(code: rawCode)
         activationCode = ActivationFormatting.normalizedCode(rawCode)
         activationBoundUID = ActivationService.shared.deviceId()
-        activationMode = outcome.mode
-        activationExpiresAt = outcome.expiresAt
-        activationRemainingClicks = outcome.remainingClicks
+        applyActivationOutcome(outcome, preserveConverterWindow: false)
         persist()
     }
 
@@ -411,15 +463,54 @@ final class AppState: ObservableObject {
                 localExpiresAt: activationExpiresAt,
                 localRemainingClicks: activationRemainingClicks
             )
-            activationMode = outcome.mode
-            activationExpiresAt = outcome.expiresAt
-            activationRemainingClicks = outcome.remainingClicks
+            applyActivationOutcome(outcome, preserveConverterWindow: true)
             persist()
         } catch {
             if shouldClearActivation(after: error) {
                 clearActivationLocal()
             }
         }
+    }
+
+    private func applyActivationOutcome(_ outcome: ActivationOutcome, preserveConverterWindow: Bool) {
+        activationMode = outcome.mode
+        activationExpiresAt = outcome.expiresAt
+        activationRemainingClicks = outcome.remainingClicks
+
+        if let initial = outcome.initialClickCount {
+            activationInitialClickCount = initial
+        } else if activationMode == .clicks, let remaining = outcome.remainingClicks {
+            activationInitialClickCount = activationInitialClickCount ?? remaining
+        }
+
+        let activatedAt = outcome.activatedAt ?? converterActivatedAt ?? Date()
+        if !preserveConverterWindow || converterExpiresAt == nil || converterActivatedAt == nil {
+            converterActivatedAt = activatedAt
+            if let mode = activationMode {
+                converterExpiresAt = ConverterAccess.converterExpiry(
+                    mode: mode,
+                    memoExpiresAt: activationExpiresAt,
+                    initialClickCount: activationInitialClickCount,
+                    activatedAt: activatedAt
+                )
+            }
+        }
+    }
+
+    private func backfillConverterAccessIfNeeded() {
+        guard activationCode != nil, converterExpiresAt == nil else { return }
+        guard let mode = activationMode else { return }
+        let activatedAt = converterActivatedAt ?? Date()
+        converterActivatedAt = activatedAt
+        if activationMode == .clicks, activationInitialClickCount == nil {
+            activationInitialClickCount = activationRemainingClicks
+        }
+        converterExpiresAt = ConverterAccess.converterExpiry(
+            mode: mode,
+            memoExpiresAt: activationExpiresAt,
+            initialClickCount: activationInitialClickCount,
+            activatedAt: activatedAt
+        )
     }
 
     @available(*, deprecated, message: "Use syncActivationIfNeeded")
@@ -440,6 +531,12 @@ final class AppState: ObservableObject {
         activationExpiresAt = nil
         activationMode = nil
         activationRemainingClicks = nil
+        converterExpiresAt = nil
+        activationInitialClickCount = nil
+        converterActivatedAt = nil
+        ConverterRoutingStore.isConverterSessionActive = false
+        isConverterSessionEngaged = false
+        showConverterHost = false
         notesSimulationUnlocked = false
         showPhoneMenu = false
         showIMessage = false
@@ -586,8 +683,44 @@ final class AppState: ObservableObject {
         screen = .home
     }
 
+    func beginConverterSession() {
+        isConverterSessionEngaged = true
+        ConverterRoutingStore.isConverterSessionActive = true
+        showConverterHost = true
+    }
+
+    func endConverterSession() {
+        isConverterSessionEngaged = false
+        ConverterRoutingStore.isConverterSessionActive = false
+        showConverterHost = false
+        converterImportToast = nil
+    }
+
+    /// 分享/用 App 打开 txt 后若仍在转换器会话中，恢复全屏（避免回到设置页）
+    func restoreConverterPresentationIfNeeded() {
+        guard isConverterSessionEngaged else { return }
+        ConverterRoutingStore.isConverterSessionActive = true
+        guard canUseConverter || DevelopmentFlags.bypassActivation else { return }
+        showConverterHost = true
+    }
+
+    private func noteConverterImport(_ fileName: String) {
+        converterImportToast = "已导入 \(fileName) 到 TXT 文件管理"
+        restoreConverterPresentationIfNeeded()
+        NotificationCenter.default.post(
+            name: .converterImportDidFinish,
+            object: fileName
+        )
+    }
+
     func importTextFile(from url: URL) {
         guard NoteImportService.accepts(url: url) else { return }
+        if ConverterRoutingStore.isConverterSessionActive || isConverterSessionEngaged {
+            if let name = ConverterImportService.importFileURLToTXTFiles(url) {
+                noteConverterImport(name)
+            }
+            return
+        }
         do {
             let payload = try NoteImportService.parseTextFile(url: url)
             applyImport(
@@ -615,6 +748,10 @@ final class AppState: ObservableObject {
     }
 
     func consumePendingImportIfNeeded() {
+        if let fileName = ConverterImportService.consumePendingImportToTXTFiles() {
+            noteConverterImport(fileName)
+            return
+        }
         if let payload = NoteImportService.consumePendingImport() {
             applyImport(
                 title: payload.title,
@@ -625,8 +762,12 @@ final class AppState: ObservableObject {
         }
         // Share Extension 写入 App Group 后可能略早于主 App 被唤起
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
-            guard let self,
-                  let payload = NoteImportService.consumePendingImport() else { return }
+            guard let self else { return }
+            if let fileName = ConverterImportService.consumePendingImportToTXTFiles() {
+                self.noteConverterImport(fileName)
+                return
+            }
+            guard let payload = NoteImportService.consumePendingImport() else { return }
             self.applyImport(
                 title: payload.title,
                 body: payload.body,
@@ -681,6 +822,9 @@ final class AppState: ObservableObject {
             $activationBoundUID.map { _ in () }.eraseToAnyPublisher(),
             $activationMode.map { _ in () }.eraseToAnyPublisher(),
             $activationRemainingClicks.map { _ in () }.eraseToAnyPublisher(),
+            $converterExpiresAt.map { _ in () }.eraseToAnyPublisher(),
+            $activationInitialClickCount.map { _ in () }.eraseToAnyPublisher(),
+            $converterActivatedAt.map { _ in () }.eraseToAnyPublisher(),
         ]
 
         Publishers.MergeMany(publishers)
@@ -747,6 +891,17 @@ final class AppState: ObservableObject {
             activationMode = nil
         }
         activationRemainingClicks = snapshot.activationRemainingClicks
+        if let stamp = snapshot.converterExpiresAt {
+            converterExpiresAt = Date(timeIntervalSince1970: stamp)
+        } else {
+            converterExpiresAt = nil
+        }
+        activationInitialClickCount = snapshot.activationInitialClickCount
+        if let stamp = snapshot.converterActivatedAt {
+            converterActivatedAt = Date(timeIntervalSince1970: stamp)
+        } else {
+            converterActivatedAt = nil
+        }
         if let data = snapshot.messageImageJPEG, let image = UIImage(data: data) {
             messageImage = image
         } else {
@@ -774,7 +929,10 @@ final class AppState: ObservableObject {
             activationCode: activationCode,
             activationBoundUID: activationBoundUID,
             activationMode: activationMode?.rawValue,
-            activationRemainingClicks: activationRemainingClicks
+            activationRemainingClicks: activationRemainingClicks,
+            converterExpiresAt: converterExpiresAt?.timeIntervalSince1970,
+            activationInitialClickCount: activationInitialClickCount,
+            converterActivatedAt: converterActivatedAt?.timeIntervalSince1970
         )
     }
 

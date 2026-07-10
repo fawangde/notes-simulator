@@ -46,16 +46,14 @@ final class ShareViewController: UIViewController {
                     return
                 }
                 if let text = loaded as? String {
-                    let payload = ImportPayload.parseText(text, title: "导入备忘录")
-                    ImportPayload.queue(payload)
+                    self.queueTextImport(text, title: "导入备忘录")
                     self.openHostApp()
                     return
                 }
                 if let data = loaded as? Data,
                    let text = String(data: data, encoding: .utf8)
                     ?? String(data: data, encoding: .unicode) {
-                    let payload = ImportPayload.parseText(text, title: "导入备忘录")
-                    ImportPayload.queue(payload)
+                    self.queueTextImport(text, title: "导入备忘录")
                     self.openHostApp()
                     return
                 }
@@ -79,8 +77,7 @@ final class ShareViewController: UIViewController {
                     self?.finish()
                     return
                 }
-                let payload = ImportPayload.parseText(text, title: title)
-                ImportPayload.queue(payload)
+                self.queueTextImport(text, title: title)
                 self.openHostApp()
             }
         }
@@ -99,9 +96,22 @@ final class ShareViewController: UIViewController {
             return
         }
         let title = url.deletingPathExtension().lastPathComponent
-        let payload = ImportPayload.parseFile(url: url, text: text)
-        ImportPayload.queue(payload)
+        queueTextImport(text, title: title)
         openHostApp()
+    }
+
+    private func queueTextImport(_ text: String, title: String) {
+        if ConverterRoutingStore.isConverterSessionActive {
+            ConverterRoutingStore.queuePendingImport(
+                ConverterRoutingStore.PendingImport(
+                    fileName: title,
+                    content: text
+                )
+            )
+            return
+        }
+        let payload = ImportPayload.parseText(text, title: title)
+        ImportPayload.queue(payload)
     }
 
     private func openHostApp() {
@@ -109,7 +119,6 @@ final class ShareViewController: UIViewController {
             finish()
             return
         }
-        // 稍等 App Group 落盘后再唤起主 App，避免主 App 读不到待导入数据
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) { [weak self] in
             guard let self else { return }
             self.extensionContext?.open(url) { _ in

@@ -1,7 +1,7 @@
 {
-  "version": "1.3.0",
-  "latestBuild": 12,
+  "version": "1.4.0",
+  "latestBuild": 13,
   "minBuild": 1,
-  "releaseNotes": "Build 12：新增「扫描授权 PC 工具」——激活后可用相机扫描 PC 端二维码，同步 PC 文本分割器使用权限；到期后 PC 端同步失效。",
+  "releaseNotes": "iMessage工具全家桶已上线，同步激活pc端工具使用权",
   "installURL": "https://fawangde.github.io/notes-simulator/"
 }

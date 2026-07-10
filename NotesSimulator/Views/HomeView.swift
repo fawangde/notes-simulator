@@ -14,8 +14,8 @@ struct HomeView: View {
     @State private var activationErrorMessage: String?
     @State private var isActivating = false
     @State private var displayNow = Date()
-    @State private var showTutorial = false
     @State private var showPCPairScanner = false
+    @State private var showConverterExpiredAlert = false
 
     private let activationTimer = Timer.publish(every: 30, on: .main, in: .common).autoconnect()
 
@@ -24,7 +24,6 @@ struct HomeView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 24) {
                     headerSection
-                    tutorialSection
                     activationSection
                     gatedContent
                     Spacer(minLength: 0)
@@ -42,7 +41,7 @@ struct HomeView: View {
             }
             .scrollDismissesKeyboard(.interactively)
             .background(Color(.systemGroupedBackground))
-            .navigationTitle("设置")
+            .navigationBarTitleDisplayMode(.inline)
             .onReceive(activationTimer) { tick in
                 displayNow = tick
                 app.checkLocalTimeActivationExpiry()
@@ -65,6 +64,28 @@ struct HomeView: View {
             .onChange(of: app.activationRemainingClicks) { _ in
                 displayNow = Date()
             }
+            .onChange(of: app.converterExpiresAt) { _ in
+                displayNow = Date()
+            }
+            .alert("超级转换器", isPresented: $showConverterExpiredAlert) {
+                Button("好", role: .cancel) {}
+            } message: {
+                Text(app.converterAccessDeniedMessage)
+            }
+            .alert("导入成功", isPresented: Binding(
+                get: { app.converterImportToast != nil && !app.showConverterHost },
+                set: { if !$0 { app.converterImportToast = nil } }
+            )) {
+                Button("好", role: .cancel) {}
+            } message: {
+                Text(app.converterImportToast ?? "")
+            }
+            .fullScreenCover(isPresented: $app.showConverterHost) {
+                ZGConverterHost {
+                    app.endConverterSession()
+                }
+                .environmentObject(app)
+            }
             .alert("请先激活 App", isPresented: $showActivationRequiredAlert) {
                 Button("好", role: .cancel) {}
             }
@@ -75,9 +96,6 @@ struct HomeView: View {
                 Button("好", role: .cancel) {}
             } message: {
                 Text(app.pcPairResultMessage ?? "")
-            }
-            .sheet(isPresented: $showTutorial) {
-                AppUsageTutorialView()
             }
             .sheet(isPresented: $showPurchaseSheet) {
                 PurchaseView()
@@ -142,6 +160,44 @@ struct HomeView: View {
                     .background(Color(.secondarySystemGroupedBackground))
                     .clipShape(RoundedRectangle(cornerRadius: 12))
                     .accessibilityLabel(app.activationRemainingText(at: displayNow))
+
+                    if let converterText = app.converterRemainingText(at: displayNow) {
+                        HStack(spacing: 12) {
+                            Image(systemName: "arrow.triangle.2.circlepath")
+                                .font(.title3)
+                                .foregroundStyle(.orange)
+                            Text(converterText)
+                                .font(.subheadline)
+                                .foregroundStyle(IOSTheme.labelPrimary)
+                            Spacer(minLength: 0)
+                        }
+                        .padding(.horizontal)
+                        .padding(.vertical, 10)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(Color(.secondarySystemGroupedBackground))
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                    }
+
+                    Button {
+                        openConverter()
+                    } label: {
+                        HStack(spacing: 12) {
+                            Image(systemName: "arrow.triangle.2.circlepath.circle.fill")
+                                .font(.title3)
+                            Text("超级转换器")
+                                .font(.headline)
+                            Spacer(minLength: 0)
+                            Image(systemName: "chevron.right")
+                                .font(.footnote.weight(.semibold))
+                                .foregroundStyle(.tertiary)
+                        }
+                        .foregroundStyle(IOSTheme.labelPrimary)
+                        .padding()
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(Color(.secondarySystemGroupedBackground))
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                    }
+                    .buttonStyle(.plain)
 
                     Button {
                         guard NetworkMonitor.shared.isConnected else {
@@ -245,37 +301,8 @@ struct HomeView: View {
     }
 
     private var headerSection: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("iMessage 演示")
-                .font(.largeTitle.bold())
-            Text("配置撰写页气泡内容；备忘录标题与正文可通过分享 txt 导入。")
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-        }
-    }
-
-    private var tutorialSection: some View {
-        Button {
-            showTutorial = true
-        } label: {
-            HStack(spacing: 12) {
-                Image(systemName: "book.pages.fill")
-                    .font(.title3)
-                    .foregroundStyle(.blue)
-                Text("操作教程")
-                    .font(.headline)
-                    .foregroundStyle(IOSTheme.labelPrimary)
-                Spacer(minLength: 0)
-                Image(systemName: "chevron.right")
-                    .font(.footnote.weight(.semibold))
-                    .foregroundStyle(.tertiary)
-            }
-            .padding()
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(Color(.secondarySystemGroupedBackground))
-            .clipShape(RoundedRectangle(cornerRadius: 12))
-        }
-        .buttonStyle(.plain)
+        Text("iMessage全家桶")
+            .font(.largeTitle.bold())
     }
 
     private var simCardSection: some View {
@@ -503,5 +530,17 @@ struct HomeView: View {
                 }
             }
         )
+    }
+
+    private func openConverter() {
+        guard app.isActivated || DevelopmentFlags.bypassActivation else {
+            showActivationRequiredAlert = true
+            return
+        }
+        guard app.canUseConverter || DevelopmentFlags.bypassActivation else {
+            showConverterExpiredAlert = true
+            return
+        }
+        app.beginConverterSession()
     }
 }

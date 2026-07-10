@@ -64,6 +64,19 @@
 		BF00000100000000000000AB /* ImageBubbleWhiteBackgroundAdjust.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR00000100000000000000AB /* ImageBubbleWhiteBackgroundAdjust.swift */; };
 		BF00000100000000000000B0 /* PCSessionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR00000100000000000000B0 /* PCSessionService.swift */; };
 		BF00000100000000000000B1 /* PCPairScannerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR00000100000000000000B1 /* PCPairScannerView.swift */; };
+		BF00000100000000000000C1 /* ConverterAccess.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR00000100000000000000C1 /* ConverterAccess.swift */; };
+		BF00000100000000000000C2 /* ConverterRoutingStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR00000100000000000000C2 /* ConverterRoutingStore.swift */; };
+		BF00000100000000000000C3 /* ConverterImportService.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR00000100000000000000C3 /* ConverterImportService.swift */; };
+		BF00000100000000000000C4 /* ZGConverterHost.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR00000100000000000000C4 /* ZGConverterHost.swift */; };
+		BF00000100000000000000C5 /* ZGConverterAccessBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR00000100000000000000C5 /* ZGConverterAccessBridge.swift */; };
+		BF00000100000000000000C6 /* ZGFileHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR00000100000000000000C6 /* ZGFileHelper.swift */; };
+		BF00000100000000000000C7 /* ZGDataManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR00000100000000000000C7 /* ZGDataManager.swift */; };
+		BF00000100000000000000C8 /* ZGConverterViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR00000100000000000000C8 /* ZGConverterViewController.swift */; };
+		BF00000100000000000000C9 /* ZGTXTFileManagerViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR00000100000000000000C9 /* ZGTXTFileManagerViewController.swift */; };
+		BF00000100000000000000CA /* ZGVCFFileManagerViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR00000100000000000000CA /* ZGVCFFileManagerViewController.swift */; };
+		BF00000100000000000000CB /* ZGEmailEditViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR00000100000000000000CB /* ZGEmailEditViewController.swift */; };
+		BF00000100000000000000CC /* ZGBoomEditViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR00000100000000000000CC /* ZGBoomEditViewController.swift */; };
+		BF00000100000000000000CD /* ConverterRoutingStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR00000100000000000000CE /* ConverterRoutingStore.swift */; };
 		BF00000100000000000000A7 /* IOS26ComposeTuningSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = FR00000100000000000000A7 /* IOS26ComposeTuningSheet.swift */; };
 		BF000001000000000000009E /* AppUsageTutorial.md in Resources */ = {isa = PBXBuildFile; fileRef = FR000001000000000000009E /* AppUsageTutorial.md */; };
 		BF0000010000000000000049 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = FR0000010000000000000049 /* GoogleService-Info.plist */; };
@@ -216,6 +229,19 @@
 		FR00000100000000000000AB /* ImageBubbleWhiteBackgroundAdjust.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageBubbleWhiteBackgroundAdjust.swift; sourceTree = "<group>"; };
 		FR00000100000000000000B0 /* PCSessionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PCSessionService.swift; sourceTree = "<group>"; };
 		FR00000100000000000000B1 /* PCPairScannerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PCPairScannerView.swift; sourceTree = "<group>"; };
+		FR00000100000000000000C1 /* ConverterAccess.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConverterAccess.swift; sourceTree = "<group>"; };
+		FR00000100000000000000C2 /* ConverterRoutingStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConverterRoutingStore.swift; sourceTree = "<group>"; };
+		FR00000100000000000000C3 /* ConverterImportService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConverterImportService.swift; sourceTree = "<group>"; };
+		FR00000100000000000000C4 /* ZGConverterHost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZGConverterHost.swift; sourceTree = "<group>"; };
+		FR00000100000000000000C5 /* ZGConverterAccessBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZGConverterAccessBridge.swift; sourceTree = "<group>"; };
+		FR00000100000000000000C6 /* ZGFileHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZGFileHelper.swift; sourceTree = "<group>"; };
+		FR00000100000000000000C7 /* ZGDataManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZGDataManager.swift; sourceTree = "<group>"; };
+		FR00000100000000000000C8 /* ZGConverterViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZGConverterViewController.swift; sourceTree = "<group>"; };
+		FR00000100000000000000C9 /* ZGTXTFileManagerViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZGTXTFileManagerViewController.swift; sourceTree = "<group>"; };
+		FR00000100000000000000CA /* ZGVCFFileManagerViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZGVCFFileManagerViewController.swift; sourceTree = "<group>"; };
+		FR00000100000000000000CB /* ZGEmailEditViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZGEmailEditViewController.swift; sourceTree = "<group>"; };
+		FR00000100000000000000CC /* ZGBoomEditViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZGBoomEditViewController.swift; sourceTree = "<group>"; };
+		FR00000100000000000000CE /* ConverterRoutingStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConverterRoutingStore.swift; sourceTree = "<group>"; };
 		FR00000100000000000000A7 /* IOS26ComposeTuningSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IOS26ComposeTuningSheet.swift; sourceTree = "<group>"; };
 		FR000001000000000000009E /* AppUsageTutorial.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = AppUsageTutorial.md; sourceTree = "<group>"; };
 		FR0000010000000000000049 /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
@@ -326,6 +352,7 @@
 				GR000001000000000000000F /* Models */,
 				GR0000010000000000000010 /* Utilities */,
 				GR0000010000000000000011 /* Views */,
+				GR00000100000000000000C0 /* ZGModule */,
 				FR000001000000000000000A /* Assets.xcassets */,
 			);
 			path = NotesSimulator;
@@ -361,6 +388,9 @@
 				FR0000010000000000000017 /* NoteDateFormatting.swift */,
 				FR0000010000000000000041 /* NoteImportService.swift */,
 				FR0000010000000000000045 /* NoteImportStore.swift */,
+				FR00000100000000000000C1 /* ConverterAccess.swift */,
+				FR00000100000000000000C2 /* ConverterRoutingStore.swift */,
+				FR00000100000000000000C3 /* ConverterImportService.swift */,
 				FR0000010000000000000046 /* ActivationService.swift */,
 				FR00000100000000000000B0 /* PCSessionService.swift */,
 				FR00000100000000000000A0 /* PurchaseOrderStore.swift */,
@@ -414,6 +444,7 @@
 				FR0000010000000000000005 /* HomeView.swift */,
 				FR0000010000000000000048 /* ActivationSheetView.swift */,
 				FR00000100000000000000B1 /* PCPairScannerView.swift */,
+				FR00000100000000000000C4 /* ZGConverterHost.swift */,
 				FR00000100000000000000A2 /* PurchaseView.swift */,
 				FR000001000000000000009D /* AppUsageTutorialView.swift */,
 				FR0000010000000000000006 /* NotesView.swift */,
@@ -472,11 +503,27 @@
 			path = Views;
 			sourceTree = "<group>";
 		};
+		GR00000100000000000000C0 /* ZGModule */ = {
+			isa = PBXGroup;
+			children = (
+				FR00000100000000000000C5 /* ZGConverterAccessBridge.swift */,
+				FR00000100000000000000C6 /* ZGFileHelper.swift */,
+				FR00000100000000000000C7 /* ZGDataManager.swift */,
+				FR00000100000000000000C8 /* ZGConverterViewController.swift */,
+				FR00000100000000000000C9 /* ZGTXTFileManagerViewController.swift */,
+				FR00000100000000000000CA /* ZGVCFFileManagerViewController.swift */,
+				FR00000100000000000000CB /* ZGEmailEditViewController.swift */,
+				FR00000100000000000000CC /* ZGBoomEditViewController.swift */,
+			);
+			path = ZGModule;
+			sourceTree = "<group>";
+		};
 		GR0000010000000000000055 /* NotesShareExtension */ = {
 			isa = PBXGroup;
 			children = (
 				FR0000010000000000000050 /* ShareViewController.swift */,
 				FR0000010000000000000051 /* ImportPayload.swift */,
+				FR00000100000000000000CE /* ConverterRoutingStore.swift */,
 				FR0000010000000000000052 /* Info.plist */,
 				FR0000010000000000000054 /* NotesShareExtension.entitlements */,
 			);
@@ -639,6 +686,18 @@
 				BF0000010000000000000015 /* NoteDateFormatting.swift in Sources */,
 				BF0000010000000000000041 /* NoteImportService.swift in Sources */,
 				BF0000010000000000000045 /* NoteImportStore.swift in Sources */,
+				BF00000100000000000000C1 /* ConverterAccess.swift in Sources */,
+				BF00000100000000000000C2 /* ConverterRoutingStore.swift in Sources */,
+				BF00000100000000000000C3 /* ConverterImportService.swift in Sources */,
+				BF00000100000000000000C4 /* ZGConverterHost.swift in Sources */,
+				BF00000100000000000000C5 /* ZGConverterAccessBridge.swift in Sources */,
+				BF00000100000000000000C6 /* ZGFileHelper.swift in Sources */,
+				BF00000100000000000000C7 /* ZGDataManager.swift in Sources */,
+				BF00000100000000000000C8 /* ZGConverterViewController.swift in Sources */,
+				BF00000100000000000000C9 /* ZGTXTFileManagerViewController.swift in Sources */,
+				BF00000100000000000000CA /* ZGVCFFileManagerViewController.swift in Sources */,
+				BF00000100000000000000CB /* ZGEmailEditViewController.swift in Sources */,
+				BF00000100000000000000CC /* ZGBoomEditViewController.swift in Sources */,
 				BF0000010000000000000046 /* ActivationService.swift in Sources */,
 				BF00000100000000000000B0 /* PCSessionService.swift in Sources */,
 				BF0000010000000000000047 /* ActivationFormatting.swift in Sources */,
@@ -718,6 +777,7 @@
 			files = (
 				BF0000010000000000000050 /* ShareViewController.swift in Sources */,
 				BF0000010000000000000051 /* ImportPayload.swift in Sources */,
+				BF00000100000000000000CD /* ConverterRoutingStore.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -779,7 +839,7 @@
 				CODE_SIGN_ENTITLEMENTS = NotesSimulator/NotesSimulator.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 12;
+				CURRENT_PROJECT_VERSION = 13;
 				DEVELOPMENT_TEAM = 562KJH9T58;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -793,7 +853,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.3;
+				MARKETING_VERSION = 1.4;
 				PRODUCT_BUNDLE_IDENTIFIER = com.notesimulator.app;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -812,7 +872,7 @@
 				CODE_SIGN_ENTITLEMENTS = NotesSimulator/NotesSimulator.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 12;
+				CURRENT_PROJECT_VERSION = 13;
 				DEVELOPMENT_TEAM = 562KJH9T58;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -826,7 +886,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.3;
+				MARKETING_VERSION = 1.4;
 				PRODUCT_BUNDLE_IDENTIFIER = com.notesimulator.app;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -842,7 +902,7 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = NotesShareExtension/NotesShareExtension.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 12;
+				CURRENT_PROJECT_VERSION = 13;
 				DEVELOPMENT_TEAM = 562KJH9T58;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = NotesShareExtension/Info.plist;
@@ -853,7 +913,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 1.3;
+				MARKETING_VERSION = 1.4;
 				PRODUCT_BUNDLE_IDENTIFIER = com.notesimulator.app.share;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -868,7 +928,7 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = NotesShareExtension/NotesShareExtension.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 12;
+				CURRENT_PROJECT_VERSION = 13;
 				DEVELOPMENT_TEAM = 562KJH9T58;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = NotesShareExtension/Info.plist;
@@ -879,7 +939,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 1.3;
+				MARKETING_VERSION = 1.4;
 				PRODUCT_BUNDLE_IDENTIFIER = com.notesimulator.app.share;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;

@@ -34,4 +34,5 @@ final class NotesAppDelegate: NSObject, UIApplicationDelegate {
 extension Notification.Name {
     static let noteImportFileOpened = Notification.Name("noteImportFileOpened")
     static let noteImportRequested = Notification.Name("noteImportRequested")
+    static let converterImportDidFinish = Notification.Name("converterImportDidFinish")
 }

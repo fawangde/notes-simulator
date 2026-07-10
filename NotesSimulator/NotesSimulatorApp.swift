@@ -29,6 +29,7 @@ struct NotesSimulatorApp: App {
                     Task { await AppUpdateController.shared.checkNow() }
                 }
                 .onReceive(NotificationCenter.default.publisher(for: .noteImportRequested)) { _ in
+                    appState.restoreConverterPresentationIfNeeded()
                     appState.consumePendingImportIfNeeded()
                 }
                 .onReceive(NotificationCenter.default.publisher(for: .noteImportFileOpened)) { note in
@@ -39,6 +40,7 @@ struct NotesSimulatorApp: App {
         .onChange(of: scenePhase) { phase in
             if phase == .active {
                 appState.checkLocalTimeActivationExpiry()
+                appState.restoreConverterPresentationIfNeeded()
                 appState.consumePendingImportIfNeeded()
                 Task {
                     await appState.performPeriodicActivationCheck()

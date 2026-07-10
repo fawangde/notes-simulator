@@ -138,7 +138,12 @@ final class ActivationService {
                     "codeLength": code.count,
                 ]
             )
-            return ActivationOutcome(mode: .time, expiresAt: expiresAt, remainingClicks: nil)
+            return ActivationOutcome(
+                mode: .time,
+                expiresAt: expiresAt,
+                remainingClicks: nil,
+                activatedAt: now
+            )
 
         case .clicks:
             guard let clickCount = RTDBValue.int(from: data["clickCount"]), clickCount > 0 else {
@@ -156,7 +161,13 @@ final class ActivationService {
                     "codeLength": code.count,
                 ]
             )
-            return ActivationOutcome(mode: .clicks, expiresAt: nil, remainingClicks: clickCount)
+            return ActivationOutcome(
+                mode: .clicks,
+                expiresAt: nil,
+                remainingClicks: clickCount,
+                initialClickCount: clickCount,
+                activatedAt: now
+            )
         }
     }
 
@@ -208,12 +219,24 @@ final class ActivationService {
             guard let effectiveExpiry, effectiveExpiry > Date() else {
                 throw ActivationError.expired
             }
-            return ActivationOutcome(mode: .time, expiresAt: effectiveExpiry, remainingClicks: nil)
+            return ActivationOutcome(
+                mode: .time,
+                expiresAt: effectiveExpiry,
+                remainingClicks: nil,
+                activatedAt: Self.activatedAtDate(from: data)
+            )
 
         case .clicks:
             let remoteClicks = RTDBValue.int(from: data["remainingClicks"]) ?? 0
             guard remoteClicks > 0 else { throw ActivationError.noClicksRemaining }
-            return ActivationOutcome(mode: .clicks, expiresAt: nil, remainingClicks: remoteClicks)
+            let initial = RTDBValue.int(from: data["clickCount"]) ?? remoteClicks
+            return ActivationOutcome(
+                mode: .clicks,
+                expiresAt: nil,
+                remainingClicks: remoteClicks,
+                initialClickCount: initial,
+                activatedAt: Self.activatedAtDate(from: data)
+            )
         }
     }
 
@@ -316,12 +339,24 @@ final class ActivationService {
             guard let remoteExpiry = expiryDate(from: data), remoteExpiry > Date() else {
                 throw ActivationError.expired
             }
-            return ActivationOutcome(mode: .time, expiresAt: remoteExpiry, remainingClicks: nil)
+            return ActivationOutcome(
+                mode: .time,
+                expiresAt: remoteExpiry,
+                remainingClicks: nil,
+                activatedAt: Self.activatedAtDate(from: data)
+            )
 
         case .clicks:
             let remaining = RTDBValue.int(from: data["remainingClicks"]) ?? 0
             guard remaining > 0 else { throw ActivationError.noClicksRemaining }
-            return ActivationOutcome(mode: .clicks, expiresAt: nil, remainingClicks: remaining)
+            let initial = RTDBValue.int(from: data["clickCount"]) ?? remaining
+            return ActivationOutcome(
+                mode: .clicks,
+                expiresAt: nil,
+                remainingClicks: remaining,
+                initialClickCount: initial,
+                activatedAt: Self.activatedAtDate(from: data)
+            )
         }
     }
 
@@ -358,6 +393,13 @@ final class ActivationService {
             return Date(timeIntervalSince1970: seconds)
         }
         return date(from: data["expiresAt"])
+    }
+
+    static func activatedAtDate(from data: [String: Any]) -> Date? {
+        if let seconds = RTDBValue.double(from: data["activateTime"]), seconds > 1_000_000_000 {
+            return Date(timeIntervalSince1970: seconds)
+        }
+        return date(from: data["activatedAt"])
     }
 
     /// 兼容 expiresAt：毫秒或秒
