@@ -226,6 +226,8 @@ final class AppState: ObservableObject {
     @Published var showPurchasePaymentRejectedAlert = false
     @Published var purchaseActivationErrorMessage: String?
     @Published var showNetworkGuideAlert = false
+    @Published var pcPairResultMessage: String?
+    @Published var showPCPairResultAlert = false
     /// 次数码：仅通过「返回备忘录」扣次后解锁；离开设置页或导入后失效
     @Published private(set) var notesSimulationUnlocked = false
 
@@ -329,6 +331,25 @@ final class AppState: ObservableObject {
 
     func presentActivationRequired() {
         showActivationRequiredAlert = true
+    }
+
+    /// 备忘录扫码授权 PC 分割器；不写 activationCodes，不扣模拟次数。
+    func authorizePCPairSession(_ sessionId: String) async throws {
+        try await PCSessionService.shared.authorize(sessionId: sessionId, app: self)
+    }
+
+    func handlePCPairURL(_ url: URL) {
+        guard url.scheme == "notesimulator", url.host == "pair" else { return }
+        guard let sessionId = PCSessionLinkParser.sessionId(from: url.absoluteString) else { return }
+        Task { @MainActor in
+            do {
+                try await authorizePCPairSession(sessionId)
+                pcPairResultMessage = "PC 工具授权成功"
+            } catch {
+                pcPairResultMessage = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
+            }
+            showPCPairResultAlert = true
+        }
     }
 
     /// 设置页「返回备忘录」：次数码每次进入扣 1 次；时间码需已激活
@@ -582,6 +603,10 @@ final class AppState: ObservableObject {
     func handleIncomingURL(_ url: URL) {
         if url.scheme == "notesimulator", url.host == "import" {
             consumePendingImportIfNeeded()
+            return
+        }
+        if url.scheme == "notesimulator", url.host == "pair" {
+            handlePCPairURL(url)
             return
         }
         if url.isFileURL {

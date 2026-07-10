@@ -15,6 +15,7 @@ struct HomeView: View {
     @State private var isActivating = false
     @State private var displayNow = Date()
     @State private var showTutorial = false
+    @State private var showPCPairScanner = false
 
     private let activationTimer = Timer.publish(every: 30, on: .main, in: .common).autoconnect()
 
@@ -70,6 +71,11 @@ struct HomeView: View {
             .alert("请先激活 App", isPresented: $app.showActivationRequiredAlert) {
                 Button("好", role: .cancel) {}
             }
+            .alert("PC 工具授权", isPresented: $app.showPCPairResultAlert) {
+                Button("好", role: .cancel) {}
+            } message: {
+                Text(app.pcPairResultMessage ?? "")
+            }
             .sheet(isPresented: $showTutorial) {
                 AppUsageTutorialView()
             }
@@ -90,6 +96,10 @@ struct HomeView: View {
                     }
                 )
                 .presentationDetents([.medium])
+            }
+            .sheet(isPresented: $showPCPairScanner) {
+                PCPairScannerView()
+                    .environmentObject(app)
             }
         }
     }
@@ -117,20 +127,47 @@ struct HomeView: View {
     private var activationSection: some View {
         Group {
             if app.isActivated {
-                HStack(spacing: 12) {
-                    Image(systemName: "checkmark.seal.fill")
-                        .font(.title3)
-                        .foregroundStyle(.green)
-                    Text(app.activationRemainingText(at: displayNow))
-                        .font(.headline)
+                VStack(spacing: 10) {
+                    HStack(spacing: 12) {
+                        Image(systemName: "checkmark.seal.fill")
+                            .font(.title3)
+                            .foregroundStyle(.green)
+                        Text(app.activationRemainingText(at: displayNow))
+                            .font(.headline)
+                            .foregroundStyle(IOSTheme.labelPrimary)
+                        Spacer(minLength: 0)
+                    }
+                    .padding()
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(Color(.secondarySystemGroupedBackground))
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                    .accessibilityLabel(app.activationRemainingText(at: displayNow))
+
+                    Button {
+                        guard NetworkMonitor.shared.isConnected else {
+                            app.showNetworkGuideAlert = true
+                            return
+                        }
+                        showPCPairScanner = true
+                    } label: {
+                        HStack(spacing: 12) {
+                            Image(systemName: "qrcode.viewfinder")
+                                .font(.title3)
+                            Text("扫描授权 PC 工具")
+                                .font(.headline)
+                            Spacer(minLength: 0)
+                            Image(systemName: "chevron.right")
+                                .font(.footnote.weight(.semibold))
+                                .foregroundStyle(.tertiary)
+                        }
                         .foregroundStyle(IOSTheme.labelPrimary)
-                    Spacer(minLength: 0)
+                        .padding()
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(Color(.secondarySystemGroupedBackground))
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                    }
+                    .buttonStyle(.plain)
                 }
-                .padding()
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .background(Color(.secondarySystemGroupedBackground))
-                .clipShape(RoundedRectangle(cornerRadius: 12))
-                .accessibilityLabel(app.activationRemainingText(at: displayNow))
             } else {
                 VStack(spacing: 10) {
                     Button {

@@ -34,5 +34,7 @@
 			</array>
 		</dict>
 	</array>
+	<key>NSCameraUsageDescription</key>
+	<string>扫描 PC 分割器二维码以授权同步激活状态</string>
 </dict>
 </plist>
